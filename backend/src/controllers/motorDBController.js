@@ -6,7 +6,6 @@ const { MotorDB } = require('../models');
 const getAllMotores = async (req, res) => {
   try {
     const motores = await MotorDB.findAll({
-      where: { activo: true },
       order: [['nombre', 'ASC']]
     });
 
@@ -56,8 +55,7 @@ const createMotor = async (req, res) => {
 
     const nuevoMotor = await MotorDB.create({
       nombre,
-      icono,
-      activo: true
+      icono
     });
 
     return res.status(201).json({
@@ -87,7 +85,6 @@ const updateMotor = async (req, res) => {
     // Update fields if provided
     if (nombre !== undefined) motor.nombre = nombre;
     if (icono !== undefined) motor.icono = icono;
-    if (activo !== undefined) motor.activo = activo;
 
     await motor.save();
 
@@ -115,9 +112,8 @@ const deleteMotor = async (req, res) => {
       return res.status(404).json({ error: 'Motor de base de datos no encontrado' });
     }
 
-    // Soft delete (set activo to false)
-    motor.activo = false;
-    await motor.save();
+    // Hard delete since we don't have activo field anymore
+    await motor.destroy();
 
     return res.status(200).json({ message: 'Motor de base de datos eliminado exitosamente' });
   } catch (error) {

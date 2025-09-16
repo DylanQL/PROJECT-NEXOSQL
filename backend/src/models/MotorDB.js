@@ -17,11 +17,6 @@ const MotorDB = sequelize.define('MotorDB', {
   icono: {
     type: DataTypes.STRING,
     allowNull: true
-  },
-  activo: {
-    type: DataTypes.BOOLEAN,
-    defaultValue: true,
-    allowNull: false
   }
 }, {
   tableName: 'motores_db',

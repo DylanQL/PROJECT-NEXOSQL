@@ -69,12 +69,7 @@ const Conexiones = () => {
     }
   };
 
-  const getStatusBadge = (estado) => {
-    if (estado === 'activo') {
-      return <Badge bg="success">Activo</Badge>;
-    }
-    return <Badge bg="danger">Inactivo</Badge>;
-  };
+  // Función eliminada: no mostramos el estado de la conexión
 
   const getMotorIcon = (motor) => {
     return motor?.nombre || 'Desconocido';
@@ -124,9 +119,8 @@ const Conexiones = () => {
                 style={{ cursor: 'pointer' }}
               >
                 <Card.Body>
-                  <Card.Title className="d-flex justify-content-between align-items-center">
+                  <Card.Title>
                     {conexion.nombre}
-                    {getStatusBadge(conexion.estado)}
                   </Card.Title>
                   <Card.Subtitle className="mb-3 text-muted">
                     Motor: {getMotorIcon(conexion.motor)}
@@ -161,9 +155,11 @@ const Conexiones = () => {
           {selectedConnection && (
             <>
               <h5>{selectedConnection.nombre}</h5>
-              <p>Motor: {getMotorIcon(selectedConnection.motor)}</p>
-              <p>Host: {selectedConnection.host}</p>
-              <p>Base de datos: {selectedConnection.database_name}</p>
+              <p><strong>Motor:</strong> {getMotorIcon(selectedConnection.motor)}</p>
+              <p><strong>Host:</strong> {selectedConnection.host}</p>
+              <p><strong>Puerto:</strong> {selectedConnection.port}</p>
+              <p><strong>Base de datos:</strong> {selectedConnection.database_name}</p>
+              <p><strong>Usuario:</strong> {selectedConnection.username}</p>
             </>
           )}
         </Modal.Body>
