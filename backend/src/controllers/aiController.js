@@ -40,7 +40,21 @@ class AIController {
       }
 
       // Process the query with the AI service
+      console.log('Processing AI query:', {
+        connectionId,
+        question: question.substring(0, 100) + (question.length > 100 ? '...' : ''),
+        motorType: connection.motor.nombre,
+        userId
+      });
+
       const result = await aiService.processQuery(connection, question);
+
+      console.log('AI processing completed:', {
+        success: !!result.answer,
+        hasMetadata: !!result.metadata,
+        iterations: result.metadata?.iterations,
+        queriesExecuted: result.metadata?.queriesExecuted
+      });
 
       return res.json({
         success: true,
@@ -48,10 +62,23 @@ class AIController {
         metadata: result.metadata
       });
     } catch (error) {
-      console.error('Error in AI controller:', error);
+      console.error('Error in AI controller:', {
+        message: error.message,
+        stack: error.stack,
+        connectionId: req.body.connectionId,
+        question: req.body.question?.substring(0, 100),
+        userId: req.user?.id
+      });
+
+      // Provide more specific error messages
+      let userFriendlyMessage = error.message;
+      if (error.message.includes('formato esperado')) {
+        userFriendlyMessage = 'La IA no pudo interpretar la consulta correctamente. Por favor, intenta reformular tu pregunta de manera más específica.';
+      }
+
       return res.status(500).json({
         success: false,
-        error: `Error al procesar la consulta: ${error.message}`
+        error: `Error al procesar la consulta: ${userFriendlyMessage}`
       });
     }
   }

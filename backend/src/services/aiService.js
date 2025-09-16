@@ -774,6 +774,8 @@ Important rules:
    * @returns {Object} - Parsed response
    */
   parseAIResponse(text) {
+    console.log('Parsing AI response:', text);
+
     const result = {
       action: null,
       sql: null,
@@ -782,31 +784,69 @@ Important rules:
       response: null
     };
 
-    // Extract action
-    const actionMatch = text.match(/ACTION:\s*(QUERY|ANSWER)/i);
+    // Extract action - try multiple patterns
+    let actionMatch = text.match(/ACTION:\s*(QUERY|ANSWER)/i);
+    if (!actionMatch) {
+      // Try alternative patterns
+      actionMatch = text.match(/\b(QUERY|ANSWER)\b/i);
+    }
     if (actionMatch) {
       result.action = actionMatch[1].toUpperCase();
+    } else {
+      // If no explicit action found, try to infer from content
+      if (text.match(/SELECT|INSERT|UPDATE|DELETE|CREATE|DROP|ALTER/i) ||
+          text.match(/db\.|find\(|aggregate\(/i)) {
+        result.action = 'QUERY';
+      } else if (text.length > 50) {
+        result.action = 'ANSWER';
+        result.response = text.trim();
+        return result;
+      }
     }
 
     // If action is QUERY, extract SQL or MongoDB query
     if (result.action === 'QUERY') {
-      // Try to extract SQL query
-      const sqlMatch = text.match(/SQL:\s*([\s\S]+?)(?=REASONING:|$)/i);
+      // Try to extract SQL query with multiple patterns
+      let sqlMatch = text.match(/SQL:\s*([\s\S]+?)(?=REASONING:|ACTION:|$)/i);
+      if (!sqlMatch) {
+        // Try code block patterns
+        sqlMatch = text.match(/```sql\s*([\s\S]+?)\s*```/i) ||
+                   text.match(/```\s*(SELECT|INSERT|UPDATE|DELETE|CREATE|DROP|ALTER[\s\S]+?)\s*```/i);
+      }
+      if (!sqlMatch) {
+        // Try to find SQL-like statements directly
+        sqlMatch = text.match(/(SELECT|INSERT|UPDATE|DELETE|CREATE|DROP|ALTER)[\s\S]+?;?/i);
+      }
+
       if (sqlMatch) {
         // Clean up the SQL - remove any markdown formatting
         let sql = sqlMatch[1].trim();
         sql = sql.replace(/```sql\s*|\s*```/g, ''); // Remove SQL markdown markers
         sql = sql.replace(/```\s*|\s*```/g, ''); // Remove generic markdown markers
+        sql = sql.replace(/^\s*SQL:\s*/i, ''); // Remove SQL: prefix if present
         result.sql = sql;
       }
 
-      // Try to extract MongoDB query
-      const queryMatch = text.match(/QUERY:\s*([\s\S]+?)(?=REASONING:|$)/i);
+      // Try to extract MongoDB query with multiple patterns
+      let queryMatch = text.match(/QUERY:\s*([\s\S]+?)(?=REASONING:|ACTION:|$)/i);
+      if (!queryMatch) {
+        // Try code block patterns
+        queryMatch = text.match(/```javascript\s*([\s\S]+?)\s*```/i) ||
+                     text.match(/```js\s*([\s\S]+?)\s*```/i) ||
+                     text.match(/```\s*(db\.[\s\S]+?)\s*```/i);
+      }
+      if (!queryMatch) {
+        // Try to find MongoDB-like statements directly
+        queryMatch = text.match(/(db\.[\w]+\.(?:find|aggregate|insertOne|updateOne|deleteOne|count)[\s\S]*)/i);
+      }
+
       if (queryMatch) {
         // Clean up the query - remove any markdown formatting
         let query = queryMatch[1].trim();
         query = query.replace(/```javascript\s*|\s*```/g, ''); // Remove JS markdown markers
+        query = query.replace(/```js\s*|\s*```/g, ''); // Remove JS markdown markers
         query = query.replace(/```\s*|\s*```/g, ''); // Remove generic markdown markers
+        query = query.replace(/^\s*QUERY:\s*/i, ''); // Remove QUERY: prefix if present
         result.query = query;
       }
 
@@ -819,12 +859,20 @@ Important rules:
 
     // If action is ANSWER, extract response
     if (result.action === 'ANSWER') {
-      const responseMatch = text.match(/RESPONSE:\s*([\s\S]+)$/i);
+      let responseMatch = text.match(/RESPONSE:\s*([\s\S]+)$/i);
+      if (!responseMatch) {
+        // If no RESPONSE: tag found, use the entire text after cleaning
+        responseMatch = text.match(/ACTION:\s*ANSWER\s*([\s\S]+)$/i);
+      }
       if (responseMatch) {
         result.response = responseMatch[1].trim();
+      } else if (!result.response) {
+        // Fallback: use the entire text if it seems like an answer
+        result.response = text.trim();
       }
     }
 
+    console.log('Parsed result:', result);
     return result;
   }
 
@@ -881,7 +929,30 @@ Important rules:
           max_tokens: 2000
         });
 
+        // Log API call info
+        console.log('OpenAI API call info:', {
+          model: this.model,
+          iteration: iterations,
+          promptLength: currentPrompt.length,
+          hasCompletion: !!completion,
+          hasChoices: !!completion?.choices,
+          choicesLength: completion?.choices?.length || 0
+        });
+
         const aiResponse = completion.choices[0].message.content;
+
+        // Log the raw AI response for debugging
+        console.log('Raw AI response:', {
+          length: aiResponse?.length || 0,
+          preview: aiResponse?.substring(0, 200) || 'null/undefined',
+          iteration: iterations,
+          question: currentPrompt.substring(0, 100)
+        });
+
+        // Validate AI response
+        if (!aiResponse || typeof aiResponse !== 'string' || aiResponse.trim().length === 0) {
+          throw new Error('La IA devolvió una respuesta vacía o inválida');
+        }
 
         // Parse the AI response
         const parsed = this.parseAIResponse(aiResponse);
@@ -969,18 +1040,51 @@ Important rules:
           };
         }
 
-        // If the AI response doesn't match the expected format
-        throw new Error('La respuesta de la IA no tiene el formato esperado');
+        // If the AI response doesn't match the expected format, try to provide a helpful response
+        console.error('AI response format not recognized:', {
+          aiResponse: aiResponse,
+          parsed: parsed,
+          iterations: iterations,
+          hasAction: !!parsed.action,
+          hasSQL: !!parsed.sql,
+          hasQuery: !!parsed.query,
+          hasResponse: !!parsed.response
+        });
+
+        // Try to extract any useful information from the response
+        if (aiResponse && aiResponse.trim().length > 0) {
+          return {
+            answer: `La IA proporcionó la siguiente respuesta: ${aiResponse.trim()}. Si esto no responde tu pregunta, intenta reformularla de manera más específica.`,
+            metadata: {
+              iterations,
+              queriesExecuted: queryResults.length,
+              queries: queryResults,
+              rawResponse: aiResponse,
+              parseResult: parsed,
+              error: 'Formato de respuesta no reconocido'
+            }
+          };
+        }
+
+        throw new Error('La respuesta de la IA no tiene el formato esperado y está vacía');
       } catch (error) {
-        console.error('Error in AI processing:', error);
+        console.error('Error in AI processing:', {
+          message: error.message,
+          stack: error.stack,
+          iteration: iterations,
+          queriesExecuted: queryResults.length,
+          motorType: motorType
+        });
 
         return {
           answer: `Lo siento, no pude procesar tu consulta debido a un error: ${error.message}`,
           metadata: {
             error: error.message,
+            errorType: error.constructor.name,
             iterations,
             queriesExecuted: queryResults.length,
-            queries: queryResults
+            queries: queryResults,
+            motorType: motorType
           }
         };
       }

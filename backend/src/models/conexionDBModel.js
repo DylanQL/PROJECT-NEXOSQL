@@ -15,7 +15,7 @@ class ConexionDBModel {
   async getUserConnections(userId) {
     try {
       const connections = await ConexionDB.findAll({
-        where: { user_id: userId },
+        where: { usuarios_id: userId },
         include: [
           {
             model: MotorDB,
@@ -44,7 +44,7 @@ class ConexionDBModel {
       const connection = await ConexionDB.findOne({
         where: {
           id: connectionId,
-          user_id: userId
+          usuarios_id: userId
         },
         include: [
           {
@@ -72,7 +72,7 @@ class ConexionDBModel {
     try {
       const newConnection = await ConexionDB.create({
         ...connectionData,
-        user_id: userId
+        usuarios_id: userId
       });
 
       // Get the connection with motor information
@@ -97,7 +97,7 @@ class ConexionDBModel {
       const connection = await ConexionDB.findOne({
         where: {
           id: connectionId,
-          user_id: userId
+          usuarios_id: userId
         }
       });
 
@@ -129,7 +129,7 @@ class ConexionDBModel {
       const result = await ConexionDB.destroy({
         where: {
           id: connectionId,
-          user_id: userId
+          usuarios_id: userId
         }
       });
 
@@ -150,7 +150,7 @@ class ConexionDBModel {
     try {
       const connections = await ConexionDB.findAll({
         where: {
-          user_id: userId,
+          usuarios_id: userId,
           nombre: {
             [Op.like]: `%${searchTerm}%`
           }
