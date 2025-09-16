@@ -19,6 +19,9 @@ import Register from "./pages/Register";
 import Profile from "./pages/Profile";
 import CompleteProfile from "./pages/CompleteProfile";
 import Welcome from "./pages/Welcome";
+import Conexiones from "./pages/Conexiones";
+import CrearConexion from "./pages/CrearConexion";
+import EditarConexion from "./pages/EditarConexion";
 
 // Contexts
 import { AuthProvider } from "./contexts/AuthContext";
@@ -45,6 +48,9 @@ function App() {
               {/* Routes that require authentication and completed profile */}
               <Route element={<PrivateRoute requireProfile={true} />}>
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/conexiones" element={<Conexiones />} />
+                <Route path="/crear-conexion" element={<CrearConexion />} />
+                <Route path="/editar-conexion/:id" element={<EditarConexion />} />
               </Route>
 
               {/* Redirect for any unknown routes */}

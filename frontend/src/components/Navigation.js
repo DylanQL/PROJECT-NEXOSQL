@@ -43,13 +43,22 @@ const Navigation = () => {
                   Bienvenida
                 </Nav.Link>
                 {userProfile && (
-                  <Nav.Link
-                    as={Link}
-                    to="/profile"
-                    className={location.pathname === "/profile" ? "active" : ""}
-                  >
-                    Mi Perfil
-                  </Nav.Link>
+                  <>
+                    <Nav.Link
+                      as={Link}
+                      to="/profile"
+                      className={location.pathname === "/profile" ? "active" : ""}
+                    >
+                      Mi Perfil
+                    </Nav.Link>
+                    <Nav.Link
+                      as={Link}
+                      to="/conexiones"
+                      className={location.pathname.startsWith("/conexiones") || location.pathname.startsWith("/crear-conexion") || location.pathname.startsWith("/editar-conexion") ? "active" : ""}
+                    >
+                      Conexiones
+                    </Nav.Link>
+                  </>
                 )}
               </>
             )}

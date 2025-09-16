@@ -81,4 +81,114 @@ export const userApi = {
   },
 };
 
+// Database Engine related API calls
+export const motorDBApi = {
+  // Get all database engines
+  getAllMotores: async () => {
+    try {
+      const response = await api.get("/motores");
+      return { data: response.data, error: null };
+    } catch (error) {
+      return {
+        data: null,
+        error: error.response?.data?.error || "Error fetching database engines",
+      };
+    }
+  },
+
+  // Get a specific database engine
+  getMotorById: async (id) => {
+    try {
+      const response = await api.get(`/motores/${id}`);
+      return { data: response.data, error: null };
+    } catch (error) {
+      return {
+        data: null,
+        error: error.response?.data?.error || "Error fetching database engine",
+      };
+    }
+  },
+};
+
+// Database Connection related API calls
+export const conexionDBApi = {
+  // Get all user connections
+  getUserConnections: async () => {
+    try {
+      const response = await api.get("/conexiones");
+      return { data: response.data, error: null };
+    } catch (error) {
+      return {
+        data: null,
+        error: error.response?.data?.error || "Error fetching user connections",
+      };
+    }
+  },
+
+  // Get a specific connection
+  getConnectionById: async (id) => {
+    try {
+      const response = await api.get(`/conexiones/${id}`);
+      return { data: response.data, error: null };
+    } catch (error) {
+      return {
+        data: null,
+        error: error.response?.data?.error || "Error fetching connection",
+      };
+    }
+  },
+
+  // Create a new connection
+  createConnection: async (connectionData) => {
+    try {
+      const response = await api.post("/conexiones", connectionData);
+      return { data: response.data, error: null };
+    } catch (error) {
+      return {
+        data: null,
+        error: error.response?.data?.error || "Error creating connection",
+      };
+    }
+  },
+
+  // Update a connection
+  updateConnection: async (id, connectionData) => {
+    try {
+      const response = await api.put(`/conexiones/${id}`, connectionData);
+      return { data: response.data, error: null };
+    } catch (error) {
+      return {
+        data: null,
+        error: error.response?.data?.error || "Error updating connection",
+      };
+    }
+  },
+
+  // Delete a connection
+  deleteConnection: async (id) => {
+    try {
+      const response = await api.delete(`/conexiones/${id}`);
+      return { data: response.data, error: null };
+    } catch (error) {
+      return {
+        data: null,
+        error: error.response?.data?.error || "Error deleting connection",
+      };
+    }
+  },
+
+  // Test a database connection
+  testConnection: async (connectionData) => {
+    try {
+      const response = await api.post("/conexiones/test", connectionData);
+      return { data: response.data, error: null };
+    } catch (error) {
+      return {
+        data: null,
+        error: error.response?.data?.error || "Error testing connection",
+      };
+    }
+  },
+};
+
 export default api;
