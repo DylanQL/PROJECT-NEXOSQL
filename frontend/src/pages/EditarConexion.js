@@ -490,31 +490,7 @@ const EditarConexion = () => {
           </Alert>
         )}
 
-        {testResult && testResult.success && (
-          <div className="d-grid gap-2">
-            <Button
-              variant="success"
-              onClick={handleUpdateConnection}
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <Spinner
-                    as="span"
-                    animation="border"
-                    size="sm"
-                    role="status"
-                    aria-hidden="true"
-                    className="me-2"
-                  />
-                  Actualizando...
-                </>
-              ) : (
-                'Actualizar Conexión'
-              )}
-            </Button>
-          </div>
-        )}
+        {/* Eliminamos el botón extra de actualizar conexión */}
       </>
     );
   };

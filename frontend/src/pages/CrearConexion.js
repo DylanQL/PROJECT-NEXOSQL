@@ -485,6 +485,8 @@ const CrearConexion = () => {
             {testResult.message}
           </Alert>
         )}
+
+        {/* Nos aseguramos de que no haya botones duplicados aquí */}
       </>
     );
   };
@@ -526,6 +528,7 @@ const CrearConexion = () => {
                 variant="success"
                 onClick={handleSaveConnection}
                 disabled={loading}
+                className="btn-lg"
               >
                 {loading ? "Guardando..." : "Guardar Conexión"}
               </Button>
