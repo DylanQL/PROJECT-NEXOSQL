@@ -191,4 +191,36 @@ export const conexionDBApi = {
   },
 };
 
+// AI-related API calls
+export const aiApi = {
+  // Process a natural language query
+  processQuery: async (connectionId, question) => {
+    try {
+      const response = await api.post("/ai/query", {
+        connectionId,
+        question
+      });
+      return { data: response.data, error: null };
+    } catch (error) {
+      return {
+        data: null,
+        error: error.response?.data?.error || "Error processing query",
+      };
+    }
+  },
+
+  // Get schema information for a connection
+  getSchemaInfo: async (connectionId) => {
+    try {
+      const response = await api.get(`/ai/schema/${connectionId}`);
+      return { data: response.data, error: null };
+    } catch (error) {
+      return {
+        data: null,
+        error: error.response?.data?.error || "Error fetching schema information",
+      };
+    }
+  },
+};
+
 export default api;

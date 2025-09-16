@@ -3,6 +3,7 @@ const cors = require('cors');
 const userRoutes = require('./routes/userRoutes');
 const motorDBRoutes = require('./routes/motorDBRoutes');
 const conexionDBRoutes = require('./routes/conexionDBRoutes');
+const aiRoutes = require('./routes/aiRoutes');
 
 // Create Express app
 const app = express();
@@ -21,6 +22,7 @@ app.get('/', (req, res) => {
 app.use('/api/users', userRoutes);
 app.use('/api/motores', motorDBRoutes);
 app.use('/api/conexiones', conexionDBRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

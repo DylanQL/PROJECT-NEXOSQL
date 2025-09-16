@@ -25,12 +25,14 @@ import EditarConexion from "./pages/EditarConexion";
 
 // Contexts
 import { AuthProvider } from "./contexts/AuthContext";
+import { ConnectionProvider } from "./contexts/ConnectionContext";
 
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <div className="d-flex flex-column min-vh-100">
+      <ConnectionProvider>
+        <Router>
+          <div className="d-flex flex-column min-vh-100">
           <Navigation />
           <Container className="flex-grow-1">
             <Routes>
@@ -65,8 +67,9 @@ function App() {
               </p>
             </Container>
           </footer>
-        </div>
-      </Router>
+          </div>
+        </Router>
+      </ConnectionProvider>
     </AuthProvider>
   );
 }
