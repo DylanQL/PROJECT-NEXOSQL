@@ -504,7 +504,11 @@ const CrearConexion = () => {
 
           <div className="d-flex justify-content-between mt-4">
             {step > 1 && (
-              <Button variant="outline-secondary" onClick={handlePrevStep}>
+              <Button
+                variant="outline-secondary"
+                onClick={handlePrevStep}
+                size="md"
+              >
                 Anterior
               </Button>
             )}
@@ -513,6 +517,7 @@ const CrearConexion = () => {
               <Button
                 variant="primary"
                 onClick={handleNextStep}
+                size="md"
                 className={step > 1 ? '' : 'ms-auto'}
               >
                 Siguiente
@@ -522,7 +527,7 @@ const CrearConexion = () => {
                 variant="success"
                 onClick={handleSaveConnection}
                 disabled={loading}
-                className="btn-lg"
+                size="md"
               >
                 {loading ? "Guardando..." : "Guardar Conexión"}
               </Button>
