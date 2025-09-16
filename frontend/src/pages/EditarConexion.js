@@ -132,7 +132,12 @@ const EditarConexion = () => {
     setError('');
     setStep(prev => prev + 1);
 
-    // No automatic test connection anymore
+    // If moving to step 3 (verification), automatically test the connection
+    if (step === 2) {
+      setTimeout(() => {
+        handleTestConnection();
+      }, 500);
+    }
   };
 
   const handlePrevStep = () => {
@@ -458,29 +463,18 @@ const EditarConexion = () => {
               </Col>
             </Row>
 
-            <div className="mt-3">
-              <Button
-                variant="primary"
-                onClick={handleTestConnection}
-                disabled={testingConnection}
-              >
-                {testingConnection ? (
-                  <>
-                    <Spinner
-                      as="span"
-                      animation="border"
-                      size="sm"
-                      role="status"
-                      aria-hidden="true"
-                      className="me-2"
-                    />
-                    Probando conexión...
-                  </>
-                ) : (
-                  'Probar Conexión'
-                )}
-              </Button>
-            </div>
+            {testingConnection && (
+              <div className="mt-3 text-center">
+                <Spinner
+                  as="span"
+                  animation="border"
+                  role="status"
+                  variant="primary"
+                  className="me-2"
+                />
+                <span>Probando conexión automáticamente...</span>
+              </div>
+            )}
           </Card.Body>
         </Card>
 
