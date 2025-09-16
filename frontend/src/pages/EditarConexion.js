@@ -167,14 +167,18 @@ const EditarConexion = () => {
         success: true,
         message: 'Conexión exitosa a la base de datos'
       });
-      // No establecer success message aquí para evitar duplicación
+      // Solo limpiamos el mensaje de error, pero no establecemos success
+      // para evitar duplicación con el testResult
+      setError('');
     } catch (err) {
       console.error('Error testing connection:', err);
       setTestResult({
         success: false,
         message: err.message || 'Error al probar la conexión'
       });
-      // No establecer error message aquí para evitar duplicación
+      // Solo limpiamos el mensaje de éxito, pero no establecemos error
+      // para evitar duplicación con el testResult
+      setSuccess('');
     } finally {
       setTestingConnection(false);
     }
@@ -184,7 +188,6 @@ const EditarConexion = () => {
     try {
       setLoading(true);
       setError('');
-      setSuccess('');
 
       // Prepare connection data, only include password if provided
       const connectionData = {
@@ -207,10 +210,11 @@ const EditarConexion = () => {
         throw new Error(error);
       }
 
+      // Mostrar mensaje y navegar después de un breve retraso
       setSuccess('Conexión actualizada exitosamente');
       setTimeout(() => {
         navigate('/conexiones');
-      }, 2000);
+      }, 1500);
     } catch (err) {
       console.error('Error updating connection:', err);
       setError(err.message || 'Error al actualizar la conexión');

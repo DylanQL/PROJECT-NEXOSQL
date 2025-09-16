@@ -164,14 +164,18 @@ const CrearConexion = () => {
         success: true,
         message: 'Conexión exitosa a la base de datos'
       });
-      // No establecer success message aquí para evitar duplicación
+      // Solo limpiamos el mensaje de error, pero no establecemos success
+      // para evitar duplicación con el testResult
+      setError('');
     } catch (err) {
       console.error('Error testing connection:', err);
       setTestResult({
         success: false,
         message: err.message || 'Error al probar la conexión'
       });
-      // No establecer error message aquí para evitar duplicación
+      // Solo limpiamos el mensaje de éxito, pero no establecemos error
+      // para evitar duplicación con el testResult
+      setSuccess('');
     } finally {
       setTestingConnection(false);
     }
@@ -181,7 +185,6 @@ const CrearConexion = () => {
     try {
       setLoading(true);
       setError('');
-      setSuccess('');
 
       const connectionData = {
         nombre: formData.nombre,
@@ -204,10 +207,11 @@ const CrearConexion = () => {
         throw new Error(result.error);
       }
 
-      setSuccess(isEditMode ? 'Conexión actualizada exitosamente' : 'Conexión creada exitosamente');
+      // Mostrar mensaje y navegar después de un breve retraso
+      setSuccess('Conexión creada exitosamente');
       setTimeout(() => {
         navigate('/conexiones');
-      }, 2000);
+      }, 1500);
     } catch (err) {
       console.error('Error saving connection:', err);
       setError(err.message || 'Error al guardar la conexión');
