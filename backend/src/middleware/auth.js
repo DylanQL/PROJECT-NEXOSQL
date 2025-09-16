@@ -8,13 +8,20 @@ initializeFirebaseAdmin();
  * Middleware to verify Firebase token and attach user to the request
  */
 const verifyToken = async (req, res, next) => {
-  // For development mode, we can bypass authentication
+  // For development mode, we can have simplified authentication
   if (process.env.NODE_ENV !== "production") {
-    console.log("Development mode: Auth verification bypassed");
-    // In development, we'll simulate a Firebase UID if one is provided in headers
-    // This allows testing without actual Firebase tokens
-    const devFirebaseUid =
-      req.headers["x-firebase-uid"] || "dev-firebase-uid-123";
+    console.log("Development mode: Using simplified auth verification");
+
+    // Still require the x-firebase-uid header in development
+    // This ensures each user gets their own profile
+    const devFirebaseUid = req.headers["x-firebase-uid"];
+
+    if (!devFirebaseUid) {
+      return res
+        .status(401)
+        .json({ error: "Unauthorized: No Firebase UID provided in headers" });
+    }
+
     req.firebaseUid = devFirebaseUid;
 
     // Try to find the user in our database
@@ -26,7 +33,7 @@ const verifyToken = async (req, res, next) => {
         req.user = user;
       }
     } catch (err) {
-      console.log("Development mode: User lookup failed, continuing anyway");
+      console.error("Development mode: User lookup failed:", err);
     }
 
     return next();

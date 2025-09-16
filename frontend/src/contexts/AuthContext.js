@@ -19,35 +19,53 @@ export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(false);
 
   // Listen for auth state changes
   useEffect(() => {
     const auth = getAuthInstance();
-    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      console.log("Auth state changed, user:", user?.email);
       setCurrentUser(user);
-      setLoading(true);
+      setLoading(false);
 
       if (user) {
-        // Try to fetch user profile from our database
-        try {
-          const { data, error } = await userApi.getUserProfile();
-          if (!error) {
-            setUserProfile(data);
-          }
-        } catch (error) {
-          console.error("Error fetching user profile:", error);
-          // If we can't get the profile, it might not exist yet
-          setUserProfile(null);
-        }
+        // We'll fetch the profile in a separate effect
       } else {
         setUserProfile(null);
       }
-
-      setLoading(false);
     });
 
     return unsubscribe;
   }, []);
+
+  // Fetch user profile when currentUser changes
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (!currentUser) return;
+
+      setProfileLoading(true);
+      try {
+        console.log("Fetching profile for user:", currentUser.uid);
+        const { data, error } = await userApi.getUserProfile();
+
+        if (error) {
+          console.error("Error fetching profile:", error);
+          setUserProfile(null);
+        } else {
+          console.log("Profile loaded:", data);
+          setUserProfile(data);
+        }
+      } catch (error) {
+        console.error("Exception fetching profile:", error);
+        setUserProfile(null);
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+
+    fetchUserProfile();
+  }, [currentUser]);
 
   // Sign up with email and password
   const signup = async (email, password) => {
@@ -66,33 +84,62 @@ export function AuthProvider({ children }) {
 
   // Create user profile
   const createProfile = async (userData) => {
-    const result = await userApi.createUser(userData);
-    if (result.data && !result.error) {
-      setUserProfile(result.data.user);
+    try {
+      console.log("Creating profile with data:", userData);
+      const result = await userApi.createUser(userData);
+
+      if (result.data && !result.error) {
+        console.log("Profile created successfully:", result.data.user);
+        setUserProfile(result.data.user);
+      } else if (result.error) {
+        console.error("Error creating profile:", result.error);
+      }
+
+      return result;
+    } catch (error) {
+      console.error("Exception creating profile:", error);
+      return { data: null, error: error.message };
     }
-    return result;
   };
 
   // Update user profile
   const updateProfile = async (userData) => {
-    const result = await userApi.updateUserProfile(userData);
-    if (result.data && !result.error) {
-      setUserProfile(result.data.user);
+    try {
+      console.log("Updating profile with data:", userData);
+      const result = await userApi.updateUserProfile(userData);
+
+      if (result.data && !result.error) {
+        console.log("Profile updated successfully:", result.data.user);
+        setUserProfile(result.data.user);
+      } else if (result.error) {
+        console.error("Error updating profile:", result.error);
+      }
+
+      return result;
+    } catch (error) {
+      console.error("Exception updating profile:", error);
+      return { data: null, error: error.message };
     }
-    return result;
   };
 
   // Logout
   const logout = async () => {
-    const result = await logOut();
-    setUserProfile(null);
-    return result;
+    try {
+      console.log("Logging out user");
+      const result = await logOut();
+      setUserProfile(null);
+      return result;
+    } catch (error) {
+      console.error("Error during logout:", error);
+      return { success: false, error: error.message };
+    }
   };
 
   const value = {
     currentUser,
     userProfile,
-    loading,
+    loading: loading || profileLoading,
+    profileLoading,
     signup,
     login,
     loginWithGoogle,

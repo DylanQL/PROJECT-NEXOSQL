@@ -1,45 +1,56 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Form, Button, Alert } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import React, { useState, useEffect } from "react";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Form,
+  Button,
+  Alert,
+  Spinner,
+} from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 const CompleteProfile = () => {
-  const { currentUser, userProfile, createProfile } = useAuth();
+  const { currentUser, userProfile, createProfile, profileLoading } = useAuth();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    nombres: '',
-    apellidos: '',
-    telefono: '',
-    pais: '',
+    nombres: "",
+    apellidos: "",
+    telefono: "",
+    pais: "",
   });
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [submitAttempted, setSubmitAttempted] = useState(false);
 
   // Redirect if the user already has a complete profile
   useEffect(() => {
-    if (userProfile) {
-      navigate('/profile');
+    if (userProfile && !submitAttempted) {
+      console.log("User already has a profile, redirecting to profile page");
+      navigate("/profile");
     }
-  }, [userProfile, navigate]);
+  }, [userProfile, navigate, submitAttempted]);
 
   // Pre-fill email from Firebase auth
   useEffect(() => {
     if (currentUser) {
       // If there's a display name, try to parse it for first/last name
       if (currentUser.displayName) {
-        const nameParts = currentUser.displayName.split(' ');
+        const nameParts = currentUser.displayName.split(" ");
         if (nameParts.length >= 2) {
-          setFormData(prev => ({
+          setFormData((prev) => ({
             ...prev,
             nombres: nameParts[0],
-            apellidos: nameParts.slice(1).join(' ')
+            apellidos: nameParts.slice(1).join(" "),
           }));
         } else {
-          setFormData(prev => ({
+          setFormData((prev) => ({
             ...prev,
-            nombres: currentUser.displayName
+            nombres: currentUser.displayName,
           }));
         }
       }
@@ -48,22 +59,23 @@ const CompleteProfile = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmitAttempted(true);
 
     // Basic validation
     if (!formData.nombres || !formData.apellidos) {
-      return setError('Nombres y apellidos son campos requeridos');
+      return setError("Nombres y apellidos son campos requeridos");
     }
 
     try {
-      setError('');
+      setError("");
       setLoading(true);
 
       // Create user profile in our database with Firebase UID
@@ -72,25 +84,39 @@ const CompleteProfile = () => {
         email: currentUser.email,
       };
 
+      console.log("Submitting profile data:", userData);
       const result = await createProfile(userData);
 
       if (result.error) {
+        console.error("Error creating profile:", result.error);
         throw new Error(result.error);
       }
 
+      console.log("Profile created successfully:", result.data);
       setSuccess(true);
 
       // Redirect to profile page after a short delay
       setTimeout(() => {
-        navigate('/profile');
+        navigate("/profile");
       }, 1500);
-
     } catch (error) {
-      setError('Error al crear perfil: ' + error.message);
+      console.error("Exception in handleSubmit:", error);
+      setError("Error al crear perfil: " + error.message);
     } finally {
       setLoading(false);
     }
   };
+
+  if (profileLoading) {
+    return (
+      <Container className="py-5 text-center">
+        <Spinner animation="border" role="status" variant="primary">
+          <span className="visually-hidden">Cargando...</span>
+        </Spinner>
+        <p className="mt-3">Verificando estado del perfil...</p>
+      </Container>
+    );
+  }
 
   if (!currentUser) {
     return (
@@ -98,6 +124,11 @@ const CompleteProfile = () => {
         <Alert variant="warning">
           Debe iniciar sesión para completar su perfil.
         </Alert>
+        <div className="text-center mt-3">
+          <Button variant="primary" onClick={() => navigate("/login")}>
+            Iniciar Sesión
+          </Button>
+        </div>
       </Container>
     );
   }
@@ -110,8 +141,17 @@ const CompleteProfile = () => {
             <Card.Body className="p-4">
               <h2 className="text-center mb-4">Completar Perfil</h2>
 
+              <div className="mb-3 text-center text-muted">
+                <small>Cuenta de Firebase: {currentUser.email}</small>
+                {currentUser.uid && (
+                  <small className="d-block">ID: {currentUser.uid}</small>
+                )}
+              </div>
+
               {error && <Alert variant="danger">{error}</Alert>}
-              {success && <Alert variant="success">¡Perfil creado exitosamente!</Alert>}
+              {success && (
+                <Alert variant="success">¡Perfil creado exitosamente!</Alert>
+              )}
 
               <Form onSubmit={handleSubmit}>
                 <Form.Group className="mb-3" controlId="nombres">
@@ -174,8 +214,20 @@ const CompleteProfile = () => {
                 </Form.Group>
 
                 <div className="d-grid gap-2">
-                  <Button variant="primary" type="submit" disabled={loading || success}>
-                    {loading ? 'Guardando...' : 'Guardar Perfil'}
+                  <Button
+                    variant="primary"
+                    type="submit"
+                    disabled={loading || success}
+                  >
+                    {loading ? "Guardando..." : "Guardar Perfil"}
+                  </Button>
+                  <Button
+                    variant="outline-secondary"
+                    className="mt-2"
+                    onClick={() => navigate("/")}
+                    disabled={loading || success}
+                  >
+                    Cancelar
                   </Button>
                 </div>
               </Form>

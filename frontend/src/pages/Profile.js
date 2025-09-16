@@ -1,17 +1,28 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Form, Button, Alert } from 'react-bootstrap';
-import { useAuth } from '../contexts/AuthContext';
+import React, { useState, useEffect } from "react";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Form,
+  Button,
+  Alert,
+  Spinner,
+} from "react-bootstrap";
+import { useAuth } from "../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const Profile = () => {
-  const { userProfile, updateProfile } = useAuth();
+  const { userProfile, updateProfile, currentUser, profileLoading } = useAuth();
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    nombres: '',
-    apellidos: '',
-    telefono: '',
-    pais: '',
+    nombres: "",
+    apellidos: "",
+    telefono: "",
+    pais: "",
   });
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -20,19 +31,19 @@ const Profile = () => {
   useEffect(() => {
     if (userProfile) {
       setFormData({
-        nombres: userProfile.nombres || '',
-        apellidos: userProfile.apellidos || '',
-        telefono: userProfile.telefono || '',
-        pais: userProfile.pais || '',
+        nombres: userProfile.nombres || "",
+        apellidos: userProfile.apellidos || "",
+        telefono: userProfile.telefono || "",
+        pais: userProfile.pais || "",
       });
     }
   }, [userProfile]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -41,11 +52,11 @@ const Profile = () => {
 
     // Basic validation
     if (!formData.nombres || !formData.apellidos) {
-      return setError('Nombres y apellidos son campos requeridos');
+      return setError("Nombres y apellidos son campos requeridos");
     }
 
     try {
-      setError('');
+      setError("");
       setLoading(true);
 
       const result = await updateProfile(formData);
@@ -61,9 +72,8 @@ const Profile = () => {
       setTimeout(() => {
         setSuccess(false);
       }, 3000);
-
     } catch (error) {
-      setError('Error al actualizar perfil: ' + error.message);
+      setError("Error al actualizar perfil: " + error.message);
     } finally {
       setLoading(false);
     }
@@ -71,16 +81,46 @@ const Profile = () => {
 
   const toggleEdit = () => {
     setIsEditing(!isEditing);
-    setError('');
+    setError("");
     setSuccess(false);
   };
+
+  if (profileLoading) {
+    return (
+      <Container className="py-5 text-center">
+        <Spinner animation="border" role="status" variant="primary">
+          <span className="visually-hidden">Cargando...</span>
+        </Spinner>
+        <p className="mt-3">Cargando información de perfil...</p>
+      </Container>
+    );
+  }
+
+  if (!currentUser) {
+    return (
+      <Container className="py-5">
+        <Alert variant="warning">
+          No has iniciado sesión. Por favor inicia sesión para ver tu perfil.
+        </Alert>
+        <div className="text-center mt-3">
+          <Button onClick={() => navigate("/login")}>Iniciar Sesión</Button>
+        </div>
+      </Container>
+    );
+  }
 
   if (!userProfile) {
     return (
       <Container className="py-5">
         <Alert variant="warning">
-          No se encontró información de perfil. Por favor complete su perfil primero.
+          No se encontró información de perfil. Por favor complete su perfil
+          primero.
         </Alert>
+        <div className="text-center mt-3">
+          <Button onClick={() => navigate("/complete-profile")}>
+            Completar Perfil
+          </Button>
+        </div>
       </Container>
     );
   }
@@ -93,17 +133,26 @@ const Profile = () => {
             <Card.Body className="p-4">
               <div className="d-flex justify-content-between align-items-center mb-4">
                 <h2 className="mb-0">Mi Perfil</h2>
-                <Button
-                  variant={isEditing ? "secondary" : "primary"}
-                  onClick={toggleEdit}
-                  disabled={loading}
-                >
-                  {isEditing ? "Cancelar" : "Editar Perfil"}
-                </Button>
+                <div>
+                  <small className="text-muted me-3">
+                    Usuario: {currentUser.email}
+                  </small>
+                  <Button
+                    variant={isEditing ? "secondary" : "primary"}
+                    onClick={toggleEdit}
+                    disabled={loading}
+                  >
+                    {isEditing ? "Cancelar" : "Editar Perfil"}
+                  </Button>
+                </div>
               </div>
 
               {error && <Alert variant="danger">{error}</Alert>}
-              {success && <Alert variant="success">¡Perfil actualizado exitosamente!</Alert>}
+              {success && (
+                <Alert variant="success">
+                  ¡Perfil actualizado exitosamente!
+                </Alert>
+              )}
 
               <Form onSubmit={handleSubmit}>
                 <Row>
@@ -178,7 +227,7 @@ const Profile = () => {
                 {isEditing && (
                   <div className="d-grid gap-2 mt-4">
                     <Button variant="success" type="submit" disabled={loading}>
-                      {loading ? 'Guardando...' : 'Guardar Cambios'}
+                      {loading ? "Guardando..." : "Guardar Cambios"}
                     </Button>
                   </div>
                 )}
@@ -186,13 +235,16 @@ const Profile = () => {
 
               <div className="mt-4">
                 <Card.Text>
-                  <strong>Fecha de registro:</strong> {new Date(userProfile.createdAt).toLocaleDateString()}
+                  <strong>Fecha de registro:</strong>{" "}
+                  {new Date(userProfile.createdAt).toLocaleDateString()}
                 </Card.Text>
-                {userProfile.updatedAt && userProfile.updatedAt !== userProfile.createdAt && (
-                  <Card.Text>
-                    <strong>Última actualización:</strong> {new Date(userProfile.updatedAt).toLocaleDateString()}
-                  </Card.Text>
-                )}
+                {userProfile.updatedAt &&
+                  userProfile.updatedAt !== userProfile.createdAt && (
+                    <Card.Text>
+                      <strong>Última actualización:</strong>{" "}
+                      {new Date(userProfile.updatedAt).toLocaleDateString()}
+                    </Card.Text>
+                  )}
               </div>
             </Card.Body>
           </Card>
