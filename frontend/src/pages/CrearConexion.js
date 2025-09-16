@@ -468,7 +468,7 @@ const CrearConexion = () => {
                   variant="primary"
                   className="me-2"
                 />
-                <span>Probando conexión automáticamente...</span>
+                <span>Verificando conexión a la base de datos...</span>
               </div>
             )}
           </Card.Body>

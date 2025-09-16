@@ -151,7 +151,8 @@ const updateConnection = async (req, res) => {
     if (host) conexion.host = host;
     if (port) conexion.port = port;
     if (username) conexion.username = username;
-    if (password) conexion.password = password;
+    // Solo actualizar contraseña si se proporciona una (no vacía)
+    if (password !== undefined && password !== '') conexion.password = password;
     if (database_name) conexion.database_name = database_name;
     if (estado) conexion.estado = estado;
 
@@ -206,12 +207,22 @@ const deleteConnection = async (req, res) => {
  */
 const testDatabaseConnection = async (req, res) => {
   try {
-    const { motores_db_id, host, port, username, password, database_name } = req.body;
+    const { motores_db_id, host, port, username, password, database_name, connectionId } = req.body;
 
     // Check if motor exists
     const motor = await MotorDB.findByPk(motores_db_id);
     if (!motor) {
       return res.status(404).json({ error: 'Motor de base de datos no encontrado' });
+    }
+
+    // Si estamos editando una conexión existente y no se proporcionó contraseña,
+    // obtener la contraseña almacenada de la conexión existente
+    let testPassword = password;
+    if ((password === '' || !password) && connectionId) {
+      const existingConnection = await ConexionDB.findByPk(connectionId);
+      if (existingConnection) {
+        testPassword = existingConnection.password;
+      }
     }
 
     // Test the connection
@@ -220,7 +231,7 @@ const testDatabaseConnection = async (req, res) => {
       host,
       port,
       username,
-      password,
+      password: testPassword,
       database: database_name
     });
 

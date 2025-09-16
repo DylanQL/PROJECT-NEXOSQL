@@ -158,9 +158,13 @@ const EditarConexion = () => {
         host: formData.host,
         port: formData.port,
         username: formData.username,
-        password: formData.password || originalData?.password,
-        database_name: formData.database_name
+        password: formData.password || "",
+        database_name: formData.database_name,
+        connectionId: id // Incluimos el ID de la conexión para que el backend pueda recuperar la contraseña original si está vacía
       };
+
+      // Mostrar mensaje de verificación
+      console.log("Verificando conexión con los datos proporcionados...");
 
       const { data, error } = await conexionDBApi.testConnection(connectionData);
 
@@ -208,6 +212,8 @@ const EditarConexion = () => {
       if (formData.password) {
         connectionData.password = formData.password;
       }
+
+      console.log("Actualización de conexión:", connectionData);
 
       const { data, error } = await conexionDBApi.updateConnection(id, connectionData);
 
@@ -472,7 +478,7 @@ const EditarConexion = () => {
                   variant="primary"
                   className="me-2"
                 />
-                <span>Probando conexión automáticamente...</span>
+                <span>Verificando conexión a la base de datos...</span>
               </div>
             )}
           </Card.Body>
@@ -546,7 +552,7 @@ const EditarConexion = () => {
                 {loading ? "Guardando..." : "Guardar Conexión"}
               </Button>
             )}
-            {/* El botón de guardar ahora está integrado en la sección de navegación */}
+            {/* El botón de guardar está en la sección de navegación y aparece siempre en el paso 3 */}
           </div>
         </Card.Body>
       </Card>
