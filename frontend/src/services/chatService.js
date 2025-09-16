@@ -1,6 +1,6 @@
-import api, { aiApi } from './api';
+import api, { aiApi } from "./api";
 
-const CHATS_STORAGE_KEY = 'nexosql_chats';
+const CHATS_STORAGE_KEY = "nexosql_chats";
 
 class ChatService {
   constructor() {
@@ -17,7 +17,7 @@ class ChatService {
       const allChats = this._getAllChatsFromStorage();
       return allChats[connectionId] || [];
     } catch (error) {
-      console.error('Error getting chats:', error);
+      console.error("Error getting chats:", error);
       return [];
     }
   }
@@ -26,15 +26,15 @@ class ChatService {
   getChatById(connectionId, chatId) {
     try {
       const chats = this.getChats(connectionId);
-      return chats.find(chat => chat.id === chatId) || null;
+      return chats.find((chat) => chat.id === chatId) || null;
     } catch (error) {
-      console.error('Error getting chat by ID:', error);
+      console.error("Error getting chat by ID:", error);
       return null;
     }
   }
 
   // Create a new chat
-  createChat(connectionId, title = 'Nueva consulta') {
+  createChat(connectionId, title = "Nueva consulta") {
     try {
       const chats = this.getChats(connectionId);
       const newChat = {
@@ -42,7 +42,7 @@ class ChatService {
         title,
         messages: [],
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
 
       const updatedChats = [newChat, ...chats];
@@ -50,8 +50,8 @@ class ChatService {
 
       return newChat;
     } catch (error) {
-      console.error('Error creating chat:', error);
-      throw new Error('No se pudo crear el chat');
+      console.error("Error creating chat:", error);
+      throw new Error("No se pudo crear el chat");
     }
   }
 
@@ -59,12 +59,12 @@ class ChatService {
   deleteChat(connectionId, chatId) {
     try {
       const chats = this.getChats(connectionId);
-      const updatedChats = chats.filter(chat => chat.id !== chatId);
+      const updatedChats = chats.filter((chat) => chat.id !== chatId);
       this._saveChatsToStorage(connectionId, updatedChats);
       return true;
     } catch (error) {
-      console.error('Error deleting chat:', error);
-      throw new Error('No se pudo eliminar el chat');
+      console.error("Error deleting chat:", error);
+      throw new Error("No se pudo eliminar el chat");
     }
   }
 
@@ -72,22 +72,22 @@ class ChatService {
   renameChat(connectionId, chatId, newTitle) {
     try {
       const chats = this.getChats(connectionId);
-      const updatedChats = chats.map(chat => {
+      const updatedChats = chats.map((chat) => {
         if (chat.id === chatId) {
           return {
             ...chat,
             title: newTitle,
-            updatedAt: new Date().toISOString()
+            updatedAt: new Date().toISOString(),
           };
         }
         return chat;
       });
 
       this._saveChatsToStorage(connectionId, updatedChats);
-      return updatedChats.find(chat => chat.id === chatId);
+      return updatedChats.find((chat) => chat.id === chatId);
     } catch (error) {
-      console.error('Error renaming chat:', error);
-      throw new Error('No se pudo renombrar el chat');
+      console.error("Error renaming chat:", error);
+      throw new Error("No se pudo renombrar el chat");
     }
   }
 
@@ -95,28 +95,28 @@ class ChatService {
   addMessage(connectionId, chatId, message) {
     try {
       const chats = this.getChats(connectionId);
-      const updatedChats = chats.map(chat => {
+      const updatedChats = chats.map((chat) => {
         if (chat.id === chatId) {
           const newMessage = {
-            id: Date.now().toString(),
+            id: message.id || Date.now().toString(),
             ...message,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
           };
 
           return {
             ...chat,
             messages: [...chat.messages, newMessage],
-            updatedAt: new Date().toISOString()
+            updatedAt: new Date().toISOString(),
           };
         }
         return chat;
       });
 
       this._saveChatsToStorage(connectionId, updatedChats);
-      return updatedChats.find(chat => chat.id === chatId);
+      return updatedChats.find((chat) => chat.id === chatId);
     } catch (error) {
-      console.error('Error adding message:', error);
-      throw new Error('No se pudo añadir el mensaje');
+      console.error("Error adding message:", error);
+      throw new Error("No se pudo añadir el mensaje");
     }
   }
 
@@ -124,19 +124,21 @@ class ChatService {
   async sendQuestion(connectionId, chatId, question) {
     let loadingMessageId;
     try {
-      // Add user message to chat
+      // Add user message to chat with unique ID
+      const userMessageId = `user_${Date.now()}`;
       this.addMessage(connectionId, chatId, {
-        type: 'user',
-        content: question
+        id: userMessageId,
+        type: "user",
+        content: question,
       });
 
       // Add a loading message that will be replaced later
-      loadingMessageId = Date.now().toString();
+      loadingMessageId = `assistant_${Date.now()}`;
       this.addMessage(connectionId, chatId, {
         id: loadingMessageId,
-        type: 'assistant',
-        content: '...',
-        loading: true
+        type: "assistant",
+        content: "...",
+        loading: true,
       });
 
       // Make API call to the backend AI service
@@ -148,20 +150,20 @@ class ChatService {
 
       // Replace loading message with actual response
       this._updateAssistantMessage(connectionId, chatId, loadingMessageId, {
-        type: 'assistant',
+        type: "assistant",
         content: data.answer,
-        metadata: data.metadata
+        metadata: data.metadata,
       });
 
       return data;
     } catch (error) {
-      console.error('Error sending question:', error);
+      console.error("Error sending question:", error);
 
       // Update loading message with error
       this._updateAssistantMessage(connectionId, chatId, loadingMessageId, {
-        type: 'assistant',
+        type: "assistant",
         content: `Error: No se pudo procesar tu consulta. ${error.message}`,
-        error: true
+        error: true,
       });
 
       throw error;
@@ -172,14 +174,14 @@ class ChatService {
   _updateAssistantMessage(connectionId, chatId, messageId, updatedMessage) {
     try {
       const chats = this.getChats(connectionId);
-      const updatedChats = chats.map(chat => {
+      const updatedChats = chats.map((chat) => {
         if (chat.id === chatId) {
-          const updatedMessages = chat.messages.map(msg => {
+          const updatedMessages = chat.messages.map((msg) => {
             if (msg.id === messageId) {
               return {
                 ...msg,
                 ...updatedMessage,
-                loading: false
+                loading: false,
               };
             }
             return msg;
@@ -188,16 +190,16 @@ class ChatService {
           return {
             ...chat,
             messages: updatedMessages,
-            updatedAt: new Date().toISOString()
+            updatedAt: new Date().toISOString(),
           };
         }
         return chat;
       });
 
       this._saveChatsToStorage(connectionId, updatedChats);
-      return updatedChats.find(chat => chat.id === chatId);
+      return updatedChats.find((chat) => chat.id === chatId);
     } catch (error) {
-      console.error('Error updating assistant message:', error);
+      console.error("Error updating assistant message:", error);
     }
   }
 
@@ -214,7 +216,7 @@ class ChatService {
       allChats[connectionId] = chats;
       localStorage.setItem(CHATS_STORAGE_KEY, JSON.stringify(allChats));
     } catch (error) {
-      console.error('Error saving chats to storage:', error);
+      console.error("Error saving chats to storage:", error);
     }
   }
 }
