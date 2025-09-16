@@ -167,14 +167,14 @@ const EditarConexion = () => {
         success: true,
         message: 'Conexión exitosa a la base de datos'
       });
-      setSuccess('Conexión exitosa a la base de datos');
+      // No establecer success message aquí para evitar duplicación
     } catch (err) {
       console.error('Error testing connection:', err);
       setTestResult({
         success: false,
         message: err.message || 'Error al probar la conexión'
       });
-      setError(err.message || 'Error al probar la conexión');
+      // No establecer error message aquí para evitar duplicación
     } finally {
       setTestingConnection(false);
     }
