@@ -22,54 +22,75 @@ import Welcome from "./pages/Welcome";
 import Conexiones from "./pages/Conexiones";
 import CrearConexion from "./pages/CrearConexion";
 import EditarConexion from "./pages/EditarConexion";
+import Subscriptions from "./pages/Subscriptions";
+import SubscriptionSuccess from "./pages/SubscriptionSuccess";
+import SubscriptionCancel from "./pages/SubscriptionCancel";
 
 // Contexts
 import { AuthProvider } from "./contexts/AuthContext";
 import { ConnectionProvider } from "./contexts/ConnectionContext";
+import { SubscriptionProvider } from "./contexts/SubscriptionContext";
 
 function App() {
   return (
     <AuthProvider>
-      <ConnectionProvider>
-        <Router>
-          <div className="d-flex flex-column min-vh-100">
-          <Navigation />
-          <Container className="flex-grow-1">
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<Home />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
+      <SubscriptionProvider>
+        <ConnectionProvider>
+          <Router>
+            <div className="d-flex flex-column min-vh-100">
+              <Navigation />
+              <Container className="flex-grow-1">
+                <Routes>
+                  {/* Public Routes */}
+                  <Route path="/" element={<Home />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
 
-              {/* Routes that require authentication */}
-              <Route element={<PrivateRoute />}>
-                <Route path="/welcome" element={<Welcome />} />
-                <Route path="/complete-profile" element={<CompleteProfile />} />
-              </Route>
+                  {/* Routes that require authentication */}
+                  <Route element={<PrivateRoute />}>
+                    <Route path="/welcome" element={<Welcome />} />
+                    <Route
+                      path="/complete-profile"
+                      element={<CompleteProfile />}
+                    />
+                  </Route>
 
-              {/* Routes that require authentication and completed profile */}
-              <Route element={<PrivateRoute requireProfile={true} />}>
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/conexiones" element={<Conexiones />} />
-                <Route path="/crear-conexion" element={<CrearConexion />} />
-                <Route path="/editar-conexion/:id" element={<EditarConexion />} />
-              </Route>
+                  {/* Routes that require authentication and completed profile */}
+                  <Route element={<PrivateRoute requireProfile={true} />}>
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/subscriptions" element={<Subscriptions />} />
+                    <Route
+                      path="/subscription/success"
+                      element={<SubscriptionSuccess />}
+                    />
+                    <Route
+                      path="/subscription/cancel"
+                      element={<SubscriptionCancel />}
+                    />
+                    <Route path="/conexiones" element={<Conexiones />} />
+                    <Route path="/crear-conexion" element={<CrearConexion />} />
+                    <Route
+                      path="/editar-conexion/:id"
+                      element={<EditarConexion />}
+                    />
+                  </Route>
 
-              {/* Redirect for any unknown routes */}
-              <Route path="*" element={<Navigate to="/" />} />
-            </Routes>
-          </Container>
-          <footer className="bg-dark text-center text-white py-3 mt-auto">
-            <Container>
-              <p className="mb-0">
-                &copy; {new Date().getFullYear()} NexoSQL. Todos los derechos
-                reservados.
-              </p>
-            </Container>
-          </footer>
-          </div>
-        </Router>
-      </ConnectionProvider>
+                  {/* Redirect for any unknown routes */}
+                  <Route path="*" element={<Navigate to="/" />} />
+                </Routes>
+              </Container>
+              <footer className="bg-dark text-center text-white py-3 mt-auto">
+                <Container>
+                  <p className="mb-0">
+                    &copy; {new Date().getFullYear()} NexoSQL. Todos los
+                    derechos reservados.
+                  </p>
+                </Container>
+              </footer>
+            </div>
+          </Router>
+        </ConnectionProvider>
+      </SubscriptionProvider>
     </AuthProvider>
   );
 }

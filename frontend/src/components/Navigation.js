@@ -2,9 +2,11 @@ import React from "react";
 import { Navbar, Nav, Container, Button, Badge } from "react-bootstrap";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useSubscription } from "../contexts/SubscriptionContext";
 
 const Navigation = () => {
   const { currentUser, userProfile, logout } = useAuth();
+  const { hasActiveSubscription, currentSubscription } = useSubscription();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -47,14 +49,36 @@ const Navigation = () => {
                     <Nav.Link
                       as={Link}
                       to="/profile"
-                      className={location.pathname === "/profile" ? "active" : ""}
+                      className={
+                        location.pathname === "/profile" ? "active" : ""
+                      }
                     >
                       Mi Perfil
                     </Nav.Link>
                     <Nav.Link
                       as={Link}
+                      to="/subscriptions"
+                      className={
+                        location.pathname === "/subscriptions" ? "active" : ""
+                      }
+                    >
+                      Suscripciones
+                      {hasActiveSubscription && (
+                        <Badge bg="success" className="ms-1">
+                          ✓
+                        </Badge>
+                      )}
+                    </Nav.Link>
+                    <Nav.Link
+                      as={Link}
                       to="/conexiones"
-                      className={location.pathname.startsWith("/conexiones") || location.pathname.startsWith("/crear-conexion") || location.pathname.startsWith("/editar-conexion") ? "active" : ""}
+                      className={
+                        location.pathname.startsWith("/conexiones") ||
+                        location.pathname.startsWith("/crear-conexion") ||
+                        location.pathname.startsWith("/editar-conexion")
+                          ? "active"
+                          : ""
+                      }
                     >
                       Conexiones
                     </Nav.Link>
@@ -70,6 +94,21 @@ const Navigation = () => {
                   <Badge bg="success" className="me-2">
                     Conectado
                   </Badge>
+                  {hasActiveSubscription && currentSubscription && (
+                    <Badge
+                      bg={
+                        currentSubscription.planType === "oro"
+                          ? "warning"
+                          : currentSubscription.planType === "plata"
+                            ? "info"
+                            : "secondary"
+                      }
+                      className="me-2"
+                    >
+                      {currentSubscription.planType.charAt(0).toUpperCase() +
+                        currentSubscription.planType.slice(1)}
+                    </Badge>
+                  )}
                   {userProfile
                     ? `${userProfile.nombres} ${userProfile.apellidos}`
                     : currentUser.email}

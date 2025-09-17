@@ -8,6 +8,7 @@ import {
   Button,
   Alert,
   Spinner,
+  Badge,
 } from "react-bootstrap";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -26,6 +27,10 @@ const Profile = () => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [subscription, setSubscription] = useState(null);
+  const [subscriptionLoading, setSubscriptionLoading] = useState(true);
+  const [syncLoading, setSyncLoading] = useState(false);
+  const [syncSuccess, setSyncSuccess] = useState("");
 
   // Load user profile data
   useEffect(() => {
@@ -38,6 +43,30 @@ const Profile = () => {
       });
     }
   }, [userProfile]);
+
+  // Load subscription data
+  useEffect(() => {
+    if (currentUser) {
+      loadSubscription();
+    }
+  }, [currentUser]);
+
+  const loadSubscription = async () => {
+    try {
+      setSubscriptionLoading(true);
+      const subscriptionService = (
+        await import("../services/subscriptionService")
+      ).default;
+      const data = await subscriptionService.getCurrentSubscription();
+      if (data.success) {
+        setSubscription(data.data);
+      }
+    } catch (err) {
+      console.error("Error loading subscription:", err);
+    } finally {
+      setSubscriptionLoading(false);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -83,6 +112,37 @@ const Profile = () => {
     setIsEditing(!isEditing);
     setError("");
     setSuccess(false);
+  };
+
+  const handleSyncSubscription = async () => {
+    if (!subscription?.subscriptionId) return;
+
+    try {
+      setSyncLoading(true);
+      setError("");
+      setSyncSuccess("");
+
+      const subscriptionService = (
+        await import("../services/subscriptionService")
+      ).default;
+
+      const result = await subscriptionService.syncSubscription(
+        subscription.subscriptionId,
+      );
+
+      if (result.success) {
+        setSyncSuccess("Suscripción sincronizada correctamente");
+        // Reload subscription data
+        await loadSubscription();
+
+        // Clear success message after 3 seconds
+        setTimeout(() => setSyncSuccess(""), 3000);
+      }
+    } catch (err) {
+      setError("Error al sincronizar suscripción: " + err.message);
+    } finally {
+      setSyncLoading(false);
+    }
   };
 
   if (profileLoading) {
@@ -246,6 +306,157 @@ const Profile = () => {
                     </Card.Text>
                   )}
               </div>
+            </Card.Body>
+          </Card>
+
+          {/* Subscription Section */}
+          <Card className="shadow mt-4">
+            <Card.Body className="p-4">
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h3 className="mb-0">Mi Suscripción</h3>
+                <Button
+                  variant="outline-primary"
+                  size="sm"
+                  onClick={() => navigate("/subscriptions")}
+                >
+                  Gestionar Suscripción
+                </Button>
+              </div>
+
+              {subscriptionLoading ? (
+                <div className="text-center py-3">
+                  <Spinner animation="border" size="sm" />
+                  <p className="text-muted mt-2">
+                    Cargando información de suscripción...
+                  </p>
+                </div>
+              ) : subscription ? (
+                <div>
+                  <Row className="mb-3">
+                    <Col md={6}>
+                      <Card.Text>
+                        <strong>Plan Actual:</strong>{" "}
+                        <Badge
+                          bg={
+                            subscription.planType === "oro"
+                              ? "warning"
+                              : subscription.planType === "plata"
+                                ? "info"
+                                : "secondary"
+                          }
+                        >
+                          {subscription.planType.charAt(0).toUpperCase() +
+                            subscription.planType.slice(1)}
+                        </Badge>
+                      </Card.Text>
+                      <Card.Text>
+                        <strong>Estado:</strong>{" "}
+                        <Badge
+                          bg={
+                            subscription.status === "active"
+                              ? "success"
+                              : subscription.status === "pending"
+                                ? "warning"
+                                : "danger"
+                          }
+                        >
+                          {subscription.status === "active"
+                            ? "Activa"
+                            : subscription.status === "pending"
+                              ? "Pendiente"
+                              : subscription.status}
+                        </Badge>
+                      </Card.Text>
+                    </Col>
+                    <Col md={6}>
+                      <Card.Text>
+                        <strong>Precio:</strong> ${subscription.price}/mes
+                      </Card.Text>
+                      {subscription.nextBillingDate && (
+                        <Card.Text>
+                          <strong>Próximo cobro:</strong>{" "}
+                          {new Date(
+                            subscription.nextBillingDate,
+                          ).toLocaleDateString("es-ES")}
+                        </Card.Text>
+                      )}
+                    </Col>
+                  </Row>
+
+                  {subscription.status === "active" && (
+                    <Alert variant="success" className="mb-0">
+                      <i className="bi bi-check-circle me-2"></i>
+                      Tu suscripción está activa. Disfruta de todas las
+                      funciones premium de NexoSQL.
+                    </Alert>
+                  )}
+
+                  {subscription.status === "pending" && (
+                    <Alert variant="warning" className="mb-0">
+                      <i className="bi bi-clock me-2"></i>
+                      Tu suscripción está pendiente de activación. Por favor,
+                      completa el proceso de pago.
+                      <div className="mt-2">
+                        <small className="d-block text-muted mb-2">
+                          Si ya completaste el pago, puedes sincronizar tu
+                          suscripción:
+                        </small>
+                        <Button
+                          variant="outline-warning"
+                          size="sm"
+                          onClick={handleSyncSubscription}
+                          disabled={syncLoading}
+                        >
+                          {syncLoading ? (
+                            <>
+                              <Spinner
+                                animation="border"
+                                size="sm"
+                                className="me-1"
+                              />
+                              Sincronizando...
+                            </>
+                          ) : (
+                            <>
+                              <i className="bi bi-arrow-clockwise me-1"></i>
+                              Sincronizar con PayPal
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </Alert>
+                  )}
+
+                  {syncSuccess && (
+                    <Alert variant="success" className="mb-0 mt-2">
+                      <i className="bi bi-check-circle me-2"></i>
+                      {syncSuccess}
+                    </Alert>
+                  )}
+                </div>
+              ) : (
+                <div>
+                  <Alert variant="info">
+                    <h6>
+                      <i className="bi bi-info-circle me-2"></i>Sin Suscripción
+                      Activa
+                    </h6>
+                    <p className="mb-3">
+                      Actualmente no tienes una suscripción activa. Para acceder
+                      a todas las funciones premium de NexoSQL, elige uno de
+                      nuestros planes.
+                    </p>
+                    <div className="d-grid gap-2 d-md-flex">
+                      <Button
+                        variant="primary"
+                        onClick={() => navigate("/subscriptions")}
+                      >
+                        Ver Planes de Suscripción
+                      </Button>
+                    </div>
+                  </Alert>
+                </div>
+              )}
             </Card.Body>
           </Card>
         </Col>

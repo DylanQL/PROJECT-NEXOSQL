@@ -1,0 +1,738 @@
+const User = require("../models/User");
+const Subscription = require("../models/Subscription");
+const paypalService = require("../services/paypalService");
+
+class SubscriptionController {
+  /**
+   * Get available subscription plans
+   */
+  async getPlans(req, res) {
+    try {
+      const plans = paypalService.getAvailablePlans();
+      res.json({
+        success: true,
+        data: plans,
+      });
+    } catch (error) {
+      console.error("Error getting plans:", error);
+      res.status(500).json({
+        success: false,
+        error: "Error al obtener los planes de suscripción",
+      });
+    }
+  }
+
+  /**
+   * Get user's current subscription
+   */
+  async getUserSubscription(req, res) {
+    try {
+      const userId = req.user.id;
+
+      const subscription = await Subscription.findOne({
+        where: { userId },
+        order: [["createdAt", "DESC"]],
+      });
+
+      if (!subscription) {
+        return res.json({
+          success: true,
+          data: null,
+          hasActiveSubscription: false,
+        });
+      }
+
+      res.json({
+        success: true,
+        data: subscription,
+        hasActiveSubscription: subscription.isActive(),
+      });
+    } catch (error) {
+      console.error("Error getting user subscription:", error);
+      res.status(500).json({
+        success: false,
+        error: "Error al obtener la suscripción del usuario",
+      });
+    }
+  }
+
+  /**
+   * Create a new subscription
+   */
+  async createSubscription(req, res) {
+    try {
+      const { planType } = req.body;
+      const userId = req.user.id;
+
+      if (!planType || !["bronce", "plata", "oro"].includes(planType)) {
+        return res.status(400).json({
+          success: false,
+          error: "Tipo de plan inválido",
+        });
+      }
+
+      // Check if user already has an active subscription
+      const existingSubscription = await req.user.getActiveSubscription();
+      if (existingSubscription) {
+        return res.status(400).json({
+          success: false,
+          error: "Ya tienes una suscripción activa",
+        });
+      }
+
+      const planDetails = Subscription.getPlanDetails(planType);
+      const baseUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+
+      const returnUrl = `${baseUrl}/subscription/success`;
+      const cancelUrl = `${baseUrl}/subscription/cancel`;
+
+      // Create subscription with PayPal
+      const paypalSubscription = await paypalService.createSubscription(
+        planType,
+        returnUrl,
+        cancelUrl,
+        {
+          nombres: req.user.nombres,
+          apellidos: req.user.apellidos,
+          email: req.user.email,
+        },
+      );
+
+      // Create subscription record in our database
+      const subscription = await Subscription.create({
+        userId: userId,
+        planType: planType,
+        planId: planDetails.planId,
+        subscriptionId: paypalSubscription.subscriptionId,
+        status: "pending",
+        price: planDetails.price,
+        currency: "USD",
+        paypalData: paypalSubscription.fullResponse,
+      });
+
+      res.json({
+        success: true,
+        data: {
+          subscription: subscription,
+          approvalUrl: paypalSubscription.approvalUrl,
+          subscriptionId: paypalSubscription.subscriptionId,
+        },
+      });
+    } catch (error) {
+      console.error("Error creating subscription:", error);
+      res.status(500).json({
+        success: false,
+        error: "Error al crear la suscripción",
+      });
+    }
+  }
+
+  /**
+   * Confirm subscription after PayPal approval
+   */
+  async confirmSubscription(req, res) {
+    try {
+      const { subscriptionId } = req.params;
+      const userId = req.user.id;
+      const { token, payerId } = req.body;
+
+      console.log(
+        `Confirming subscription ${subscriptionId} for user ${userId}`,
+        {
+          token,
+          payerId,
+        },
+      );
+
+      // Find subscription in our database
+      const subscription = await Subscription.findOne({
+        where: {
+          subscriptionId: subscriptionId,
+          userId: userId,
+        },
+      });
+
+      if (!subscription) {
+        console.error(
+          `Subscription ${subscriptionId} not found for user ${userId}`,
+        );
+        return res.status(404).json({
+          success: false,
+          error: "Suscripción no encontrada",
+        });
+      }
+
+      // Get subscription details from PayPal
+      const paypalSubscription =
+        await paypalService.getSubscription(subscriptionId);
+
+      console.log(`PayPal subscription status for ${subscriptionId}:`, {
+        status: paypalSubscription.status,
+        currentDbStatus: subscription.status,
+        startTime: paypalSubscription.start_time,
+        createTime: paypalSubscription.create_time,
+      });
+
+      // Update subscription status based on PayPal response
+      const updates = {
+        paypalData: paypalSubscription,
+      };
+
+      let message = "Suscripción procesada";
+      let shouldActivate = false;
+
+      // Handle different PayPal statuses
+      switch (paypalSubscription.status) {
+        case "ACTIVE":
+          updates.status = "active";
+          updates.startDate = new Date(
+            paypalSubscription.start_time || paypalSubscription.create_time,
+          );
+          shouldActivate = true;
+          message = "Suscripción activada correctamente";
+          break;
+
+        case "APPROVED":
+          // Sometimes PayPal returns APPROVED instead of ACTIVE for new subscriptions
+          updates.status = "active";
+          updates.startDate = new Date(paypalSubscription.create_time);
+          shouldActivate = true;
+          message = "Suscripción activada correctamente";
+          break;
+
+        case "PENDING":
+          updates.status = "pending";
+          message = "Suscripción está siendo procesada por PayPal";
+          break;
+
+        case "CANCELLED":
+          updates.status = "cancelled";
+          updates.endDate = new Date();
+          message = "Suscripción cancelada";
+          break;
+
+        case "SUSPENDED":
+          updates.status = "suspended";
+          message = "Suscripción suspendida";
+          break;
+
+        case "EXPIRED":
+          updates.status = "expired";
+          updates.endDate = new Date();
+          message = "Suscripción expirada";
+          break;
+
+        default:
+          console.warn(`Unknown PayPal status: ${paypalSubscription.status}`);
+          updates.status = paypalSubscription.status.toLowerCase();
+          message = `Suscripción en estado: ${paypalSubscription.status}`;
+      }
+
+      // Set billing info if available and subscription is active
+      if (shouldActivate && paypalSubscription.billing_info) {
+        if (paypalSubscription.billing_info.next_billing_time) {
+          updates.nextBillingDate = new Date(
+            paypalSubscription.billing_info.next_billing_time,
+          );
+        }
+      }
+
+      await subscription.update(updates);
+
+      console.log(`Subscription ${subscriptionId} updated:`, {
+        oldStatus: subscription.status,
+        newStatus: updates.status,
+        startDate: updates.startDate,
+        nextBillingDate: updates.nextBillingDate,
+      });
+
+      res.json({
+        success: true,
+        data: subscription,
+        message,
+        paypalStatus: paypalSubscription.status,
+        isActive: shouldActivate,
+      });
+    } catch (error) {
+      console.error("Error confirming subscription:", error);
+      res.status(500).json({
+        success: false,
+        error: "Error al confirmar la suscripción",
+        details:
+          process.env.NODE_ENV === "development" ? error.message : undefined,
+      });
+    }
+  }
+
+  /**
+   * Cancel user's subscription
+   */
+  async cancelSubscription(req, res) {
+    try {
+      const userId = req.user.id;
+      const { reason } = req.body;
+
+      const subscription = await Subscription.findOne({
+        where: {
+          userId: userId,
+          status: "active",
+        },
+      });
+
+      if (!subscription) {
+        return res.status(404).json({
+          success: false,
+          error: "No se encontró una suscripción activa",
+        });
+      }
+
+      // Cancel subscription with PayPal
+      const cancelled = await paypalService.cancelSubscription(
+        subscription.subscriptionId,
+        reason || "Usuario solicitó cancelación",
+      );
+
+      if (cancelled) {
+        await subscription.update({
+          status: "cancelled",
+          endDate: new Date(),
+        });
+
+        res.json({
+          success: true,
+          message: "Suscripción cancelada correctamente",
+        });
+      } else {
+        res.status(500).json({
+          success: false,
+          error: "Error al cancelar la suscripción",
+        });
+      }
+    } catch (error) {
+      console.error("Error canceling subscription:", error);
+      res.status(500).json({
+        success: false,
+        error: "Error al cancelar la suscripción",
+      });
+    }
+  }
+
+  /**
+   * Update/Change user's subscription plan
+   */
+  async updateSubscription(req, res) {
+    try {
+      const { newPlanType } = req.body;
+      const userId = req.user.id;
+
+      if (!newPlanType || !["bronce", "plata", "oro"].includes(newPlanType)) {
+        return res.status(400).json({
+          success: false,
+          error: "Tipo de plan inválido",
+        });
+      }
+
+      const currentSubscription = await req.user.getActiveSubscription();
+      if (!currentSubscription) {
+        return res.status(400).json({
+          success: false,
+          error: "No tienes una suscripción activa para actualizar",
+        });
+      }
+
+      if (currentSubscription.planType === newPlanType) {
+        return res.status(400).json({
+          success: false,
+          error: "Ya tienes este plan activo",
+        });
+      }
+
+      // Cancel current subscription
+      await paypalService.cancelSubscription(
+        currentSubscription.subscriptionId,
+        "Cambiando a un nuevo plan",
+      );
+
+      await currentSubscription.update({
+        status: "cancelled",
+        endDate: new Date(),
+      });
+
+      // Create new subscription
+      const planDetails = Subscription.getPlanDetails(newPlanType);
+      const baseUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+
+      const returnUrl = `${baseUrl}/subscription/success`;
+      const cancelUrl = `${baseUrl}/subscription/cancel`;
+
+      const paypalSubscription = await paypalService.createSubscription(
+        newPlanType,
+        returnUrl,
+        cancelUrl,
+        {
+          nombres: req.user.nombres,
+          apellidos: req.user.apellidos,
+          email: req.user.email,
+        },
+      );
+
+      const newSubscription = await Subscription.create({
+        userId: userId,
+        planType: newPlanType,
+        planId: planDetails.planId,
+        subscriptionId: paypalSubscription.subscriptionId,
+        status: "pending",
+        price: planDetails.price,
+        currency: "USD",
+        paypalData: paypalSubscription.fullResponse,
+      });
+
+      res.json({
+        success: true,
+        data: {
+          subscription: newSubscription,
+          approvalUrl: paypalSubscription.approvalUrl,
+          subscriptionId: paypalSubscription.subscriptionId,
+        },
+        message:
+          "Suscripción actualizada. Completa el pago para activar el nuevo plan.",
+      });
+    } catch (error) {
+      console.error("Error updating subscription:", error);
+      res.status(500).json({
+        success: false,
+        error: "Error al actualizar la suscripción",
+      });
+    }
+  }
+
+  /**
+   * Handle PayPal webhooks
+   */
+  async handleWebhook(req, res) {
+    try {
+      const webhookEvent = req.body;
+      const headers = req.headers;
+
+      // Verify webhook signature (optional but recommended)
+      const isValid = await paypalService.verifyWebhookSignature(
+        headers,
+        webhookEvent,
+        process.env.PAYPAL_WEBHOOK_ID || "18R7482678791552E",
+      );
+
+      if (!isValid && process.env.NODE_ENV === "production") {
+        console.warn("Invalid webhook signature");
+        return res.status(400).json({ error: "Invalid webhook signature" });
+      }
+
+      // Process webhook event
+      const processedEvent =
+        await paypalService.processWebhookEvent(webhookEvent);
+
+      if (processedEvent.subscriptionId) {
+        // Find subscription in our database
+        const subscription = await Subscription.findOne({
+          where: { subscriptionId: processedEvent.subscriptionId },
+        });
+
+        if (subscription) {
+          const updates = { paypalData: processedEvent.data };
+
+          switch (processedEvent.type) {
+            case "subscription_activated":
+              updates.status = "active";
+              updates.startDate = new Date();
+              if (processedEvent.data.billing_info?.next_billing_time) {
+                updates.nextBillingDate = new Date(
+                  processedEvent.data.billing_info.next_billing_time,
+                );
+              }
+              break;
+
+            case "subscription_cancelled":
+              updates.status = "cancelled";
+              updates.endDate = new Date();
+              break;
+
+            case "subscription_suspended":
+              updates.status = "suspended";
+              break;
+
+            case "payment_completed":
+              // Update next billing date if available
+              if (processedEvent.data.billing_info?.next_billing_time) {
+                updates.nextBillingDate = new Date(
+                  processedEvent.data.billing_info.next_billing_time,
+                );
+              }
+              break;
+          }
+
+          await subscription.update(updates);
+          console.log(
+            `Subscription ${processedEvent.subscriptionId} updated:`,
+            processedEvent.type,
+          );
+        }
+      }
+
+      // Respond to PayPal that webhook was received successfully
+      res.status(200).json({ received: true });
+    } catch (error) {
+      console.error("Error handling webhook:", error);
+      res.status(500).json({ error: "Webhook processing failed" });
+    }
+  }
+
+  /**
+   * Check if user can access a feature (middleware helper)
+   */
+  async checkSubscriptionAccess(req, res, next) {
+    try {
+      const hasActiveSubscription = await req.user.hasActiveSubscription();
+
+      if (!hasActiveSubscription) {
+        return res.status(403).json({
+          success: false,
+          error:
+            "Se requiere una suscripción activa para acceder a esta función",
+          code: "SUBSCRIPTION_REQUIRED",
+        });
+      }
+
+      next();
+    } catch (error) {
+      console.error("Error checking subscription access:", error);
+      res.status(500).json({
+        success: false,
+        error: "Error al verificar la suscripción",
+      });
+    }
+  }
+
+  /**
+   * Get subscription statistics (for admin or user dashboard)
+   */
+  async getSubscriptionStats(req, res) {
+    try {
+      const userId = req.user.id;
+
+      const subscriptions = await Subscription.findAll({
+        where: { userId },
+        order: [["createdAt", "DESC"]],
+      });
+
+      const stats = {
+        totalSubscriptions: subscriptions.length,
+        currentSubscription: subscriptions.find((s) => s.isActive()) || null,
+        subscriptionHistory: subscriptions.map((s) => ({
+          id: s.id,
+          planType: s.planType,
+          status: s.status,
+          price: s.price,
+          startDate: s.startDate,
+          endDate: s.endDate,
+          createdAt: s.createdAt,
+        })),
+      };
+
+      res.json({
+        success: true,
+        data: stats,
+      });
+    } catch (error) {
+      console.error("Error getting subscription stats:", error);
+      res.status(500).json({
+        success: false,
+        error: "Error al obtener las estadísticas de suscripción",
+      });
+    }
+  }
+
+  /**
+   * Verify and update pending subscriptions manually
+   */
+  async verifyPendingSubscriptions(req, res) {
+    try {
+      const userId = req.user.id;
+
+      // Find pending subscriptions for this user
+      const pendingSubscriptions = await Subscription.findAll({
+        where: {
+          userId: userId,
+          status: "pending",
+        },
+        order: [["createdAt", "DESC"]],
+      });
+
+      if (pendingSubscriptions.length === 0) {
+        return res.json({
+          success: true,
+          message: "No hay suscripciones pendientes",
+          data: null,
+        });
+      }
+
+      const results = [];
+
+      for (const subscription of pendingSubscriptions) {
+        try {
+          // Get subscription status from PayPal
+          const paypalSubscription = await paypalService.getSubscription(
+            subscription.subscriptionId,
+          );
+
+          console.log(
+            `PayPal subscription status for ${subscription.subscriptionId}:`,
+            paypalSubscription.status,
+          );
+
+          // Update subscription based on PayPal status
+          const updates = {
+            paypalData: paypalSubscription,
+          };
+
+          if (paypalSubscription.status === "ACTIVE") {
+            updates.status = "active";
+            updates.startDate = new Date(
+              paypalSubscription.start_time || paypalSubscription.create_time,
+            );
+
+            if (
+              paypalSubscription.billing_info &&
+              paypalSubscription.billing_info.next_billing_time
+            ) {
+              updates.nextBillingDate = new Date(
+                paypalSubscription.billing_info.next_billing_time,
+              );
+            }
+          } else if (paypalSubscription.status === "APPROVED") {
+            updates.status = "active";
+            updates.startDate = new Date();
+          } else if (paypalSubscription.status === "CANCELLED") {
+            updates.status = "cancelled";
+            updates.endDate = new Date();
+          } else if (paypalSubscription.status === "SUSPENDED") {
+            updates.status = "suspended";
+          }
+
+          await subscription.update(updates);
+
+          results.push({
+            subscriptionId: subscription.subscriptionId,
+            oldStatus: "pending",
+            newStatus: updates.status,
+            paypalStatus: paypalSubscription.status,
+          });
+        } catch (paypalError) {
+          console.error(
+            `Error checking PayPal subscription ${subscription.subscriptionId}:`,
+            paypalError,
+          );
+          results.push({
+            subscriptionId: subscription.subscriptionId,
+            error: "Error al verificar con PayPal",
+            paypalError: paypalError.message,
+          });
+        }
+      }
+
+      res.json({
+        success: true,
+        message: "Verificación de suscripciones completada",
+        data: results,
+      });
+    } catch (error) {
+      console.error("Error verifying pending subscriptions:", error);
+      res.status(500).json({
+        success: false,
+        error: "Error al verificar suscripciones pendientes",
+      });
+    }
+  }
+
+  /**
+   * Sync specific subscription with PayPal
+   */
+  async syncSubscription(req, res) {
+    try {
+      const { subscriptionId } = req.params;
+      const userId = req.user.id;
+
+      // Find subscription
+      const subscription = await Subscription.findOne({
+        where: {
+          subscriptionId: subscriptionId,
+          userId: userId,
+        },
+      });
+
+      if (!subscription) {
+        return res.status(404).json({
+          success: false,
+          error: "Suscripción no encontrada",
+        });
+      }
+
+      // Get current status from PayPal
+      const paypalSubscription =
+        await paypalService.getSubscription(subscriptionId);
+
+      console.log(`PayPal sync for ${subscriptionId}:`, {
+        currentStatus: subscription.status,
+        paypalStatus: paypalSubscription.status,
+        paypalData: paypalSubscription,
+      });
+
+      // Update subscription based on PayPal response
+      const updates = {
+        paypalData: paypalSubscription,
+      };
+
+      if (paypalSubscription.status === "ACTIVE") {
+        updates.status = "active";
+        updates.startDate = new Date(
+          paypalSubscription.start_time || paypalSubscription.create_time,
+        );
+
+        if (
+          paypalSubscription.billing_info &&
+          paypalSubscription.billing_info.next_billing_time
+        ) {
+          updates.nextBillingDate = new Date(
+            paypalSubscription.billing_info.next_billing_time,
+          );
+        }
+      } else if (paypalSubscription.status === "APPROVED") {
+        updates.status = "active";
+        updates.startDate = new Date();
+      } else if (paypalSubscription.status === "CANCELLED") {
+        updates.status = "cancelled";
+        updates.endDate = new Date();
+      } else if (paypalSubscription.status === "SUSPENDED") {
+        updates.status = "suspended";
+      }
+
+      await subscription.update(updates);
+
+      res.json({
+        success: true,
+        message: "Suscripción sincronizada correctamente",
+        data: {
+          subscription: subscription,
+          paypalStatus: paypalSubscription.status,
+          updated: true,
+        },
+      });
+    } catch (error) {
+      console.error("Error syncing subscription:", error);
+      res.status(500).json({
+        success: false,
+        error: "Error al sincronizar suscripción con PayPal",
+      });
+    }
+  }
+}
+
+module.exports = new SubscriptionController();

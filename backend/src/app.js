@@ -1,9 +1,10 @@
-const express = require('express');
-const cors = require('cors');
-const userRoutes = require('./routes/userRoutes');
-const motorDBRoutes = require('./routes/motorDBRoutes');
-const conexionDBRoutes = require('./routes/conexionDBRoutes');
-const aiRoutes = require('./routes/aiRoutes');
+const express = require("express");
+const cors = require("cors");
+const userRoutes = require("./routes/userRoutes");
+const motorDBRoutes = require("./routes/motorDBRoutes");
+const conexionDBRoutes = require("./routes/conexionDBRoutes");
+const aiRoutes = require("./routes/aiRoutes");
+const subscriptionRoutes = require("./routes/subscriptionRoutes");
 
 // Create Express app
 const app = express();
@@ -14,28 +15,29 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Simple route for testing
-app.get('/', (req, res) => {
-  res.json({ message: 'Welcome to NexoSQL API' });
+app.get("/", (req, res) => {
+  res.json({ message: "Welcome to NexoSQL API" });
 });
 
 // Routes
-app.use('/api/users', userRoutes);
-app.use('/api/motores', motorDBRoutes);
-app.use('/api/conexiones', conexionDBRoutes);
-app.use('/api/ai', aiRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/motores", motorDBRoutes);
+app.use("/api/conexiones", conexionDBRoutes);
+app.use("/api/ai", aiRoutes);
+app.use("/api/subscriptions", subscriptionRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({
-    error: 'Internal Server Error',
-    message: process.env.NODE_ENV === 'development' ? err.message : undefined
+    error: "Internal Server Error",
+    message: process.env.NODE_ENV === "development" ? err.message : undefined,
   });
 });
 
 // 404 handler - should be the last route
 app.use((req, res) => {
-  res.status(404).json({ error: 'Route not found' });
+  res.status(404).json({ error: "Route not found" });
 });
 
 module.exports = app;

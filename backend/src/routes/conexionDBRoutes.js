@@ -1,24 +1,65 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const conexionDBController = require('../controllers/conexionDBController');
-const { verifyToken, requireUser } = require('../middleware/auth');
+const conexionDBController = require("../controllers/conexionDBController");
+const { verifyToken, requireUser } = require("../middleware/auth");
+const {
+  requireActiveSubscription,
+  checkConnectionLimit,
+} = require("../middleware/subscription");
 
 // GET /api/conexiones - Get all user's connections
-router.get('/', verifyToken, requireUser, conexionDBController.getUserConnections);
+router.get(
+  "/",
+  verifyToken,
+  requireUser,
+  requireActiveSubscription,
+  conexionDBController.getUserConnections,
+);
 
 // GET /api/conexiones/:id - Get a specific connection
-router.get('/:id', verifyToken, requireUser, conexionDBController.getConnectionById);
+router.get(
+  "/:id",
+  verifyToken,
+  requireUser,
+  requireActiveSubscription,
+  conexionDBController.getConnectionById,
+);
 
 // POST /api/conexiones - Create a new connection
-router.post('/', verifyToken, requireUser, conexionDBController.createConnection);
+router.post(
+  "/",
+  verifyToken,
+  requireUser,
+  requireActiveSubscription,
+  checkConnectionLimit,
+  conexionDBController.createConnection,
+);
 
 // PUT /api/conexiones/:id - Update a connection
-router.put('/:id', verifyToken, requireUser, conexionDBController.updateConnection);
+router.put(
+  "/:id",
+  verifyToken,
+  requireUser,
+  requireActiveSubscription,
+  conexionDBController.updateConnection,
+);
 
 // DELETE /api/conexiones/:id - Delete a connection
-router.delete('/:id', verifyToken, requireUser, conexionDBController.deleteConnection);
+router.delete(
+  "/:id",
+  verifyToken,
+  requireUser,
+  requireActiveSubscription,
+  conexionDBController.deleteConnection,
+);
 
 // POST /api/conexiones/test - Test a database connection
-router.post('/test', verifyToken, requireUser, conexionDBController.testDatabaseConnection);
+router.post(
+  "/test",
+  verifyToken,
+  requireUser,
+  requireActiveSubscription,
+  conexionDBController.testDatabaseConnection,
+);
 
 module.exports = router;
