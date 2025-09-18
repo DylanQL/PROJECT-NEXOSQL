@@ -286,21 +286,94 @@ class SubscriptionController {
         });
       }
 
+      console.log(
+        `Attempting to cancel subscription ${subscription.subscriptionId} for user ${userId}`,
+      );
+
       // Cancel subscription with PayPal
       const cancelled = await paypalService.cancelSubscription(
         subscription.subscriptionId,
         reason || "Usuario solicitó cancelación",
       );
 
+      console.log(`PayPal cancellation result: ${cancelled}`);
+
       if (cancelled) {
-        await subscription.update({
-          status: "cancelled",
-          endDate: new Date(),
-        });
+        const updates = {};
+
+        try {
+          // Try to get the updated subscription details from PayPal
+          console.log(`Getting subscription details from PayPal...`);
+          const paypalSubscription = await paypalService.getSubscription(
+            subscription.subscriptionId,
+          );
+
+          console.log(`PayPal subscription after cancellation:`, {
+            status: paypalSubscription.status,
+            billing_info: paypalSubscription.billing_info,
+          });
+
+          updates.paypalData = paypalSubscription;
+
+          // Set the end date to maintain access until the end of the billing period
+          if (
+            paypalSubscription.billing_info &&
+            paypalSubscription.billing_info.next_billing_time
+          ) {
+            // Use the next billing time as the end date for access
+            updates.endDate = new Date(
+              paypalSubscription.billing_info.next_billing_time,
+            );
+            console.log(`Using PayPal next_billing_time: ${updates.endDate}`);
+          } else if (subscription.nextBillingDate) {
+            // If PayPal doesn't provide it, use our stored next billing date
+            updates.endDate = subscription.nextBillingDate;
+            console.log(`Using stored nextBillingDate: ${updates.endDate}`);
+          } else {
+            // Fallback: set end date to end of current month
+            const endDate = new Date();
+            endDate.setMonth(endDate.getMonth() + 1);
+            endDate.setDate(0); // Last day of current month
+            updates.endDate = endDate;
+            console.log(`Using fallback endDate: ${updates.endDate}`);
+          }
+        } catch (paypalError) {
+          console.error(
+            `Error getting PayPal subscription details after cancellation:`,
+            paypalError.message,
+          );
+
+          // Use fallback logic if PayPal call fails
+          if (subscription.nextBillingDate) {
+            updates.endDate = subscription.nextBillingDate;
+            console.log(
+              `PayPal error - using stored nextBillingDate: ${updates.endDate}`,
+            );
+          } else {
+            const endDate = new Date();
+            endDate.setMonth(endDate.getMonth() + 1);
+            endDate.setDate(0);
+            updates.endDate = endDate;
+            console.log(
+              `PayPal error - using fallback endDate: ${updates.endDate}`,
+            );
+          }
+        }
+
+        // Keep status as "active" so user maintains access
+        // The isActive() method will automatically return false after endDate
+        console.log(`Updating subscription with:`, updates);
+
+        await subscription.update(updates);
 
         res.json({
           success: true,
-          message: "Suscripción cancelada correctamente",
+          message:
+            "Suscripción cancelada correctamente. Mantendrás acceso hasta el final del período de facturación.",
+          data: {
+            subscription: subscription,
+            accessUntil: updates.endDate,
+          },
         });
       } else {
         res.status(500).json({
@@ -313,6 +386,8 @@ class SubscriptionController {
       res.status(500).json({
         success: false,
         error: "Error al cancelar la suscripción",
+        details:
+          process.env.NODE_ENV === "development" ? error.message : undefined,
       });
     }
   }
