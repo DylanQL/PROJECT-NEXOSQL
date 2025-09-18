@@ -1,32 +1,42 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Form, Button, Alert, ProgressBar, Spinner } from 'react-bootstrap';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { motorDBApi, conexionDBApi } from '../services/api';
+import React, { useState, useEffect } from "react";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Form,
+  Button,
+  Alert,
+  Spinner,
+  ProgressBar,
+} from "react-bootstrap";
+import { useNavigate, useParams } from "react-router-dom";
+
+import { conexionDBApi, motorDBApi } from "../services/api";
+import ConnectionLimitInfo from "../components/ConnectionLimitInfo";
 
 const CrearConexion = () => {
   const { id } = useParams(); // For edit mode, id will be present
-  const { currentUser } = useAuth();
   const navigate = useNavigate();
 
   // State variables
   const [step, setStep] = useState(1);
   const [motores, setMotores] = useState([]);
-  const [selectedMotor, setSelectedMotor] = useState('');
+  const [selectedMotor, setSelectedMotor] = useState("");
   const [formData, setFormData] = useState({
-    nombre: '',
-    motores_db_id: '',
-    host: '',
-    port: '',
-    username: '',
-    password: '',
-    database_name: ''
+    nombre: "",
+    motores_db_id: "",
+    host: "",
+    port: "",
+    username: "",
+    password: "",
+    database_name: "",
   });
   const [validated, setValidated] = useState(false);
   const [loading, setLoading] = useState(false);
   const [testingConnection, setTestingConnection] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [testResult, setTestResult] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
 
@@ -46,7 +56,7 @@ const CrearConexion = () => {
   const fetchDatabaseEngines = async () => {
     try {
       setLoading(true);
-      setError('');
+      setError("");
 
       const { data, error } = await motorDBApi.getAllMotores();
 
@@ -56,8 +66,10 @@ const CrearConexion = () => {
 
       setMotores(data || []);
     } catch (err) {
-      console.error('Error fetching database engines:', err);
-      setError('No se pudieron cargar los motores de base de datos. Por favor, intente nuevamente.');
+      console.error("Error fetching database engines:", err);
+      setError(
+        "No se pudieron cargar los motores de base de datos. Por favor, intente nuevamente.",
+      );
     } finally {
       setLoading(false);
     }
@@ -66,9 +78,10 @@ const CrearConexion = () => {
   const fetchConnectionDetails = async (connectionId) => {
     try {
       setLoading(true);
-      setError('');
+      setError("");
 
-      const { data, error } = await conexionDBApi.getConnectionById(connectionId);
+      const { data, error } =
+        await conexionDBApi.getConnectionById(connectionId);
 
       if (error) {
         throw new Error(error);
@@ -76,58 +89,51 @@ const CrearConexion = () => {
 
       // Update form data with connection details
       setFormData({
-        nombre: data.nombre || '',
-        motores_db_id: data.motores_db_id || '',
-        host: data.host || '',
-        port: data.port || '',
-        username: data.username || '',
-        password: '', // Password is not returned from the API for security reasons
-        database_name: data.database_name || ''
+        nombre: data.nombre || "",
+        motores_db_id: data.motores_db_id || "",
+        host: data.host || "",
+        port: data.port || "",
+        username: data.username || "",
+        password: "", // Password is not returned from the API for security reasons
+        database_name: data.database_name || "",
       });
 
       setSelectedMotor(data.motores_db_id);
     } catch (err) {
-      console.error('Error fetching connection details:', err);
-      setError('No se pudieron cargar los detalles de la conexión. Por favor, intente nuevamente.');
+      console.error("Error fetching connection details:", err);
+      setError(
+        "No se pudieron cargar los detalles de la conexión. Por favor, intente nuevamente.",
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const handleMotorSelect = (e) => {
-    const motorId = e.target.value;
-    setSelectedMotor(motorId);
-    setFormData(prev => ({
-      ...prev,
-      motores_db_id: motorId
-    }));
-  };
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleNextStep = () => {
     if (step === 1 && !selectedMotor) {
-      setError('Por favor, seleccione un motor de base de datos');
+      setError("Por favor, seleccione un motor de base de datos");
       return;
     }
 
     if (step === 2) {
       // Validate form before proceeding
-      const form = document.getElementById('conexion-form');
+      const form = document.getElementById("conexion-form");
       if (!form.checkValidity()) {
         setValidated(true);
         return;
       }
     }
 
-    setError('');
-    setStep(prev => prev + 1);
+    setError("");
+    setStep((prev) => prev + 1);
 
     // If moving to step 3 (verification), automatically test the connection
     if (step === 2) {
@@ -138,16 +144,16 @@ const CrearConexion = () => {
   };
 
   const handlePrevStep = () => {
-    setError('');
+    setError("");
     setTestResult(null);
-    setStep(prev => prev - 1);
+    setStep((prev) => prev - 1);
   };
 
   const handleTestConnection = async () => {
     try {
       setTestingConnection(true);
-      setError('');
-      setSuccess('');
+      setError("");
+      setSuccess("");
       setTestResult(null);
 
       const connectionData = {
@@ -156,10 +162,10 @@ const CrearConexion = () => {
         port: formData.port,
         username: formData.username,
         password: formData.password,
-        database_name: formData.database_name
+        database_name: formData.database_name,
       };
 
-      const { data, error } = await conexionDBApi.testConnection(connectionData);
+      const { error } = await conexionDBApi.testConnection(connectionData);
 
       if (error) {
         throw new Error(error);
@@ -167,20 +173,20 @@ const CrearConexion = () => {
 
       setTestResult({
         success: true,
-        message: 'Conexión exitosa a la base de datos'
+        message: "Conexión exitosa a la base de datos",
       });
       // Solo limpiamos el mensaje de error, pero no establecemos success
       // para evitar duplicación con el testResult
-      setError('');
+      setError("");
     } catch (err) {
-      console.error('Error testing connection:', err);
+      console.error("Error testing connection:", err);
       setTestResult({
         success: false,
-        message: err.message || 'Error al probar la conexión'
+        message: err.message || "Error al probar la conexión",
       });
       // Solo limpiamos el mensaje de éxito, pero no establecemos error
       // para evitar duplicación con el testResult
-      setSuccess('');
+      setSuccess("");
     } finally {
       setTestingConnection(false);
     }
@@ -189,7 +195,7 @@ const CrearConexion = () => {
   const handleSaveConnection = async () => {
     try {
       setLoading(true);
-      setError('');
+      setError("");
 
       const connectionData = {
         nombre: formData.nombre,
@@ -198,7 +204,7 @@ const CrearConexion = () => {
         port: formData.port,
         username: formData.username,
         password: formData.password,
-        database_name: formData.database_name
+        database_name: formData.database_name,
       };
 
       let result;
@@ -213,13 +219,13 @@ const CrearConexion = () => {
       }
 
       // Mostrar mensaje y navegar después de un breve retraso
-      setSuccess('Conexión creada exitosamente');
+      setSuccess("Conexión creada exitosamente");
       setTimeout(() => {
-        navigate('/conexiones');
+        navigate("/conexiones");
       }, 1500);
     } catch (err) {
-      console.error('Error saving connection:', err);
-      setError(err.message || 'Error al guardar la conexión');
+      console.error("Error saving connection:", err);
+      setError(err.message || "Error al guardar la conexión");
     } finally {
       setLoading(false);
     }
@@ -230,15 +236,15 @@ const CrearConexion = () => {
       <div className="mb-4">
         <ProgressBar now={(step / 3) * 100} className="mb-3" />
         <div className="d-flex justify-content-between">
-          <div className={`step-item ${step >= 1 ? 'active' : ''}`}>
+          <div className={`step-item ${step >= 1 ? "active" : ""}`}>
             <div className="step-number">1</div>
             <div className="step-text">Seleccionar Motor</div>
           </div>
-          <div className={`step-item ${step >= 2 ? 'active' : ''}`}>
+          <div className={`step-item ${step >= 2 ? "active" : ""}`}>
             <div className="step-number">2</div>
             <div className="step-text">Ingresar Credenciales</div>
           </div>
-          <div className={`step-item ${step >= 3 ? 'active' : ''}`}>
+          <div className={`step-item ${step >= 3 ? "active" : ""}`}>
             <div className="step-number">3</div>
             <div className="step-text">Verificación</div>
           </div>
@@ -276,18 +282,18 @@ const CrearConexion = () => {
       <>
         <h5 className="mb-4">Seleccione el motor de base de datos</h5>
         <Row>
-          {motores.map(motor => (
+          {motores.map((motor) => (
             <Col md={4} key={motor.id} className="mb-3">
               <Card
-                className={`h-100 ${selectedMotor === motor.id ? 'border-primary' : ''}`}
+                className={`h-100 ${selectedMotor === motor.id ? "border-primary" : ""}`}
                 onClick={() => {
                   setSelectedMotor(motor.id);
-                  setFormData(prev => ({
+                  setFormData((prev) => ({
                     ...prev,
-                    motores_db_id: motor.id
+                    motores_db_id: motor.id,
                   }));
                 }}
-                style={{ cursor: 'pointer' }}
+                style={{ cursor: "pointer" }}
               >
                 <Card.Body className="text-center">
                   <div className="mb-3">
@@ -312,12 +318,17 @@ const CrearConexion = () => {
   };
 
   const renderCredentialsForm = () => {
-    const selectedMotorDetails = motores.find(m => m.id.toString() === selectedMotor.toString());
+    const selectedMotorDetails = motores.find(
+      (m) => m.id.toString() === selectedMotor.toString(),
+    );
 
     return (
       <>
         <h5 className="mb-4">
-          Ingrese las credenciales para {selectedMotorDetails ? selectedMotorDetails.nombre : 'la base de datos'}
+          Ingrese las credenciales para{" "}
+          {selectedMotorDetails
+            ? selectedMotorDetails.nombre
+            : "la base de datos"}
         </h5>
 
         <Form id="conexion-form" noValidate validated={validated}>
@@ -448,14 +459,32 @@ const CrearConexion = () => {
             <h6>Resumen de la conexión</h6>
             <Row>
               <Col md={6}>
-                <p><strong>Nombre:</strong> {formData.nombre}</p>
-                <p><strong>Motor:</strong> {motores.find(m => m.id.toString() === formData.motores_db_id.toString())?.nombre}</p>
-                <p><strong>Host:</strong> {formData.host}</p>
+                <p>
+                  <strong>Nombre:</strong> {formData.nombre}
+                </p>
+                <p>
+                  <strong>Motor:</strong>{" "}
+                  {
+                    motores.find(
+                      (m) =>
+                        m.id.toString() === formData.motores_db_id.toString(),
+                    )?.nombre
+                  }
+                </p>
+                <p>
+                  <strong>Host:</strong> {formData.host}
+                </p>
               </Col>
               <Col md={6}>
-                <p><strong>Puerto:</strong> {formData.port}</p>
-                <p><strong>Usuario:</strong> {formData.username}</p>
-                <p><strong>Base de datos:</strong> {formData.database_name}</p>
+                <p>
+                  <strong>Puerto:</strong> {formData.port}
+                </p>
+                <p>
+                  <strong>Usuario:</strong> {formData.username}
+                </p>
+                <p>
+                  <strong>Base de datos:</strong> {formData.database_name}
+                </p>
               </Col>
             </Row>
 
@@ -475,7 +504,7 @@ const CrearConexion = () => {
         </Card>
 
         {testResult && (
-          <Alert variant={testResult.success ? 'success' : 'danger'}>
+          <Alert variant={testResult.success ? "success" : "danger"}>
             {testResult.message}
           </Alert>
         )}
@@ -488,8 +517,10 @@ const CrearConexion = () => {
   return (
     <Container className="py-5">
       <div className="mb-4">
-        <h1>{isEditMode ? 'Editar Conexión' : 'Crear Nueva Conexión'}</h1>
+        <h1>{isEditMode ? "Editar Conexión" : "Crear Nueva Conexión"}</h1>
       </div>
+
+      <ConnectionLimitInfo />
 
       {error && <Alert variant="danger">{error}</Alert>}
       {success && <Alert variant="success">{success}</Alert>}
@@ -498,9 +529,7 @@ const CrearConexion = () => {
         <Card.Body className="p-4">
           {renderStepIndicator()}
 
-          <div className="step-content py-3">
-            {renderStepContent()}
-          </div>
+          <div className="step-content py-3">{renderStepContent()}</div>
 
           <div className="d-flex justify-content-between mt-4">
             {step > 1 && (
@@ -518,7 +547,7 @@ const CrearConexion = () => {
                 variant="primary"
                 onClick={handleNextStep}
                 size="md"
-                className={step > 1 ? '' : 'ms-auto'}
+                className={step > 1 ? "" : "ms-auto"}
               >
                 Siguiente
               </Button>

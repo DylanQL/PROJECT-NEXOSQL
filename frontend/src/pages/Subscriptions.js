@@ -10,11 +10,11 @@ import {
   Spinner,
   Modal,
 } from "react-bootstrap";
-import { useAuth } from "../contexts/AuthContext";
-import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
+
+import { useSubscription } from "../contexts/SubscriptionContext";
 
 const Subscriptions = () => {
-  const { user } = useAuth();
+  const { autoSyncActive } = useSubscription();
   const [plans, setPlans] = useState({});
   const [currentSubscription, setCurrentSubscription] = useState(null);
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
@@ -23,7 +23,6 @@ const Subscriptions = () => {
   const [success, setSuccess] = useState("");
   const [actionLoading, setActionLoading] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState(null);
   const [subscriptionStats, setSubscriptionStats] = useState(null);
   const [syncLoading, setSyncLoading] = useState(false);
   const [syncSuccess, setSyncSuccess] = useState("");
@@ -312,33 +311,58 @@ const Subscriptions = () => {
                   <Col>
                     <div className="d-flex gap-2 flex-wrap">
                       {currentSubscription.status === "pending" && (
-                        <Button
-                          variant="outline-warning"
-                          onClick={handleSyncSubscription}
-                          disabled={syncLoading || actionLoading}
-                          size="sm"
-                        >
-                          {syncLoading ? (
-                            <>
-                              <Spinner
-                                animation="border"
-                                size="sm"
-                                className="me-1"
-                              />
-                              Sincronizando...
-                            </>
+                        <>
+                          {autoSyncActive ? (
+                            <Alert variant="info" className="mb-2 w-100">
+                              <div className="d-flex align-items-center">
+                                <Spinner
+                                  animation="border"
+                                  size="sm"
+                                  className="me-2"
+                                />
+                                <span>
+                                  <strong>
+                                    Sincronizando automáticamente con PayPal...
+                                  </strong>
+                                </span>
+                              </div>
+                              <small className="text-muted mt-1 d-block">
+                                Estamos verificando el estado de tu suscripción
+                                automáticamente.
+                              </small>
+                            </Alert>
                           ) : (
-                            <>
-                              <i className="bi bi-arrow-clockwise me-1"></i>
-                              Sincronizar con PayPal
-                            </>
+                            <Button
+                              variant="outline-warning"
+                              onClick={handleSyncSubscription}
+                              disabled={syncLoading || actionLoading}
+                              size="sm"
+                            >
+                              {syncLoading ? (
+                                <>
+                                  <Spinner
+                                    animation="border"
+                                    size="sm"
+                                    className="me-1"
+                                  />
+                                  Sincronizando...
+                                </>
+                              ) : (
+                                <>
+                                  <i className="bi bi-arrow-clockwise me-1"></i>
+                                  Sincronizar con PayPal
+                                </>
+                              )}
+                            </Button>
                           )}
-                        </Button>
+                        </>
                       )}
                       <Button
                         variant="outline-danger"
                         onClick={() => setShowCancelModal(true)}
-                        disabled={actionLoading || syncLoading}
+                        disabled={
+                          actionLoading || syncLoading || autoSyncActive
+                        }
                         size="sm"
                       >
                         Cancelar Suscripción

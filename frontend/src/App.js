@@ -5,7 +5,7 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import { Container } from "react-bootstrap";
+import { Container, Toast, ToastContainer } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 // Components
@@ -29,7 +29,37 @@ import SubscriptionCancel from "./pages/SubscriptionCancel";
 // Contexts
 import { AuthProvider } from "./contexts/AuthContext";
 import { ConnectionProvider } from "./contexts/ConnectionContext";
-import { SubscriptionProvider } from "./contexts/SubscriptionContext";
+import {
+  SubscriptionProvider,
+  useSubscription,
+} from "./contexts/SubscriptionContext";
+
+// Component to handle global notifications
+function AppNotifications() {
+  const { autoSyncSuccess, clearAutoSyncSuccess } = useSubscription();
+
+  return (
+    <ToastContainer
+      position="top-end"
+      className="p-3"
+      style={{ position: "fixed", top: "20px", right: "20px", zIndex: 9999 }}
+    >
+      <Toast
+        show={!!autoSyncSuccess}
+        onClose={clearAutoSyncSuccess}
+        delay={5000}
+        autohide
+        bg="success"
+      >
+        <Toast.Header>
+          <i className="bi bi-check-circle-fill text-success me-2"></i>
+          <strong className="me-auto">Suscripción Activada</strong>
+        </Toast.Header>
+        <Toast.Body className="text-white">{autoSyncSuccess}</Toast.Body>
+      </Toast>
+    </ToastContainer>
+  );
+}
 
 function App() {
   return (
@@ -39,6 +69,7 @@ function App() {
           <Router>
             <div className="d-flex flex-column min-vh-100">
               <Navigation />
+              <AppNotifications />
               <Container className="flex-grow-1">
                 <Routes>
                   {/* Public Routes */}

@@ -6,7 +6,8 @@ import { useSubscription } from "../contexts/SubscriptionContext";
 
 const Navigation = () => {
   const { currentUser, userProfile, logout } = useAuth();
-  const { hasActiveSubscription, currentSubscription } = useSubscription();
+  const { hasActiveSubscription, currentSubscription, autoSyncActive } =
+    useSubscription();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -94,6 +95,12 @@ const Navigation = () => {
                   <Badge bg="success" className="me-2">
                     Conectado
                   </Badge>
+                  {autoSyncActive && (
+                    <Badge bg="warning" className="me-2">
+                      <i className="bi bi-arrow-clockwise me-1"></i>
+                      Sincronizando
+                    </Badge>
+                  )}
                   {hasActiveSubscription && currentSubscription && (
                     <Badge
                       bg={

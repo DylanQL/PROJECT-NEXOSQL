@@ -11,10 +11,12 @@ import {
   Badge,
 } from "react-bootstrap";
 import { useAuth } from "../contexts/AuthContext";
+import { useSubscription } from "../contexts/SubscriptionContext";
 import { useNavigate } from "react-router-dom";
 
 const Profile = () => {
   const { userProfile, updateProfile, currentUser, profileLoading } = useAuth();
+  const { autoSyncActive } = useSubscription();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -394,36 +396,62 @@ const Profile = () => {
                   {subscription.status === "pending" && (
                     <Alert variant="warning" className="mb-0">
                       <i className="bi bi-clock me-2"></i>
-                      Tu suscripción está pendiente de activación. Por favor,
-                      completa el proceso de pago.
-                      <div className="mt-2">
-                        <small className="d-block text-muted mb-2">
-                          Si ya completaste el pago, puedes sincronizar tu
-                          suscripción:
-                        </small>
-                        <Button
-                          variant="outline-warning"
-                          size="sm"
-                          onClick={handleSyncSubscription}
-                          disabled={syncLoading}
-                        >
-                          {syncLoading ? (
-                            <>
-                              <Spinner
-                                animation="border"
-                                size="sm"
-                                className="me-1"
-                              />
-                              Sincronizando...
-                            </>
-                          ) : (
-                            <>
-                              <i className="bi bi-arrow-clockwise me-1"></i>
-                              Sincronizar con PayPal
-                            </>
-                          )}
-                        </Button>
-                      </div>
+                      {autoSyncActive ? (
+                        <>
+                          <div className="d-flex align-items-center">
+                            <Spinner
+                              animation="border"
+                              size="sm"
+                              className="me-2"
+                            />
+                            <span>
+                              <strong>
+                                Sincronizando automáticamente con PayPal...
+                              </strong>
+                            </span>
+                          </div>
+                          <div className="mt-2">
+                            <small className="text-muted">
+                              Estamos verificando el estado de tu suscripción
+                              automáticamente. Este proceso puede tomar unos
+                              minutos.
+                            </small>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          Tu suscripción está pendiente de activación. Por
+                          favor, completa el proceso de pago.
+                          <div className="mt-2">
+                            <small className="d-block text-muted mb-2">
+                              Si ya completaste el pago, puedes sincronizar tu
+                              suscripción:
+                            </small>
+                            <Button
+                              variant="outline-warning"
+                              size="sm"
+                              onClick={handleSyncSubscription}
+                              disabled={syncLoading}
+                            >
+                              {syncLoading ? (
+                                <>
+                                  <Spinner
+                                    animation="border"
+                                    size="sm"
+                                    className="me-1"
+                                  />
+                                  Sincronizando...
+                                </>
+                              ) : (
+                                <>
+                                  <i className="bi bi-arrow-clockwise me-1"></i>
+                                  Sincronizar con PayPal
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        </>
+                      )}
                     </Alert>
                   )}
 

@@ -1,16 +1,26 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Badge, Spinner, Alert, Modal, ListGroup } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { conexionDBApi } from '../services/api';
+import React, { useState, useEffect } from "react";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Button,
+  Spinner,
+  Alert,
+  Modal,
+  ListGroup,
+} from "react-bootstrap";
+import { useNavigate } from "react-router-dom";
+
+import { conexionDBApi } from "../services/api";
+import ConnectionLimitInfo from "../components/ConnectionLimitInfo";
 
 const Conexiones = () => {
-  const { currentUser } = useAuth();
   const navigate = useNavigate();
 
   const [conexiones, setConexiones] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [selectedConnection, setSelectedConnection] = useState(null);
 
@@ -22,7 +32,7 @@ const Conexiones = () => {
   const fetchUserConnections = async () => {
     try {
       setLoading(true);
-      setError('');
+      setError("");
 
       const { data, error } = await conexionDBApi.getUserConnections();
 
@@ -32,8 +42,10 @@ const Conexiones = () => {
 
       setConexiones(data || []);
     } catch (err) {
-      console.error('Error fetching connections:', err);
-      setError('No se pudieron cargar las conexiones. Por favor, intente nuevamente.');
+      console.error("Error fetching connections:", err);
+      setError(
+        "No se pudieron cargar las conexiones. Por favor, intente nuevamente.",
+      );
     } finally {
       setLoading(false);
     }
@@ -53,7 +65,9 @@ const Conexiones = () => {
     try {
       setLoading(true);
 
-      const { error } = await conexionDBApi.deleteConnection(selectedConnection.id);
+      const { error } = await conexionDBApi.deleteConnection(
+        selectedConnection.id,
+      );
 
       if (error) {
         throw new Error(error);
@@ -62,8 +76,10 @@ const Conexiones = () => {
       setShowModal(false);
       fetchUserConnections();
     } catch (err) {
-      console.error('Error deleting connection:', err);
-      setError('No se pudo eliminar la conexión. Por favor, intente nuevamente.');
+      console.error("Error deleting connection:", err);
+      setError(
+        "No se pudo eliminar la conexión. Por favor, intente nuevamente.",
+      );
     } finally {
       setLoading(false);
     }
@@ -72,7 +88,7 @@ const Conexiones = () => {
   // Función eliminada: no mostramos el estado de la conexión
 
   const getMotorIcon = (motor) => {
-    return motor?.nombre || 'Desconocido';
+    return motor?.nombre || "Desconocido";
   };
 
   if (loading && conexiones.length === 0) {
@@ -90,10 +106,12 @@ const Conexiones = () => {
     <Container className="py-5">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1>Mis Conexiones a Bases de Datos</h1>
-        <Button variant="primary" onClick={() => navigate('/crear-conexion')}>
+        <Button variant="primary" onClick={() => navigate("/crear-conexion")}>
           Nueva Conexión
         </Button>
       </div>
+
+      <ConnectionLimitInfo currentConnectionCount={conexiones.length} />
 
       {error && <Alert variant="danger">{error}</Alert>}
 
@@ -102,9 +120,13 @@ const Conexiones = () => {
           <Card.Body>
             <Card.Title>No tienes conexiones configuradas</Card.Title>
             <Card.Text>
-              Para empezar a usar NexoSQL, necesitas configurar una conexión a una base de datos.
+              Para empezar a usar NexoSQL, necesitas configurar una conexión a
+              una base de datos.
             </Card.Text>
-            <Button variant="primary" onClick={() => navigate('/crear-conexion')}>
+            <Button
+              variant="primary"
+              onClick={() => navigate("/crear-conexion")}
+            >
               Crear Primera Conexión
             </Button>
           </Card.Body>
@@ -116,12 +138,10 @@ const Conexiones = () => {
               <Card
                 className="h-100 shadow-sm"
                 onClick={() => handleConnectionClick(conexion)}
-                style={{ cursor: 'pointer' }}
+                style={{ cursor: "pointer" }}
               >
                 <Card.Body>
-                  <Card.Title>
-                    {conexion.nombre}
-                  </Card.Title>
+                  <Card.Title>{conexion.nombre}</Card.Title>
                   <Card.Subtitle className="mb-3 text-muted">
                     Motor: {getMotorIcon(conexion.motor)}
                   </Card.Subtitle>
@@ -137,7 +157,10 @@ const Conexiones = () => {
                     </ListGroup.Item>
                   </ListGroup>
                   <Card.Text className="text-muted">
-                    <small>Creada: {new Date(conexion.createdAt).toLocaleDateString()}</small>
+                    <small>
+                      Creada:{" "}
+                      {new Date(conexion.createdAt).toLocaleDateString()}
+                    </small>
                   </Card.Text>
                 </Card.Body>
               </Card>
@@ -155,11 +178,22 @@ const Conexiones = () => {
           {selectedConnection && (
             <>
               <h5>{selectedConnection.nombre}</h5>
-              <p><strong>Motor:</strong> {getMotorIcon(selectedConnection.motor)}</p>
-              <p><strong>Host:</strong> {selectedConnection.host}</p>
-              <p><strong>Puerto:</strong> {selectedConnection.port}</p>
-              <p><strong>Base de datos:</strong> {selectedConnection.database_name}</p>
-              <p><strong>Usuario:</strong> {selectedConnection.username}</p>
+              <p>
+                <strong>Motor:</strong> {getMotorIcon(selectedConnection.motor)}
+              </p>
+              <p>
+                <strong>Host:</strong> {selectedConnection.host}
+              </p>
+              <p>
+                <strong>Puerto:</strong> {selectedConnection.port}
+              </p>
+              <p>
+                <strong>Base de datos:</strong>{" "}
+                {selectedConnection.database_name}
+              </p>
+              <p>
+                <strong>Usuario:</strong> {selectedConnection.username}
+              </p>
             </>
           )}
         </Modal.Body>

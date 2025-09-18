@@ -9,10 +9,8 @@ import {
   Button,
 } from "react-bootstrap";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
 
 const SubscriptionSuccess = () => {
-  const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);

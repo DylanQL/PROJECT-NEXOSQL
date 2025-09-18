@@ -1,13 +1,15 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useAuth } from './AuthContext';
-import subscriptionService from '../services/subscriptionService';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { useAuth } from "./AuthContext";
+import subscriptionService from "../services/subscriptionService";
 
 const SubscriptionContext = createContext();
 
 export function useSubscription() {
   const context = useContext(SubscriptionContext);
   if (!context) {
-    throw new Error('useSubscription must be used within a SubscriptionProvider');
+    throw new Error(
+      "useSubscription must be used within a SubscriptionProvider",
+    );
   }
   return context;
 }
@@ -21,7 +23,9 @@ export function SubscriptionProvider({ children }) {
   const [subscriptionLoading, setSubscriptionLoading] = useState(true);
   const [plans, setPlans] = useState({});
   const [subscriptionStats, setSubscriptionStats] = useState(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
+  const [autoSyncActive, setAutoSyncActive] = useState(false);
+  const [autoSyncSuccess, setAutoSyncSuccess] = useState("");
 
   // Load subscription data when user changes
   useEffect(() => {
@@ -32,58 +36,164 @@ export function SubscriptionProvider({ children }) {
     }
   }, [currentUser, userProfile]);
 
+  // Auto-sync pending subscriptions effect
+  useEffect(() => {
+    if (
+      currentSubscription &&
+      currentSubscription.status === "pending" &&
+      !autoSyncActive
+    ) {
+      console.log("Detected pending subscription, starting auto-sync...");
+      startAutoSync();
+    } else if (
+      (!currentSubscription || currentSubscription.status !== "pending") &&
+      autoSyncActive
+    ) {
+      console.log("No pending subscription, stopping auto-sync...");
+      stopAutoSync();
+    }
+  }, [currentSubscription, autoSyncActive]);
+
+  // Cleanup auto-sync on unmount
+  useEffect(() => {
+    return () => {
+      stopAutoSync();
+    };
+  }, []);
+
   // Reset subscription state when user logs out
   const resetSubscriptionState = () => {
     setCurrentSubscription(null);
     setHasActiveSubscription(false);
     setSubscriptionStats(null);
     setSubscriptionLoading(false);
-    setError('');
+    setError("");
   };
 
   // Load all subscription related data
   const loadSubscriptionData = async () => {
     try {
       setSubscriptionLoading(true);
-      setError('');
+      setError("");
 
       // Load plans and current subscription in parallel
       const [plansResult, subscriptionResult] = await Promise.allSettled([
         subscriptionService.getPlans(),
-        subscriptionService.getCurrentSubscription()
+        subscriptionService.getCurrentSubscription(),
       ]);
 
       // Handle plans result
-      if (plansResult.status === 'fulfilled' && plansResult.value.success) {
+      if (plansResult.status === "fulfilled" && plansResult.value.success) {
         setPlans(plansResult.value.data);
       }
 
       // Handle subscription result
-      if (subscriptionResult.status === 'fulfilled' && subscriptionResult.value.success) {
+      if (
+        subscriptionResult.status === "fulfilled" &&
+        subscriptionResult.value.success
+      ) {
         setCurrentSubscription(subscriptionResult.value.data);
-        setHasActiveSubscription(subscriptionResult.value.hasActiveSubscription);
+        setHasActiveSubscription(
+          subscriptionResult.value.hasActiveSubscription,
+        );
       } else {
         setCurrentSubscription(null);
         setHasActiveSubscription(false);
       }
 
       // Load subscription stats if user has subscription history
-      if (subscriptionResult.status === 'fulfilled' && subscriptionResult.value.data) {
+      if (
+        subscriptionResult.status === "fulfilled" &&
+        subscriptionResult.value.data
+      ) {
         try {
           const statsResult = await subscriptionService.getSubscriptionStats();
           if (statsResult.success) {
             setSubscriptionStats(statsResult.data);
           }
         } catch (statsError) {
-          console.warn('Could not load subscription stats:', statsError);
+          console.warn("Could not load subscription stats:", statsError);
         }
       }
-
     } catch (err) {
-      console.error('Error loading subscription data:', err);
-      setError('Error al cargar información de suscripción');
+      console.error("Error loading subscription data:", err);
+      setError("Error al cargar información de suscripción");
     } finally {
       setSubscriptionLoading(false);
+    }
+  };
+
+  // Auto-sync functionality for pending subscriptions
+  const syncPendingSubscription = async () => {
+    if (!currentSubscription?.subscriptionId) return false;
+
+    try {
+      console.log(
+        `Auto-syncing subscription ${currentSubscription.subscriptionId}...`,
+      );
+      const result = await subscriptionService.syncSubscription(
+        currentSubscription.subscriptionId,
+      );
+
+      if (result.success && result.data.data.subscription.status === "active") {
+        console.log("Auto-sync successful: subscription is now active");
+        setAutoSyncSuccess(
+          "¡Suscripción activada automáticamente! Ya puedes acceder a todas las funciones.",
+        );
+        await refreshSubscription();
+
+        // Clear success message after 5 seconds
+        setTimeout(() => setAutoSyncSuccess(""), 5000);
+
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.warn("Auto-sync failed:", err.message);
+      return false;
+    }
+  };
+
+  // Start auto-sync interval
+  const startAutoSync = () => {
+    if (autoSyncActive) return;
+
+    setAutoSyncActive(true);
+    console.log("Starting auto-sync for pending subscription...");
+
+    // Try sync immediately
+    syncPendingSubscription();
+
+    // Then check every 30 seconds
+    const interval = setInterval(async () => {
+      const syncSuccess = await syncPendingSubscription();
+      if (syncSuccess) {
+        stopAutoSync();
+      }
+    }, 30000); // 30 seconds
+
+    // Store interval ID for cleanup
+    window.subscriptionAutoSyncInterval = interval;
+
+    // Stop after 10 minutes to avoid infinite loops
+    setTimeout(() => {
+      if (autoSyncActive) {
+        console.log("Auto-sync timeout reached, stopping...");
+        stopAutoSync();
+      }
+    }, 600000); // 10 minutes
+  };
+
+  // Stop auto-sync interval
+  const stopAutoSync = () => {
+    if (!autoSyncActive) return;
+
+    setAutoSyncActive(false);
+    console.log("Stopping auto-sync...");
+
+    if (window.subscriptionAutoSyncInterval) {
+      clearInterval(window.subscriptionAutoSyncInterval);
+      delete window.subscriptionAutoSyncInterval;
     }
   };
 
@@ -97,7 +207,7 @@ export function SubscriptionProvider({ children }) {
   // Create new subscription
   const createSubscription = async (planType) => {
     try {
-      setError('');
+      setError("");
       const result = await subscriptionService.createSubscription(planType);
 
       if (result.success) {
@@ -105,7 +215,7 @@ export function SubscriptionProvider({ children }) {
         await refreshSubscription();
         return result;
       } else {
-        throw new Error(result.error || 'Error al crear suscripción');
+        throw new Error(result.error || "Error al crear suscripción");
       }
     } catch (err) {
       const errorMessage = subscriptionService.getErrorMessage(err);
@@ -115,17 +225,25 @@ export function SubscriptionProvider({ children }) {
   };
 
   // Confirm subscription after PayPal approval
-  const confirmSubscription = async (subscriptionId, token = null, payerId = null) => {
+  const confirmSubscription = async (
+    subscriptionId,
+    token = null,
+    payerId = null,
+  ) => {
     try {
-      setError('');
-      const result = await subscriptionService.confirmSubscription(subscriptionId, token, payerId);
+      setError("");
+      const result = await subscriptionService.confirmSubscription(
+        subscriptionId,
+        token,
+        payerId,
+      );
 
       if (result.success) {
         // Refresh subscription data after confirmation
         await refreshSubscription();
         return result;
       } else {
-        throw new Error(result.error || 'Error al confirmar suscripción');
+        throw new Error(result.error || "Error al confirmar suscripción");
       }
     } catch (err) {
       const errorMessage = subscriptionService.getErrorMessage(err);
@@ -137,7 +255,7 @@ export function SubscriptionProvider({ children }) {
   // Update subscription plan
   const updateSubscription = async (newPlanType) => {
     try {
-      setError('');
+      setError("");
       const result = await subscriptionService.updateSubscription(newPlanType);
 
       if (result.success) {
@@ -145,7 +263,7 @@ export function SubscriptionProvider({ children }) {
         await refreshSubscription();
         return result;
       } else {
-        throw new Error(result.error || 'Error al actualizar suscripción');
+        throw new Error(result.error || "Error al actualizar suscripción");
       }
     } catch (err) {
       const errorMessage = subscriptionService.getErrorMessage(err);
@@ -155,9 +273,11 @@ export function SubscriptionProvider({ children }) {
   };
 
   // Cancel subscription
-  const cancelSubscription = async (reason = 'Usuario solicitó cancelación') => {
+  const cancelSubscription = async (
+    reason = "Usuario solicitó cancelación",
+  ) => {
     try {
-      setError('');
+      setError("");
       const result = await subscriptionService.cancelSubscription(reason);
 
       if (result.success) {
@@ -165,7 +285,7 @@ export function SubscriptionProvider({ children }) {
         await refreshSubscription();
         return result;
       } else {
-        throw new Error(result.error || 'Error al cancelar suscripción');
+        throw new Error(result.error || "Error al cancelar suscripción");
       }
     } catch (err) {
       const errorMessage = subscriptionService.getErrorMessage(err);
@@ -182,13 +302,19 @@ export function SubscriptionProvider({ children }) {
   // Check if current plan is higher than specified plan
   const isPlanHigherThan = (planType) => {
     if (!currentSubscription || !hasActiveSubscription) return false;
-    return subscriptionService.isPlanHigher(currentSubscription.planType, planType);
+    return subscriptionService.isPlanHigher(
+      currentSubscription.planType,
+      planType,
+    );
   };
 
   // Check if current plan is lower than specified plan
   const isPlanLowerThan = (planType) => {
     if (!currentSubscription || !hasActiveSubscription) return true;
-    return subscriptionService.isPlanLower(currentSubscription.planType, planType);
+    return subscriptionService.isPlanLower(
+      currentSubscription.planType,
+      planType,
+    );
   };
 
   // Get connection limit for current subscription
@@ -212,7 +338,7 @@ export function SubscriptionProvider({ children }) {
   };
 
   // Format price for display
-  const formatPrice = (price, currency = 'USD') => {
+  const formatPrice = (price, currency = "USD") => {
     return subscriptionService.formatPrice(price, currency);
   };
 
@@ -228,71 +354,79 @@ export function SubscriptionProvider({ children }) {
 
   // Clear error
   const clearError = () => {
-    setError('');
+    setError("");
+  };
+
+  // Clear success notification
+  const clearAutoSyncSuccess = () => {
+    setAutoSyncSuccess("");
   };
 
   // Check if subscription is active and valid
   const isSubscriptionActive = () => {
     if (!currentSubscription) return false;
 
-    return currentSubscription.status === 'active' &&
-           hasActiveSubscription &&
-           (!currentSubscription.endDate || new Date() <= new Date(currentSubscription.endDate));
+    return (
+      currentSubscription.status === "active" &&
+      hasActiveSubscription &&
+      (!currentSubscription.endDate ||
+        new Date() <= new Date(currentSubscription.endDate))
+    );
   };
 
   // Get subscription status info
   const getSubscriptionStatusInfo = () => {
     if (!currentSubscription) {
       return {
-        status: 'none',
-        message: 'No tienes una suscripción activa',
-        variant: 'warning',
-        canAccess: false
+        status: "none",
+        message: "No tienes una suscripción activa",
+        variant: "warning",
+        canAccess: false,
       };
     }
 
     switch (currentSubscription.status) {
-      case 'active':
+      case "active":
         return {
-          status: 'active',
-          message: 'Tu suscripción está activa',
-          variant: 'success',
-          canAccess: true
+          status: "active",
+          message: "Tu suscripción está activa",
+          variant: "success",
+          canAccess: true,
         };
-      case 'pending':
+      case "pending":
         return {
-          status: 'pending',
-          message: 'Tu suscripción está pendiente de activación',
-          variant: 'warning',
-          canAccess: false
+          status: "pending",
+          message: "Tu suscripción está pendiente de activación",
+          variant: "warning",
+          canAccess: false,
         };
-      case 'cancelled':
+      case "cancelled":
         return {
-          status: 'cancelled',
-          message: 'Tu suscripción ha sido cancelada',
-          variant: 'danger',
-          canAccess: false
+          status: "cancelled",
+          message: "Tu suscripción ha sido cancelada",
+          variant: "danger",
+          canAccess: false,
         };
-      case 'suspended':
+      case "suspended":
         return {
-          status: 'suspended',
-          message: 'Tu suscripción está suspendida',
-          variant: 'danger',
-          canAccess: false
+          status: "suspended",
+          message: "Tu suscripción está suspendida",
+          variant: "danger",
+          canAccess: false,
         };
-      case 'expired':
+      case "expired":
         return {
-          status: 'expired',
-          message: 'Tu suscripción ha expirado',
-          variant: 'danger',
-          canAccess: false
+          status: "expired",
+          message: "Tu suscripción ha expirado",
+          variant: "danger",
+          canAccess: false,
         };
       default:
         return {
-          status: 'unknown',
-          message: 'Estado de suscripción desconocido',
-          variant: 'secondary',
-          canAccess: false
+          status: "unknown",
+          message: "Estado de suscripción desconocido",
+          variant: "secondary",
+          canAccess: false,
         };
     }
   };
@@ -305,13 +439,15 @@ export function SubscriptionProvider({ children }) {
 
     const nextBilling = new Date(currentSubscription.nextBillingDate);
     const now = new Date();
-    const daysUntilBilling = Math.ceil((nextBilling - now) / (1000 * 60 * 60 * 24));
+    const daysUntilBilling = Math.ceil(
+      (nextBilling - now) / (1000 * 60 * 60 * 24),
+    );
 
     return {
       nextBillingDate: nextBilling,
       daysUntilBilling,
       isNearExpiry: daysUntilBilling <= 7,
-      formatted: formatDate(nextBilling)
+      formatted: formatDate(nextBilling),
     };
   };
 
@@ -323,6 +459,8 @@ export function SubscriptionProvider({ children }) {
     plans,
     subscriptionStats,
     error,
+    autoSyncActive,
+    autoSyncSuccess,
 
     // Actions
     createSubscription,
@@ -331,6 +469,10 @@ export function SubscriptionProvider({ children }) {
     cancelSubscription,
     refreshSubscription,
     clearError,
+    clearAutoSyncSuccess,
+    syncPendingSubscription,
+    startAutoSync,
+    stopAutoSync,
 
     // Helpers
     canAccessFeature,
@@ -347,7 +489,7 @@ export function SubscriptionProvider({ children }) {
     getExpiryInfo,
 
     // Service access
-    subscriptionService
+    subscriptionService,
   };
 
   return (
