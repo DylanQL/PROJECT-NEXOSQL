@@ -407,15 +407,34 @@ class SubscriptionController {
       const { newPlanType } = req.body;
       const userId = req.user.id;
 
+      console.log(`=== UpdateSubscription Debug ===`);
+      console.log(`User ID: ${userId}`);
+      console.log(`New Plan Type: ${newPlanType}`);
+
       if (!newPlanType || !["bronce", "plata", "oro"].includes(newPlanType)) {
+        console.log(`Invalid plan type: ${newPlanType}`);
         return res.status(400).json({
           success: false,
           error: "Tipo de plan inválido",
         });
       }
 
+      console.log(`Getting active subscription for user ${userId}...`);
       const currentSubscription = await req.user.getActiveSubscription();
+      console.log(
+        `Current subscription found:`,
+        currentSubscription
+          ? {
+              id: currentSubscription.id,
+              planType: currentSubscription.planType,
+              status: currentSubscription.status,
+              isInGracePeriod: currentSubscription.isInGracePeriod(),
+            }
+          : null,
+      );
+
       if (!currentSubscription) {
+        console.log(`No active subscription found for user ${userId}`);
         return res.status(400).json({
           success: false,
           error: "No tienes una suscripción activa para actualizar",
@@ -429,24 +448,40 @@ class SubscriptionController {
         });
       }
 
-      // Cancel current subscription
-      await paypalService.cancelSubscription(
-        currentSubscription.subscriptionId,
-        "Cambiando a un nuevo plan",
-      );
+      // Check if subscription is in grace period (already cancelled in PayPal)
+      const isInGracePeriod = currentSubscription.isInGracePeriod();
+      console.log(`Subscription in grace period: ${isInGracePeriod}`);
 
+      if (!isInGracePeriod) {
+        // Only cancel in PayPal if not already cancelled
+        console.log(`Cancelling current subscription in PayPal...`);
+        await paypalService.cancelSubscription(
+          currentSubscription.subscriptionId,
+          "Cambiando a un nuevo plan",
+        );
+      } else {
+        console.log(
+          `Subscription already cancelled in PayPal, skipping cancellation...`,
+        );
+      }
+
+      // Update current subscription status regardless
+      console.log(`Updating current subscription status to cancelled...`);
       await currentSubscription.update({
         status: "cancelled",
         endDate: new Date(),
       });
 
       // Create new subscription
+      console.log(`Creating new subscription with plan: ${newPlanType}`);
       const planDetails = Subscription.getPlanDetails(newPlanType);
-      const baseUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+      console.log(`Plan details:`, planDetails);
 
+      const baseUrl = process.env.FRONTEND_URL || "http://localhost:3000";
       const returnUrl = `${baseUrl}/subscription/success`;
       const cancelUrl = `${baseUrl}/subscription/cancel`;
 
+      console.log(`Creating PayPal subscription...`);
       const paypalSubscription = await paypalService.createSubscription(
         newPlanType,
         returnUrl,
@@ -457,7 +492,12 @@ class SubscriptionController {
           email: req.user.email,
         },
       );
+      console.log(
+        `PayPal subscription created:`,
+        paypalSubscription.subscriptionId,
+      );
 
+      console.log(`Creating subscription record in database...`);
       const newSubscription = await Subscription.create({
         userId: userId,
         planType: newPlanType,
@@ -468,6 +508,7 @@ class SubscriptionController {
         currency: "USD",
         paypalData: paypalSubscription.fullResponse,
       });
+      console.log(`New subscription created with ID: ${newSubscription.id}`);
 
       res.json({
         success: true,
@@ -480,7 +521,10 @@ class SubscriptionController {
           "Suscripción actualizada. Completa el pago para activar el nuevo plan.",
       });
     } catch (error) {
-      console.error("Error updating subscription:", error);
+      console.error("=== Error updating subscription ===");
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
+      console.error("Error details:", error);
       res.status(500).json({
         success: false,
         error: "Error al actualizar la suscripción",
