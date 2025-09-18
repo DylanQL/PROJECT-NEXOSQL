@@ -70,6 +70,26 @@ const Subscription = sequelize.define(
       type: DataTypes.JSON,
       allowNull: true,
       comment: "Additional PayPal subscription data",
+      get() {
+        const value = this.getDataValue("paypalData");
+        // If it's a string, parse it; if it's already an object, return as is
+        if (typeof value === "string") {
+          try {
+            return JSON.parse(value);
+          } catch (e) {
+            return null;
+          }
+        }
+        return value;
+      },
+      set(value) {
+        // If it's an object, stringify it; if it's already a string, keep as is
+        if (typeof value === "object" && value !== null) {
+          this.setDataValue("paypalData", JSON.stringify(value));
+        } else {
+          this.setDataValue("paypalData", value);
+        }
+      },
     },
   },
   {
@@ -127,6 +147,28 @@ Subscription.prototype.isActive = function () {
   return (
     this.status === "active" &&
     (!this.endDate || new Date() <= new Date(this.endDate))
+  );
+};
+
+// Instance method to check if subscription is in grace period (cancelled but still has access)
+Subscription.prototype.isInGracePeriod = function () {
+  // Parse paypalData if it's a string
+  let paypalData = this.paypalData;
+  if (typeof paypalData === "string") {
+    try {
+      paypalData = JSON.parse(paypalData);
+    } catch (e) {
+      paypalData = null;
+    }
+  }
+
+  return (
+    this.status === "active" &&
+    this.endDate &&
+    new Date() <= new Date(this.endDate) &&
+    // If there's paypal data indicating cancellation
+    paypalData &&
+    (paypalData.status === "CANCELLED" || paypalData.status === "CANCELED")
   );
 };
 

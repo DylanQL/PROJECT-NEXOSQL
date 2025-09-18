@@ -18,6 +18,7 @@ const Subscriptions = () => {
   const [plans, setPlans] = useState({});
   const [currentSubscription, setCurrentSubscription] = useState(null);
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
+  const [isInGracePeriod, setIsInGracePeriod] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -67,6 +68,7 @@ const Subscriptions = () => {
       if (data.success) {
         setCurrentSubscription(data.data);
         setHasActiveSubscription(data.hasActiveSubscription);
+        setIsInGracePeriod(data.isInGracePeriod || false);
       }
     } catch (err) {
       console.error("Error loading current subscription:", err);
@@ -305,6 +307,13 @@ const Subscriptions = () => {
                         {formatDate(currentSubscription.endDate)}
                       </p>
                     )}
+                    {isInGracePeriod && (
+                      <Alert variant="warning" className="mt-2">
+                        <i className="bi bi-exclamation-triangle me-2"></i>
+                        <strong>Suscripción cancelada:</strong> Mantienes acceso
+                        hasta la fecha de fin.
+                      </Alert>
+                    )}
                   </Col>
                 </Row>
                 <Row className="mt-3">
@@ -357,16 +366,18 @@ const Subscriptions = () => {
                           )}
                         </>
                       )}
-                      <Button
-                        variant="outline-danger"
-                        onClick={() => setShowCancelModal(true)}
-                        disabled={
-                          actionLoading || syncLoading || autoSyncActive
-                        }
-                        size="sm"
-                      >
-                        Cancelar Suscripción
-                      </Button>
+                      {!isInGracePeriod && (
+                        <Button
+                          variant="outline-danger"
+                          onClick={() => setShowCancelModal(true)}
+                          disabled={
+                            actionLoading || syncLoading || autoSyncActive
+                          }
+                          size="sm"
+                        >
+                          Cancelar Suscripción
+                        </Button>
+                      )}
                     </div>
                   </Col>
                 </Row>

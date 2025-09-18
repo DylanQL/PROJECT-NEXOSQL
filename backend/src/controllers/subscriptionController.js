@@ -46,6 +46,7 @@ class SubscriptionController {
         success: true,
         data: subscription,
         hasActiveSubscription: subscription.isActive(),
+        isInGracePeriod: subscription.isInGracePeriod(),
       });
     } catch (error) {
       console.error("Error getting user subscription:", error);
@@ -313,7 +314,13 @@ class SubscriptionController {
             billing_info: paypalSubscription.billing_info,
           });
 
-          updates.paypalData = paypalSubscription;
+          // Ensure we save the cancellation status in PayPal data
+          const updatedPaypalData = {
+            ...paypalSubscription,
+            status: paypalSubscription.status || "CANCELLED", // Ensure status is saved
+            cancelled_at: new Date().toISOString(), // Add cancellation timestamp
+          };
+          updates.paypalData = updatedPaypalData;
 
           // Set the end date to maintain access until the end of the billing period
           if (

@@ -41,6 +41,7 @@ class SubscriptionService {
         success: true,
         data: response.data.data,
         hasActiveSubscription: response.data.hasActiveSubscription,
+        isInGracePeriod: response.data.isInGracePeriod,
       };
     } catch (error) {
       console.error("Error getting current subscription:", error);
