@@ -116,7 +116,7 @@ export const conexionDBApi = {
   getUserConnections: async () => {
     try {
       const response = await api.get("/conexiones");
-      return { data: response.data, error: null };
+      return { data: response.data.data, error: null };
     } catch (error) {
       return {
         data: null,
@@ -198,7 +198,7 @@ export const aiApi = {
     try {
       const response = await api.post("/ai/query", {
         connectionId,
-        question
+        question,
       });
       return { data: response.data, error: null };
     } catch (error) {
@@ -217,7 +217,8 @@ export const aiApi = {
     } catch (error) {
       return {
         data: null,
-        error: error.response?.data?.error || "Error fetching schema information",
+        error:
+          error.response?.data?.error || "Error fetching schema information",
       };
     }
   },

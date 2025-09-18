@@ -256,7 +256,7 @@ const ChatInterface = () => {
     );
   }
 
-  if (connections.length === 0) {
+  if (!Array.isArray(connections) || connections.length === 0) {
     return (
       <Container className="py-5">
         <Card className="text-center p-5">
@@ -292,21 +292,22 @@ const ChatInterface = () => {
                   {activeConnection?.nombre || "Seleccionar conexión"}
                 </Dropdown.Toggle>
                 <Dropdown.Menu className="w-100">
-                  {connections.map((conn) => (
-                    <Dropdown.Item
-                      key={conn.id}
-                      active={activeConnection?.id === conn.id}
-                      onClick={() => {
-                        // Dispatch custom event to change connection
-                        const event = new CustomEvent("changeConnection", {
-                          detail: { connectionId: conn.id },
-                        });
-                        document.dispatchEvent(event);
-                      }}
-                    >
-                      {conn.nombre} - {conn.motor?.nombre || "Base de datos"}
-                    </Dropdown.Item>
-                  ))}
+                  {Array.isArray(connections) &&
+                    connections.map((conn) => (
+                      <Dropdown.Item
+                        key={conn.id}
+                        active={activeConnection?.id === conn.id}
+                        onClick={() => {
+                          // Dispatch custom event to change connection
+                          const event = new CustomEvent("changeConnection", {
+                            detail: { connectionId: conn.id },
+                          });
+                          document.dispatchEvent(event);
+                        }}
+                      >
+                        {conn.nombre} - {conn.motor?.nombre || "Base de datos"}
+                      </Dropdown.Item>
+                    ))}
                 </Dropdown.Menu>
               </Dropdown>
             </Form.Group>
