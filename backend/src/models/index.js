@@ -4,6 +4,21 @@ const MotorDB = require("./MotorDB");
 const ConexionDB = require("./ConexionDB");
 const Subscription = require("./Subscription");
 
+// Initialize associations
+const models = {
+  User,
+  MotorDB,
+  ConexionDB,
+  Subscription,
+};
+
+// Set up associations
+Object.keys(models).forEach((modelName) => {
+  if (models[modelName].associate) {
+    models[modelName].associate(models);
+  }
+});
+
 // Initialize models
 const initializeModels = async () => {
   try {

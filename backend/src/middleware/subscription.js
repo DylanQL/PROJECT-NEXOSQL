@@ -1,5 +1,4 @@
-const User = require("../models/User");
-const Subscription = require("../models/Subscription");
+const { User, Subscription } = require("../models");
 
 /**
  * Middleware to check if user has an active subscription
@@ -162,9 +161,9 @@ const checkConnectionLimit = async (req, res, next) => {
     const limit = connectionLimits[activeSubscription.planType];
 
     // Check current connection count
-    const ConexionDB = require("../models/ConexionDB");
+    const { ConexionDB } = require("../models");
     const currentConnections = await ConexionDB.count({
-      where: { userId: req.user.id },
+      where: { usuarios_id: req.user.id },
     });
 
     if (currentConnections >= limit) {

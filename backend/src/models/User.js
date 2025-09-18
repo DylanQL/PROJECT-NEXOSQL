@@ -48,7 +48,7 @@ const User = sequelize.define(
   },
 );
 
-// Define associations
+// Define associations after model creation
 User.associate = function (models) {
   User.hasMany(models.Subscription, {
     foreignKey: "userId",

@@ -14,10 +14,12 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import { conexionDBApi, motorDBApi } from "../services/api";
 import ConnectionLimitInfo from "../components/ConnectionLimitInfo";
+import { useSubscription } from "../contexts/SubscriptionContext";
 
 const CrearConexion = () => {
   const { id } = useParams(); // For edit mode, id will be present
   const navigate = useNavigate();
+  const { hasActiveSubscription } = useSubscription();
 
   // State variables
   const [step, setStep] = useState(1);
@@ -193,6 +195,12 @@ const CrearConexion = () => {
   };
 
   const handleSaveConnection = async () => {
+    // Verificar suscripción antes de intentar guardar
+    if (!hasActiveSubscription) {
+      setError("Se requiere una suscripción activa para crear conexiones");
+      return;
+    }
+
     try {
       setLoading(true);
       setError("");
@@ -555,7 +563,7 @@ const CrearConexion = () => {
               <Button
                 variant="success"
                 onClick={handleSaveConnection}
-                disabled={loading}
+                disabled={loading || !hasActiveSubscription}
                 size="md"
               >
                 {loading ? "Guardando..." : "Guardar Conexión"}
