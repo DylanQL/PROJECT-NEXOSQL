@@ -7,12 +7,11 @@ const {
   checkConnectionLimit,
 } = require("../middleware/subscription");
 
-// GET /api/conexiones - Get all user's connections
+// GET /api/conexiones - Get all user's connections (allow access even without subscription)
 router.get(
   "/",
   verifyToken,
   requireUser,
-  requireActiveSubscription,
   conexionDBController.getUserConnections,
 );
 

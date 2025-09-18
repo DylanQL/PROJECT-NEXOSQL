@@ -49,12 +49,14 @@ const ConnectionLimitInfo = ({
 
   // Load connection count if not provided
   useEffect(() => {
-    if (currentConnectionCount === 0 && hasActiveSubscription) {
+    if (currentConnectionCount === 0) {
+      // Always try to load connection count, even without subscription
+      // This allows the backend to return empty array for users without subscription
       loadConnectionCount();
     } else {
       setConnections(currentConnectionCount);
     }
-  }, [currentConnectionCount, hasActiveSubscription, loadConnectionCount]);
+  }, [currentConnectionCount, loadConnectionCount]);
 
   if (subscriptionLoading || loading) {
     return (
