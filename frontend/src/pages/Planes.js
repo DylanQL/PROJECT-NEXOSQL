@@ -20,57 +20,49 @@ const Planes = () => {
   const plans = {
     bronce: {
       name: "Plan Bronce",
-      price: 9.99,
-      connections: 2,
-      queries: 100,
-      description: "Perfecto para proyectos pequeños",
+      price: 5.0,
+      connections: 5,
+      queries: 500,
+      description:
+        "Para profesionales o micro-equipos que quieren comenzar a consultar sus bases de datos sin complicaciones.",
       features: [
-        "2 conexiones de base de datos",
-        "100 consultas por mes",
-        "Soporte básico por email",
-        "Acceso a chat con IA",
-        "Consultas SQL automáticas",
-        "Documentación básica",
+        "Hasta 5 conexiones de bases de datos",
+        "Consultas en lenguaje natural con IA",
+        "Reportes y estadísticas en tiempo real",
+        "Compatibilidad SQL/NoSQL",
       ],
       color: "secondary",
       popular: false,
     },
     plata: {
       name: "Plan Plata",
-      price: 19.99,
-      connections: 5,
-      queries: 500,
-      description: "Ideal para equipos medianos",
+      price: 10.0,
+      connections: 10,
+      queries: 1000,
+      description:
+        "Para profesionales o micro-equipos que quieren comenzar a consultar sus bases de datos sin complicaciones.",
       features: [
-        "5 conexiones de base de datos",
-        "500 consultas por mes",
-        "Soporte prioritario",
-        "Análisis de rendimiento",
-        "Optimización de consultas",
-        "Historial de consultas",
-        "Exportación de datos",
-        "Notificaciones en tiempo real",
+        "Hasta 10 conexiones de bases de datos",
+        "Consultas en lenguaje natural con IA",
+        "Reportes y estadísticas en tiempo real",
+        "Compatibilidad SQL/NoSQL",
       ],
       color: "primary",
       popular: true,
     },
     oro: {
       name: "Plan Oro",
-      price: 39.99,
-      connections: 15,
+      price: 20.0,
+      connections: 20,
       queries: 2000,
-      description: "Para empresas y proyectos grandes",
+      description:
+        "Para profesionales o micro-equipos que quieren comenzar a consultar sus bases de datos sin complicaciones.",
       features: [
-        "15 conexiones de base de datos",
-        "2000 consultas por mes",
-        "Soporte 24/7",
-        "Análisis avanzado con IA",
-        "Reportes personalizados",
-        "Backup automático",
-        "Integración con APIs",
-        "Dashboard ejecutivo",
-        "Acceso a beta features",
-        "Consultoría personalizada",
+        "Hasta 20 conexiones de bases de datos",
+        "Consultas en lenguaje natural con IA",
+        "Reportes y estadísticas en tiempo real",
+        "Compatibilidad SQL/NoSQL",
+        "Soporte técnico prioritario para resolver dudas y consultas",
       ],
       color: "warning",
       popular: false,
@@ -133,10 +125,13 @@ const Planes = () => {
                   {formatPrice(plan.price)}
                   <small className="fs-6 opacity-75">/mes</small>
                 </div>
-                <p className="mb-0 opacity-85">{plan.description}</p>
               </Card.Header>
 
               <Card.Body className="d-flex flex-column">
+                <p className="text-muted mb-4 text-center">
+                  {plan.description}
+                </p>
+
                 <div className="text-center mb-4">
                   <div className="row text-center">
                     <div className="col-6">
