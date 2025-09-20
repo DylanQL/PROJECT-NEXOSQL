@@ -9,6 +9,7 @@ import {
   Alert,
   Spinner,
   Badge,
+  Modal,
 } from "react-bootstrap";
 import { useAuth } from "../contexts/AuthContext";
 import { useSubscription } from "../contexts/SubscriptionContext";
@@ -33,6 +34,11 @@ const Profile = () => {
   const [subscriptionLoading, setSubscriptionLoading] = useState(true);
   const [syncLoading, setSyncLoading] = useState(false);
   const [syncSuccess, setSyncSuccess] = useState("");
+  const [plans, setPlans] = useState({});
+  const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
+  const [isInGracePeriod, setIsInGracePeriod] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
 
   // Load user profile data
   useEffect(() => {
@@ -50,6 +56,7 @@ const Profile = () => {
   useEffect(() => {
     if (currentUser) {
       loadSubscription();
+      loadPlans();
     }
   }, [currentUser]);
 
@@ -62,11 +69,25 @@ const Profile = () => {
       const data = await subscriptionService.getCurrentSubscription();
       if (data.success) {
         setSubscription(data.data);
+        setHasActiveSubscription(data.hasActiveSubscription);
+        setIsInGracePeriod(data.isInGracePeriod || false);
       }
     } catch (err) {
       console.error("Error loading subscription:", err);
     } finally {
       setSubscriptionLoading(false);
+    }
+  };
+
+  const loadPlans = async () => {
+    try {
+      const response = await fetch("/api/subscriptions/plans");
+      const data = await response.json();
+      if (data.success) {
+        setPlans(data.data);
+      }
+    } catch (err) {
+      console.error("Error loading plans:", err);
     }
   };
 
@@ -145,6 +166,61 @@ const Profile = () => {
     } finally {
       setSyncLoading(false);
     }
+  };
+
+  const handleCancelSubscription = async () => {
+    try {
+      setActionLoading(true);
+      setError("");
+      setSuccess(false);
+
+      const subscriptionService = (
+        await import("../services/subscriptionService")
+      ).default;
+      const data = await subscriptionService.cancelSubscription(
+        "Usuario solicitó cancelación",
+      );
+
+      if (data.success) {
+        setSuccess(true);
+        setShowCancelModal(false);
+        await loadSubscription();
+      } else {
+        setError(data.error || "Error al cancelar la suscripción");
+      }
+    } catch (err) {
+      setError("Error al cancelar la suscripción");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const getStatusBadge = (status) => {
+    const statusConfig = {
+      active: { variant: "success", text: "Activa" },
+      pending: { variant: "warning", text: "Pendiente" },
+      cancelled: { variant: "danger", text: "Cancelada" },
+      suspended: { variant: "secondary", text: "Suspendida" },
+      expired: { variant: "dark", text: "Expirada" },
+    };
+
+    const config = statusConfig[status] || {
+      variant: "secondary",
+      text: status,
+    };
+    return <Badge bg={config.variant}>{config.text}</Badge>;
+  };
+
+  const formatPrice = (price) => {
+    return new Intl.NumberFormat("es-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(price);
+  };
+
+  const formatDate = (date) => {
+    if (!date) return "N/A";
+    return new Date(date).toLocaleDateString("es-ES");
   };
 
   if (profileLoading) {
@@ -321,7 +397,7 @@ const Profile = () => {
                   size="sm"
                   onClick={() => navigate("/subscriptions")}
                 >
-                  Gestionar Suscripción
+                  Ver Todos los Planes
                 </Button>
               </div>
 
@@ -332,135 +408,133 @@ const Profile = () => {
                     Cargando información de suscripción...
                   </p>
                 </div>
-              ) : subscription ? (
+              ) : hasActiveSubscription && subscription ? (
                 <div>
-                  <Row className="mb-3">
-                    <Col md={6}>
-                      <Card.Text>
-                        <strong>Plan Actual:</strong>{" "}
-                        <Badge
-                          bg={
-                            subscription.planType === "oro"
-                              ? "warning"
-                              : subscription.planType === "plata"
-                                ? "info"
-                                : "secondary"
-                          }
-                        >
-                          {subscription.planType.charAt(0).toUpperCase() +
-                            subscription.planType.slice(1)}
-                        </Badge>
-                      </Card.Text>
-                      <Card.Text>
-                        <strong>Estado:</strong>{" "}
-                        <Badge
-                          bg={
-                            subscription.status === "active"
-                              ? "success"
-                              : subscription.status === "pending"
-                                ? "warning"
-                                : "danger"
-                          }
-                        >
-                          {subscription.status === "active"
-                            ? "Activa"
-                            : subscription.status === "pending"
-                              ? "Pendiente"
-                              : subscription.status}
-                        </Badge>
-                      </Card.Text>
-                    </Col>
-                    <Col md={6}>
-                      <Card.Text>
-                        <strong>Precio:</strong> ${subscription.price}/mes
-                      </Card.Text>
-                      {subscription.nextBillingDate && (
-                        <Card.Text>
-                          <strong>Próximo cobro:</strong>{" "}
-                          {new Date(
-                            subscription.nextBillingDate,
-                          ).toLocaleDateString("es-ES")}
-                        </Card.Text>
-                      )}
-                    </Col>
-                  </Row>
+                  <Card className="border-success mb-3">
+                    <Card.Header className="bg-success text-white">
+                      <h5 className="mb-0">Plan Actual</h5>
+                    </Card.Header>
+                    <Card.Body>
+                      <Row className="mb-3">
+                        <Col md={6}>
+                          <h6>
+                            Plan:{" "}
+                            <Badge bg="primary">
+                              {plans[subscription.planType]?.name ||
+                                subscription.planType.charAt(0).toUpperCase() +
+                                  subscription.planType.slice(1)}
+                            </Badge>
+                          </h6>
+                          <p>
+                            <strong>Estado:</strong>{" "}
+                            {getStatusBadge(subscription.status)}
+                          </p>
+                          <p>
+                            <strong>Precio:</strong>{" "}
+                            {formatPrice(subscription.price)}/mes
+                          </p>
+                        </Col>
+                        <Col md={6}>
+                          <p>
+                            <strong>Fecha de inicio:</strong>{" "}
+                            {formatDate(subscription.startDate)}
+                          </p>
+                          <p>
+                            <strong>Próximo cobro:</strong>{" "}
+                            {formatDate(subscription.nextBillingDate)}
+                          </p>
+                          {subscription.endDate && (
+                            <p>
+                              <strong>Fecha de fin:</strong>{" "}
+                              {formatDate(subscription.endDate)}
+                            </p>
+                          )}
+                          {isInGracePeriod && (
+                            <Alert variant="warning" className="mt-2">
+                              <i className="bi bi-exclamation-triangle me-2"></i>
+                              <strong>Suscripción cancelada:</strong> Mantienes
+                              acceso hasta la fecha de fin.
+                            </Alert>
+                          )}
+                        </Col>
+                      </Row>
 
-                  {subscription.status === "active" && (
-                    <Alert variant="success" className="mb-0">
-                      <i className="bi bi-check-circle me-2"></i>
-                      Tu suscripción está activa. Disfruta de todas las
-                      funciones premium de NexoSQL.
-                    </Alert>
-                  )}
-
-                  {subscription.status === "pending" && (
-                    <Alert variant="warning" className="mb-0">
-                      <i className="bi bi-clock me-2"></i>
-                      {autoSyncActive ? (
-                        <>
-                          <div className="d-flex align-items-center">
-                            <Spinner
-                              animation="border"
-                              size="sm"
-                              className="me-2"
-                            />
-                            <span>
-                              <strong>
-                                Sincronizando automáticamente con PayPal...
-                              </strong>
-                            </span>
-                          </div>
-                          <div className="mt-2">
-                            <small className="text-muted">
-                              Estamos verificando el estado de tu suscripción
-                              automáticamente. Este proceso puede tomar unos
-                              minutos.
-                            </small>
-                          </div>
-                        </>
-                      ) : (
-                        <>
-                          Tu suscripción está pendiente de activación. Por
-                          favor, completa el proceso de pago.
-                          <div className="mt-2">
-                            <small className="d-block text-muted mb-2">
-                              Si ya completaste el pago, puedes sincronizar tu
-                              suscripción:
-                            </small>
-                            <Button
-                              variant="outline-warning"
-                              size="sm"
-                              onClick={handleSyncSubscription}
-                              disabled={syncLoading}
-                            >
-                              {syncLoading ? (
-                                <>
-                                  <Spinner
-                                    animation="border"
+                      {/* Action Buttons */}
+                      <Row className="mt-3">
+                        <Col>
+                          <div className="d-flex gap-2 flex-wrap">
+                            {subscription.status === "pending" && (
+                              <>
+                                {autoSyncActive ? (
+                                  <Alert variant="info" className="mb-2 w-100">
+                                    <div className="d-flex align-items-center">
+                                      <Spinner
+                                        animation="border"
+                                        size="sm"
+                                        className="me-2"
+                                      />
+                                      <span>
+                                        <strong>
+                                          Sincronizando automáticamente con
+                                          PayPal...
+                                        </strong>
+                                      </span>
+                                    </div>
+                                    <small className="text-muted mt-1 d-block">
+                                      Estamos verificando el estado de tu
+                                      suscripción automáticamente.
+                                    </small>
+                                  </Alert>
+                                ) : (
+                                  <Button
+                                    variant="outline-warning"
+                                    onClick={handleSyncSubscription}
+                                    disabled={syncLoading || actionLoading}
                                     size="sm"
-                                    className="me-1"
-                                  />
-                                  Sincronizando...
-                                </>
-                              ) : (
-                                <>
-                                  <i className="bi bi-arrow-clockwise me-1"></i>
-                                  Sincronizar con PayPal
-                                </>
-                              )}
-                            </Button>
+                                  >
+                                    {syncLoading ? (
+                                      <>
+                                        <Spinner
+                                          animation="border"
+                                          size="sm"
+                                          className="me-1"
+                                        />
+                                        Sincronizando...
+                                      </>
+                                    ) : (
+                                      <>
+                                        <i className="bi bi-arrow-clockwise me-1"></i>
+                                        Sincronizar con PayPal
+                                      </>
+                                    )}
+                                  </Button>
+                                )}
+                              </>
+                            )}
+                            {!isInGracePeriod && (
+                              <Button
+                                variant="outline-danger"
+                                onClick={() => setShowCancelModal(true)}
+                                disabled={
+                                  actionLoading || syncLoading || autoSyncActive
+                                }
+                                size="sm"
+                              >
+                                Cancelar Suscripción
+                              </Button>
+                            )}
                           </div>
-                        </>
-                      )}
-                    </Alert>
-                  )}
+                        </Col>
+                      </Row>
 
-                  {syncSuccess && (
-                    <Alert variant="success" className="mb-0 mt-2">
-                      <i className="bi bi-check-circle me-2"></i>
-                      {syncSuccess}
-                    </Alert>
-                  )}
+                      {syncSuccess && (
+                        <Alert variant="success" className="mb-0 mt-2">
+                          <i className="bi bi-check-circle me-2"></i>
+                          {syncSuccess}
+                        </Alert>
+                      )}
+                    </Card.Body>
+                  </Card>
                 </div>
               ) : (
                 <div>
@@ -489,6 +563,36 @@ const Profile = () => {
           </Card>
         </Col>
       </Row>
+
+      {/* Cancel Subscription Modal */}
+      <Modal show={showCancelModal} onHide={() => setShowCancelModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Cancelar Suscripción</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>¿Estás seguro de que quieres cancelar tu suscripción?</p>
+          <Alert variant="warning">
+            <strong>Importante:</strong> Una vez cancelada, perderás el acceso a
+            las funciones premium al final del período de facturación actual.
+          </Alert>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowCancelModal(false)}>
+            No, Mantener Suscripción
+          </Button>
+          <Button
+            variant="danger"
+            onClick={handleCancelSubscription}
+            disabled={actionLoading}
+          >
+            {actionLoading ? (
+              <Spinner animation="border" size="sm" />
+            ) : (
+              "Sí, Cancelar"
+            )}
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Container>
   );
 };
