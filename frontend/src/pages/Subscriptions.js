@@ -22,7 +22,7 @@ const Subscriptions = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [actionLoading, setActionLoading] = useState(false);
+  const [loadingPlanType, setLoadingPlanType] = useState(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [subscriptionStats, setSubscriptionStats] = useState(null);
   const [syncLoading, setSyncLoading] = useState(false);
@@ -91,7 +91,7 @@ const Subscriptions = () => {
 
   const handleSubscribe = async (planType) => {
     try {
-      setActionLoading(true);
+      setLoadingPlanType(planType);
       setError("");
       setSuccess("");
 
@@ -109,13 +109,13 @@ const Subscriptions = () => {
     } catch (err) {
       setError("Error al crear la suscripción");
     } finally {
-      setActionLoading(false);
+      setLoadingPlanType(null);
     }
   };
 
   const handleUpdateSubscription = async (newPlanType) => {
     try {
-      setActionLoading(true);
+      setLoadingPlanType(newPlanType);
       setError("");
       setSuccess("");
 
@@ -133,13 +133,13 @@ const Subscriptions = () => {
     } catch (err) {
       setError("Error al actualizar la suscripción");
     } finally {
-      setActionLoading(false);
+      setLoadingPlanType(null);
     }
   };
 
   const handleCancelSubscription = async () => {
     try {
-      setActionLoading(true);
+      setLoadingPlanType("cancel");
       setError("");
       setSuccess("");
 
@@ -160,7 +160,7 @@ const Subscriptions = () => {
     } catch (err) {
       setError("Error al cancelar la suscripción");
     } finally {
-      setActionLoading(false);
+      setLoadingPlanType(null);
     }
   };
 
@@ -320,9 +320,9 @@ const Subscriptions = () => {
                           variant="primary"
                           className="w-100"
                           onClick={() => handleUpdateSubscription(planType)}
-                          disabled={actionLoading}
+                          disabled={loadingPlanType === planType}
                         >
-                          {actionLoading ? (
+                          {loadingPlanType === planType ? (
                             <Spinner animation="border" size="sm" />
                           ) : (
                             "Actualizar Plan"
@@ -333,9 +333,9 @@ const Subscriptions = () => {
                           variant="outline-secondary"
                           className="w-100"
                           onClick={() => handleUpdateSubscription(planType)}
-                          disabled={actionLoading}
+                          disabled={loadingPlanType === planType}
                         >
-                          {actionLoading ? (
+                          {loadingPlanType === planType ? (
                             <Spinner animation="border" size="sm" />
                           ) : (
                             "Cambiar Plan"
@@ -349,9 +349,9 @@ const Subscriptions = () => {
                         }
                         className="w-100"
                         onClick={() => handleSubscribe(planType)}
-                        disabled={actionLoading}
+                        disabled={loadingPlanType === planType}
                       >
-                        {actionLoading ? (
+                        {loadingPlanType === planType ? (
                           <Spinner animation="border" size="sm" />
                         ) : (
                           "Suscribirse"
@@ -423,9 +423,9 @@ const Subscriptions = () => {
           <Button
             variant="danger"
             onClick={handleCancelSubscription}
-            disabled={actionLoading}
+            disabled={loadingPlanType === "cancel"}
           >
-            {actionLoading ? (
+            {loadingPlanType === "cancel" ? (
               <Spinner animation="border" size="sm" />
             ) : (
               "Sí, Cancelar"
