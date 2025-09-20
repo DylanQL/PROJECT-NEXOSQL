@@ -67,13 +67,6 @@ const Navigation = () => {
             )}
             {currentUser && (
               <>
-                <Nav.Link
-                  as={Link}
-                  to="/welcome"
-                  className={location.pathname === "/welcome" ? "active" : ""}
-                >
-                  Bienvenida
-                </Nav.Link>
                 {userProfile && (
                   <>
                     <Nav.Link

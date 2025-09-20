@@ -18,7 +18,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Profile from "./pages/Profile";
 import CompleteProfile from "./pages/CompleteProfile";
-import Welcome from "./pages/Welcome";
+
 import Conexiones from "./pages/Conexiones";
 import CrearConexion from "./pages/CrearConexion";
 import EditarConexion from "./pages/EditarConexion";
@@ -85,7 +85,6 @@ function App() {
 
                   {/* Routes that require authentication */}
                   <Route element={<PrivateRoute />}>
-                    <Route path="/welcome" element={<Welcome />} />
                     <Route
                       path="/complete-profile"
                       element={<CompleteProfile />}
