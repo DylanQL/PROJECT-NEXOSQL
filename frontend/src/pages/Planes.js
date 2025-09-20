@@ -1,5 +1,13 @@
 import React from "react";
-import { Container, Row, Col, Card, Button, Badge } from "react-bootstrap";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Button,
+  Badge,
+  Accordion,
+} from "react-bootstrap";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useSubscription } from "../contexts/SubscriptionContext";
@@ -184,103 +192,50 @@ const Planes = () => {
       <Row className="mt-5">
         <Col lg={8} className="mx-auto">
           <h3 className="text-center mb-4">Preguntas Frecuentes</h3>
-          <div className="accordion" id="planesAccordion">
-            <div className="accordion-item">
-              <h2 className="accordion-header">
-                <button
-                  className="accordion-button collapsed"
-                  type="button"
-                  data-bs-toggle="collapse"
-                  data-bs-target="#faq1"
-                >
-                  ¿Puedo cambiar de plan en cualquier momento?
-                </button>
-              </h2>
-              <div
-                id="faq1"
-                className="accordion-collapse collapse"
-                data-bs-parent="#planesAccordion"
-              >
-                <div className="accordion-body">
-                  Sí, puedes actualizar o degradar tu plan en cualquier momento.
-                  Los cambios se aplican inmediatamente y se prorratea el costo
-                  según corresponda.
-                </div>
-              </div>
-            </div>
+          <Accordion>
+            <Accordion.Item eventKey="0">
+              <Accordion.Header>
+                ¿Puedo cambiar de plan en cualquier momento?
+              </Accordion.Header>
+              <Accordion.Body>
+                Sí, puedes cambiar tu plan en cualquier momento desde tu panel
+                de suscripciones. Los cambios se aplicarán de inmediato.
+              </Accordion.Body>
+            </Accordion.Item>
 
-            <div className="accordion-item">
-              <h2 className="accordion-header">
-                <button
-                  className="accordion-button collapsed"
-                  type="button"
-                  data-bs-toggle="collapse"
-                  data-bs-target="#faq2"
-                >
-                  ¿Qué sucede si excedo mi límite de consultas?
-                </button>
-              </h2>
-              <div
-                id="faq2"
-                className="accordion-collapse collapse"
-                data-bs-parent="#planesAccordion"
-              >
-                <div className="accordion-body">
-                  Si excedes tu límite mensual, el servicio se pausará
-                  temporalmente hasta el próximo ciclo de facturación, o puedes
-                  actualizar tu plan para obtener más consultas inmediatamente.
-                </div>
-              </div>
-            </div>
+            <Accordion.Item eventKey="1">
+              <Accordion.Header>
+                ¿Qué sucede si excedo mi límite de consultas?
+              </Accordion.Header>
+              <Accordion.Body>
+                Si excedes tu límite mensual de consultas, tendrás que esperar
+                hasta que se restablezca el contador el próximo mes. Para acceso
+                inmediato, puedes actualizar tu plan.
+              </Accordion.Body>
+            </Accordion.Item>
 
-            <div className="accordion-item">
-              <h2 className="accordion-header">
-                <button
-                  className="accordion-button collapsed"
-                  type="button"
-                  data-bs-toggle="collapse"
-                  data-bs-target="#faq3"
-                >
-                  ¿Hay período de prueba gratuito?
-                </button>
-              </h2>
-              <div
-                id="faq3"
-                className="accordion-collapse collapse"
-                data-bs-parent="#planesAccordion"
-              >
-                <div className="accordion-body">
-                  Ofrecemos una garantía de devolución de dinero de 7 días en
-                  todos nuestros planes. Si no estás satisfecho, te devolvemos
-                  el 100% de tu dinero.
-                </div>
-              </div>
-            </div>
+            <Accordion.Item eventKey="2">
+              <Accordion.Header>
+                ¿Hay período de prueba gratuito?
+              </Accordion.Header>
+              <Accordion.Body>
+                No ofrecemos período de prueba gratuito. Sin embargo, puedes
+                comenzar con nuestro Plan Bronce que es muy accesible y cambiar
+                de plan cuando lo necesites.
+              </Accordion.Body>
+            </Accordion.Item>
 
-            <div className="accordion-item">
-              <h2 className="accordion-header">
-                <button
-                  className="accordion-button collapsed"
-                  type="button"
-                  data-bs-toggle="collapse"
-                  data-bs-target="#faq4"
-                >
-                  ¿Qué tipos de bases de datos soportan?
-                </button>
-              </h2>
-              <div
-                id="faq4"
-                className="accordion-collapse collapse"
-                data-bs-parent="#planesAccordion"
-              >
-                <div className="accordion-body">
-                  Actualmente soportamos MySQL, PostgreSQL y SQL Server. Estamos
-                  trabajando para agregar más tipos de bases de datos en futuras
-                  actualizaciones.
-                </div>
-              </div>
-            </div>
-          </div>
+            <Accordion.Item eventKey="3">
+              <Accordion.Header>
+                ¿Qué tipos de bases de datos soportan?
+              </Accordion.Header>
+              <Accordion.Body>
+                Soportamos las siguientes bases de datos: MySQL, SQL Server,
+                PostgreSQL, MariaDB, Oracle y MongoDB. Trabajamos constantemente
+                para ampliar esta lista.
+              </Accordion.Body>
+            </Accordion.Item>
+          </Accordion>
         </Col>
       </Row>
 
