@@ -114,9 +114,6 @@ const Navigation = () => {
             {currentUser ? (
               <>
                 <Navbar.Text className="me-3">
-                  <Badge bg="success" className="me-2">
-                    Conectado
-                  </Badge>
                   {autoSyncActive && (
                     <Badge bg="warning" className="me-2">
                       <i className="bi bi-arrow-clockwise me-1"></i>
