@@ -238,15 +238,6 @@ const Subscriptions = () => {
 
   return (
     <Container className="py-4">
-      <Row className="mb-4">
-        <Col>
-          <h1 className="display-4 text-center mb-4">Suscripciones</h1>
-          <p className="lead text-center text-muted">
-            Elige el plan que mejor se adapte a tus necesidades
-          </p>
-        </Col>
-      </Row>
-
       {error && (
         <Alert variant="danger" dismissible onClose={() => setError("")}>
           {error}
