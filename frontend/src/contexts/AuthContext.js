@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useRef,
+} from "react";
 import {
   getAuthInstance,
   loginWithEmailAndPassword,
@@ -20,23 +26,85 @@ export function AuthProvider({ children }) {
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
+  const authStateChecked = useRef(false);
+  const authUnsubscribe = useRef(null);
 
-  // Listen for auth state changes
+  // Configure Firebase persistence and listen for auth state changes
   useEffect(() => {
-    const auth = getAuthInstance();
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      console.log("Auth state changed, user:", user?.email);
-      setCurrentUser(user);
-      setLoading(false);
+    const initAuth = async () => {
+      try {
+        const auth = getAuthInstance();
 
-      if (user) {
-        // We'll fetch the profile in a separate effect
-      } else {
-        setUserProfile(null);
+        // Check localStorage for existing user
+        const localStorageUser = localStorage.getItem("authUser");
+        if (localStorageUser) {
+          console.log(
+            "Found user in localStorage, waiting for Firebase to confirm",
+          );
+          // We don't immediately set currentUser here - we wait for Firebase to confirm
+        }
+
+        // Set up auth state listener
+        authUnsubscribe.current = auth.onAuthStateChanged((user) => {
+          console.log("Auth state changed, user:", user?.email);
+
+          if (user) {
+            setCurrentUser(user);
+            // Store user in localStorage for backup persistence
+            localStorage.setItem(
+              "authUser",
+              JSON.stringify({
+                uid: user.uid,
+                email: user.email,
+                timestamp: Date.now(),
+              }),
+            );
+          } else {
+            // Check if we have a stored user that hasn't expired (within last 24 hours)
+            const storedUser = localStorage.getItem("authUser");
+            if (storedUser) {
+              const parsedUser = JSON.parse(storedUser);
+              const now = Date.now();
+              const timeElapsed = now - (parsedUser.timestamp || 0);
+
+              // If less than 24 hours, try to keep using this user
+              if (timeElapsed < 24 * 60 * 60 * 1000) {
+                console.log(
+                  "Using stored user from localStorage during auth check",
+                );
+                // We don't set currentUser here - wait for Firebase to confirm
+              } else {
+                console.log("Stored user expired, clearing");
+                localStorage.removeItem("authUser");
+                setCurrentUser(null);
+                setUserProfile(null);
+              }
+            } else {
+              setCurrentUser(null);
+              setUserProfile(null);
+            }
+          }
+
+          // Mark auth as checked - this helps prevent flashing of login screens
+          authStateChecked.current = true;
+          setAuthChecked(true);
+          setLoading(false);
+        });
+      } catch (error) {
+        console.error("Error initializing auth:", error);
+        setLoading(false);
       }
-    });
+    };
 
-    return unsubscribe;
+    initAuth();
+
+    // Cleanup function
+    return () => {
+      if (authUnsubscribe.current) {
+        authUnsubscribe.current();
+      }
+    };
   }, []);
 
   // Fetch user profile when currentUser changes
@@ -135,22 +203,40 @@ export function AuthProvider({ children }) {
     }
   };
 
+  // Function to check if session is valid without waiting for Firebase
+  const getQuickAuthStatus = () => {
+    if (currentUser) return true;
+
+    const storedUser = localStorage.getItem("authUser");
+    if (storedUser) {
+      const parsedUser = JSON.parse(storedUser);
+      const now = Date.now();
+      const timeElapsed = now - (parsedUser.timestamp || 0);
+
+      // If less than 24 hours, consider valid
+      if (timeElapsed < 24 * 60 * 60 * 1000) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
   const value = {
     currentUser,
     userProfile,
     loading: loading || profileLoading,
     profileLoading,
+    authChecked,
+    isAuthenticated: !!currentUser || getQuickAuthStatus(),
     signup,
     login,
     loginWithGoogle,
     logout,
     createProfile,
     updateProfile,
+    getQuickAuthStatus,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {!loading && children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

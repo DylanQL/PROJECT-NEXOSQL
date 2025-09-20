@@ -8,7 +8,7 @@ import {
   Button,
   Alert,
 } from "react-bootstrap";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
 const Login = () => {
@@ -19,6 +19,8 @@ const Login = () => {
 
   const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from || "/welcome";
 
   const handleEmailLogin = async (e) => {
     e.preventDefault();
@@ -38,8 +40,8 @@ const Login = () => {
         throw new Error(result.error);
       }
 
-      // Login successful
-      navigate("/welcome");
+      // Login successful, redirect to the page user was trying to access
+      navigate(from);
     } catch (error) {
       setError("Error al iniciar sesión: " + error.message);
     } finally {
@@ -58,8 +60,8 @@ const Login = () => {
         throw new Error(result.error);
       }
 
-      // Login successful
-      navigate("/welcome");
+      // Login successful, redirect to the page user was trying to access
+      navigate(from);
     } catch (error) {
       setError("Error al iniciar sesión con Google: " + error.message);
     } finally {

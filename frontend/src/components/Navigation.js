@@ -5,7 +5,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useSubscription } from "../contexts/SubscriptionContext";
 
 const Navigation = () => {
-  const { currentUser, userProfile, logout } = useAuth();
+  const { currentUser, userProfile, logout, isAuthenticated } = useAuth();
   const { hasActiveSubscription, currentSubscription, autoSyncActive } =
     useSubscription();
   const navigate = useNavigate();
@@ -112,7 +112,7 @@ const Navigation = () => {
             )}
           </Nav>
           <Nav>
-            {currentUser ? (
+            {isAuthenticated ? (
               <div className="profile-dropdown" ref={dropdownRef}>
                 <div
                   className="profile-avatar"
@@ -165,11 +165,6 @@ const Navigation = () => {
                     >
                       <i className="bi bi-credit-card"></i>
                       Suscripciones
-                      {hasActiveSubscription && (
-                        <Badge bg="success" className="ms-auto">
-                          ✓
-                        </Badge>
-                      )}
                     </Link>
 
                     <Link

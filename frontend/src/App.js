@@ -30,7 +30,7 @@ import Planes from "./pages/Planes";
 import SobreNosotros from "./pages/SobreNosotros";
 
 // Contexts
-import { AuthProvider } from "./contexts/AuthContext";
+import { useAuth } from "./contexts/AuthContext";
 import { ConnectionProvider } from "./contexts/ConnectionContext";
 import {
   SubscriptionProvider,
@@ -65,69 +65,91 @@ function AppNotifications() {
 }
 
 function App() {
+  const { loading } = useAuth();
+
+  // Show loading screen while authentication state is being verified
+  if (loading) {
+    return (
+      <div
+        className="d-flex justify-content-center align-items-center"
+        style={{ height: "100vh" }}
+      >
+        <div className="text-center">
+          <div
+            className="spinner-border text-primary"
+            role="status"
+            style={{ width: "3rem", height: "3rem" }}
+          >
+            <span className="visually-hidden">Cargando...</span>
+          </div>
+          <h3 className="mt-3">Cargando aplicación...</h3>
+          <p>Por favor espere mientras verificamos su sesión</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <AuthProvider>
-      <SubscriptionProvider>
-        <ConnectionProvider>
-          <Router>
-            <div className="d-flex flex-column min-vh-100">
-              <Navigation />
-              <AppNotifications />
-              <Container className="flex-grow-1">
-                <Routes>
-                  {/* Public Routes */}
-                  <Route path="/" element={<Home />} />
-                  <Route path="/como-funciona" element={<ComoFunciona />} />
-                  <Route path="/planes" element={<Planes />} />
-                  <Route path="/sobre-nosotros" element={<SobreNosotros />} />
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/register" element={<Register />} />
+    <SubscriptionProvider>
+      <ConnectionProvider>
+        <Router>
+          <div className="d-flex flex-column min-vh-100">
+            <Navigation />
+            <AppNotifications />
+            <Container className="flex-grow-1">
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/" element={<Home />} />
+                <Route path="/como-funciona" element={<ComoFunciona />} />
+                <Route path="/planes" element={<Planes />} />
+                <Route path="/sobre-nosotros" element={<SobreNosotros />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
 
-                  {/* Routes that require authentication */}
-                  <Route element={<PrivateRoute />}>
-                    <Route
-                      path="/complete-profile"
-                      element={<CompleteProfile />}
-                    />
-                  </Route>
+                {/* Routes that require authentication */}
+                <Route element={<PrivateRoute />}>
+                  <Route
+                    path="/complete-profile"
+                    element={<CompleteProfile />}
+                  />
+                </Route>
 
-                  {/* Routes that require authentication and completed profile */}
-                  <Route element={<PrivateRoute requireProfile={true} />}>
-                    <Route path="/profile" element={<Profile />} />
-                    <Route path="/subscriptions" element={<Subscriptions />} />
-                    <Route
-                      path="/subscription/success"
-                      element={<SubscriptionSuccess />}
-                    />
-                    <Route
-                      path="/subscription/cancel"
-                      element={<SubscriptionCancel />}
-                    />
-                    <Route path="/conexiones" element={<Conexiones />} />
-                    <Route path="/crear-conexion" element={<CrearConexion />} />
-                    <Route
-                      path="/editar-conexion/:id"
-                      element={<EditarConexion />}
-                    />
-                  </Route>
+                {/* Routes that require authentication and completed profile */}
+                <Route element={<PrivateRoute requireProfile={true} />}>
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/subscriptions" element={<Subscriptions />} />
+                  <Route
+                    path="/subscription/success"
+                    element={<SubscriptionSuccess />}
+                  />
+                  <Route
+                    path="/subscription/cancel"
+                    element={<SubscriptionCancel />}
+                  />
+                  <Route path="/conexiones" element={<Conexiones />} />
+                  <Route path="/crear-conexion" element={<CrearConexion />} />
+                  <Route
+                    path="/editar-conexion/:id"
+                    element={<EditarConexion />}
+                  />
+                </Route>
 
-                  {/* Redirect for any unknown routes */}
-                  <Route path="*" element={<Navigate to="/" />} />
-                </Routes>
+                {/* Redirect for any unknown routes */}
+                <Route path="*" element={<Navigate to="/" />} />
+              </Routes>
+            </Container>
+            <footer className="bg-dark text-center text-white py-3 mt-auto">
+              <Container>
+                <p className="mb-0">
+                  &copy; {new Date().getFullYear()} NexoSQL. Todos los derechos
+                  reservados.
+                </p>
               </Container>
-              <footer className="bg-dark text-center text-white py-3 mt-auto">
-                <Container>
-                  <p className="mb-0">
-                    &copy; {new Date().getFullYear()} NexoSQL. Todos los
-                    derechos reservados.
-                  </p>
-                </Container>
-              </footer>
-            </div>
-          </Router>
-        </ConnectionProvider>
-      </SubscriptionProvider>
-    </AuthProvider>
+            </footer>
+          </div>
+        </Router>
+      </ConnectionProvider>
+    </SubscriptionProvider>
   );
 }
 
