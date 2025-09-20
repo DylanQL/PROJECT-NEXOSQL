@@ -16,7 +16,8 @@ const Navigation = () => {
   const handleLogout = async () => {
     try {
       await logout();
-      navigate("/login");
+      // Forzar actualización del estado de autenticación
+      window.location.href = "/login";
       setShowProfileDropdown(false);
     } catch (error) {
       console.error("Failed to log out", error);

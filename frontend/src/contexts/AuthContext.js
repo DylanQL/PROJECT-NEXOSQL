@@ -195,7 +195,13 @@ export function AuthProvider({ children }) {
     try {
       console.log("Logging out user");
       const result = await logOut();
+      // Limpiar todos los estados de autenticación inmediatamente
+      setCurrentUser(null);
       setUserProfile(null);
+      // Limpiar cualquier dato de usuario almacenado en localStorage
+      localStorage.removeItem("authUser");
+      // Asegurar que isAuthenticated sea false inmediatamente
+      setAuthChecked(true);
       return result;
     } catch (error) {
       console.error("Error during logout:", error);
@@ -209,13 +215,19 @@ export function AuthProvider({ children }) {
 
     const storedUser = localStorage.getItem("authUser");
     if (storedUser) {
-      const parsedUser = JSON.parse(storedUser);
-      const now = Date.now();
-      const timeElapsed = now - (parsedUser.timestamp || 0);
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        const now = Date.now();
+        const timeElapsed = now - (parsedUser.timestamp || 0);
 
-      // If less than 24 hours, consider valid
-      if (timeElapsed < 24 * 60 * 60 * 1000) {
-        return true;
+        // If less than 24 hours, consider valid
+        if (timeElapsed < 24 * 60 * 60 * 1000) {
+          return true;
+        }
+      } catch (error) {
+        console.error("Error parsing stored user:", error);
+        localStorage.removeItem("authUser");
+        return false;
       }
     }
 
@@ -228,7 +240,7 @@ export function AuthProvider({ children }) {
     loading: loading || profileLoading,
     profileLoading,
     authChecked,
-    isAuthenticated: !!currentUser || getQuickAuthStatus(),
+    isAuthenticated: getQuickAuthStatus(),
     signup,
     login,
     loginWithGoogle,
