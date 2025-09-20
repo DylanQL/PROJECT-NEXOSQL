@@ -74,7 +74,10 @@ const Conexiones = () => {
       }
 
       setShowModal(false);
-      fetchUserConnections();
+      // Usar window.location.href para forzar una recarga completa de la página
+      setTimeout(() => {
+        window.location.href = "/conexiones";
+      }, 1000);
     } catch (err) {
       console.error("Error deleting connection:", err);
       setError(

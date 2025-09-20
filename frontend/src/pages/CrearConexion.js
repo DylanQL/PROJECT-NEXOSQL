@@ -229,7 +229,8 @@ const CrearConexion = () => {
       // Mostrar mensaje y navegar después de un breve retraso
       setSuccess("Conexión creada exitosamente");
       setTimeout(() => {
-        navigate("/conexiones");
+        // Usar window.location.href para forzar una recarga completa de la página
+        window.location.href = "/conexiones";
       }, 1500);
     } catch (err) {
       console.error("Error saving connection:", err);

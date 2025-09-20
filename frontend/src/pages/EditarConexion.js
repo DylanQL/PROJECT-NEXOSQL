@@ -1,8 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Form, Button, Alert, ProgressBar, Spinner } from 'react-bootstrap';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { motorDBApi, conexionDBApi } from '../services/api';
+import React, { useState, useEffect } from "react";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Form,
+  Button,
+  Alert,
+  ProgressBar,
+  Spinner,
+} from "react-bootstrap";
+import { useNavigate, useParams } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import { motorDBApi, conexionDBApi } from "../services/api";
 
 const EditarConexion = () => {
   const { id } = useParams();
@@ -12,22 +22,22 @@ const EditarConexion = () => {
   // State variables
   const [step, setStep] = useState(1);
   const [motores, setMotores] = useState([]);
-  const [selectedMotor, setSelectedMotor] = useState('');
+  const [selectedMotor, setSelectedMotor] = useState("");
   const [formData, setFormData] = useState({
-    nombre: '',
-    motores_db_id: '',
-    host: '',
-    port: '',
-    username: '',
-    password: '',
-    database_name: ''
+    nombre: "",
+    motores_db_id: "",
+    host: "",
+    port: "",
+    username: "",
+    password: "",
+    database_name: "",
   });
   const [originalData, setOriginalData] = useState(null);
   const [validated, setValidated] = useState(false);
   const [loading, setLoading] = useState(false);
   const [testingConnection, setTestingConnection] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [testResult, setTestResult] = useState(null);
 
   // Fetch database engines and connection details on component mount
@@ -37,14 +47,14 @@ const EditarConexion = () => {
       fetchConnectionDetails(id);
     } else {
       // If no ID is provided, redirect to connections page
-      navigate('/conexiones');
+      navigate("/conexiones");
     }
   }, [id, navigate]);
 
   const fetchDatabaseEngines = async () => {
     try {
       setLoading(true);
-      setError('');
+      setError("");
 
       const { data, error } = await motorDBApi.getAllMotores();
 
@@ -54,8 +64,10 @@ const EditarConexion = () => {
 
       setMotores(data || []);
     } catch (err) {
-      console.error('Error fetching database engines:', err);
-      setError('No se pudieron cargar los motores de base de datos. Por favor, intente nuevamente.');
+      console.error("Error fetching database engines:", err);
+      setError(
+        "No se pudieron cargar los motores de base de datos. Por favor, intente nuevamente.",
+      );
     } finally {
       setLoading(false);
     }
@@ -64,9 +76,10 @@ const EditarConexion = () => {
   const fetchConnectionDetails = async (connectionId) => {
     try {
       setLoading(true);
-      setError('');
+      setError("");
 
-      const { data, error } = await conexionDBApi.getConnectionById(connectionId);
+      const { data, error } =
+        await conexionDBApi.getConnectionById(connectionId);
 
       if (error) {
         throw new Error(error);
@@ -74,23 +87,26 @@ const EditarConexion = () => {
 
       // Update form data with connection details
       const connectionData = {
-        nombre: data.nombre || '',
-        motores_db_id: data.motores_db_id || '',
-        host: data.host || '',
-        port: data.port || '',
-        username: data.username || '',
-        password: '', // Password is not returned from the API for security reasons
-        database_name: data.database_name || ''
+        nombre: data.nombre || "",
+        motores_db_id: data.motores_db_id || "",
+        host: data.host || "",
+        port: data.port || "",
+        username: data.username || "",
+        password: "", // Password is not returned from the API for security reasons
+        database_name: data.database_name || "",
       };
 
       setFormData(connectionData);
       setOriginalData(data);
       setSelectedMotor(data.motores_db_id);
     } catch (err) {
-      console.error('Error fetching connection details:', err);
-      setError('No se pudieron cargar los detalles de la conexión. Por favor, intente nuevamente.');
+      console.error("Error fetching connection details:", err);
+      setError(
+        "No se pudieron cargar los detalles de la conexión. Por favor, intente nuevamente.",
+      );
       setTimeout(() => {
-        navigate('/conexiones');
+        // Usar window.location.href para forzar una recarga completa de la página
+        window.location.href = "/conexiones";
       }, 2000);
     } finally {
       setLoading(false);
@@ -100,37 +116,37 @@ const EditarConexion = () => {
   const handleMotorSelect = (e) => {
     const motorId = e.target.value;
     setSelectedMotor(motorId);
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      motores_db_id: motorId
+      motores_db_id: motorId,
     }));
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleNextStep = () => {
     if (step === 1 && !selectedMotor) {
-      setError('Por favor, seleccione un motor de base de datos');
+      setError("Por favor, seleccione un motor de base de datos");
       return;
     }
 
     if (step === 2) {
       // Validate form before proceeding
-      const form = document.getElementById('conexion-form');
+      const form = document.getElementById("conexion-form");
       if (!form.checkValidity()) {
         setValidated(true);
         return;
       }
     }
 
-    setError('');
-    setStep(prev => prev + 1);
+    setError("");
+    setStep((prev) => prev + 1);
 
     // If moving to step 3 (verification), automatically test the connection
     if (step === 2) {
@@ -141,16 +157,16 @@ const EditarConexion = () => {
   };
 
   const handlePrevStep = () => {
-    setError('');
+    setError("");
     setTestResult(null);
-    setStep(prev => prev - 1);
+    setStep((prev) => prev - 1);
   };
 
   const handleTestConnection = async () => {
     try {
       setTestingConnection(true);
-      setError('');
-      setSuccess('');
+      setError("");
+      setSuccess("");
       setTestResult(null);
 
       const connectionData = {
@@ -160,13 +176,14 @@ const EditarConexion = () => {
         username: formData.username,
         password: formData.password || "",
         database_name: formData.database_name,
-        connectionId: id // Incluimos el ID de la conexión para que el backend pueda recuperar la contraseña original si está vacía
+        connectionId: id, // Incluimos el ID de la conexión para que el backend pueda recuperar la contraseña original si está vacía
       };
 
       // Mostrar mensaje de verificación
       console.log("Verificando conexión con los datos proporcionados...");
 
-      const { data, error } = await conexionDBApi.testConnection(connectionData);
+      const { data, error } =
+        await conexionDBApi.testConnection(connectionData);
 
       if (error) {
         throw new Error(error);
@@ -174,20 +191,20 @@ const EditarConexion = () => {
 
       setTestResult({
         success: true,
-        message: 'Conexión exitosa a la base de datos'
+        message: "Conexión exitosa a la base de datos",
       });
       // Solo limpiamos el mensaje de error, pero no establecemos success
       // para evitar duplicación con el testResult
-      setError('');
+      setError("");
     } catch (err) {
-      console.error('Error testing connection:', err);
+      console.error("Error testing connection:", err);
       setTestResult({
         success: false,
-        message: err.message || 'Error al probar la conexión'
+        message: err.message || "Error al probar la conexión",
       });
       // Solo limpiamos el mensaje de éxito, pero no establecemos error
       // para evitar duplicación con el testResult
-      setSuccess('');
+      setSuccess("");
     } finally {
       setTestingConnection(false);
     }
@@ -196,7 +213,7 @@ const EditarConexion = () => {
   const handleUpdateConnection = async () => {
     try {
       setLoading(true);
-      setError('');
+      setError("");
 
       // Prepare connection data, only include password if provided
       const connectionData = {
@@ -205,7 +222,7 @@ const EditarConexion = () => {
         host: formData.host,
         port: formData.port,
         username: formData.username,
-        database_name: formData.database_name
+        database_name: formData.database_name,
       };
 
       // Only include password if it was changed
@@ -215,20 +232,24 @@ const EditarConexion = () => {
 
       console.log("Actualización de conexión:", connectionData);
 
-      const { data, error } = await conexionDBApi.updateConnection(id, connectionData);
+      const { data, error } = await conexionDBApi.updateConnection(
+        id,
+        connectionData,
+      );
 
       if (error) {
         throw new Error(error);
       }
 
       // Mostrar mensaje y navegar después de un breve retraso
-      setSuccess('Conexión actualizada exitosamente');
+      setSuccess("Conexión actualizada exitosamente");
       setTimeout(() => {
-        navigate('/conexiones');
+        // Usar window.location.href para forzar una recarga completa de la página
+        window.location.href = "/conexiones";
       }, 1500);
     } catch (err) {
-      console.error('Error updating connection:', err);
-      setError(err.message || 'Error al actualizar la conexión');
+      console.error("Error updating connection:", err);
+      setError(err.message || "Error al actualizar la conexión");
     } finally {
       setLoading(false);
     }
@@ -239,15 +260,15 @@ const EditarConexion = () => {
       <div className="mb-4">
         <ProgressBar now={(step / 3) * 100} className="mb-3" />
         <div className="d-flex justify-content-between">
-          <div className={`step-item ${step >= 1 ? 'active' : ''}`}>
+          <div className={`step-item ${step >= 1 ? "active" : ""}`}>
             <div className="step-number">1</div>
             <div className="step-text">Seleccionar Motor</div>
           </div>
-          <div className={`step-item ${step >= 2 ? 'active' : ''}`}>
+          <div className={`step-item ${step >= 2 ? "active" : ""}`}>
             <div className="step-number">2</div>
             <div className="step-text">Editar Credenciales</div>
           </div>
-          <div className={`step-item ${step >= 3 ? 'active' : ''}`}>
+          <div className={`step-item ${step >= 3 ? "active" : ""}`}>
             <div className="step-number">3</div>
             <div className="step-text">Verificación</div>
           </div>
@@ -287,23 +308,26 @@ const EditarConexion = () => {
 
         {originalData && (
           <Alert variant="info">
-            Motor actual: {motores.find(m => m.id.toString() === originalData.motores_db_id.toString())?.nombre || 'Desconocido'}
+            Motor actual:{" "}
+            {motores.find(
+              (m) => m.id.toString() === originalData.motores_db_id.toString(),
+            )?.nombre || "Desconocido"}
           </Alert>
         )}
 
         <Row>
-          {motores.map(motor => (
+          {motores.map((motor) => (
             <Col md={4} key={motor.id} className="mb-3">
               <Card
-                className={`h-100 ${selectedMotor.toString() === motor.id.toString() ? 'border-primary' : ''}`}
+                className={`h-100 ${selectedMotor.toString() === motor.id.toString() ? "border-primary" : ""}`}
                 onClick={() => {
                   setSelectedMotor(motor.id);
-                  setFormData(prev => ({
+                  setFormData((prev) => ({
                     ...prev,
-                    motores_db_id: motor.id
+                    motores_db_id: motor.id,
                   }));
                 }}
-                style={{ cursor: 'pointer' }}
+                style={{ cursor: "pointer" }}
               >
                 <Card.Body className="text-center">
                   <div className="mb-3">
@@ -328,12 +352,17 @@ const EditarConexion = () => {
   };
 
   const renderCredentialsForm = () => {
-    const selectedMotorDetails = motores.find(m => m.id.toString() === selectedMotor.toString());
+    const selectedMotorDetails = motores.find(
+      (m) => m.id.toString() === selectedMotor.toString(),
+    );
 
     return (
       <>
         <h5 className="mb-4">
-          Edite las credenciales para {selectedMotorDetails ? selectedMotorDetails.nombre : 'la base de datos'}
+          Edite las credenciales para{" "}
+          {selectedMotorDetails
+            ? selectedMotorDetails.nombre
+            : "la base de datos"}
         </h5>
 
         <Form id="conexion-form" noValidate validated={validated}>
@@ -438,7 +467,8 @@ const EditarConexion = () => {
                   placeholder="Dejar en blanco para mantener la contraseña actual"
                 />
                 <Form.Text className="text-muted">
-                  Deje este campo en blanco si no desea cambiar la contraseña actual.
+                  Deje este campo en blanco si no desea cambiar la contraseña
+                  actual.
                 </Form.Text>
               </Form.Group>
             </Col>
@@ -458,14 +488,32 @@ const EditarConexion = () => {
             <h6>Resumen de la conexión</h6>
             <Row>
               <Col md={6}>
-                <p><strong>Nombre:</strong> {formData.nombre}</p>
-                <p><strong>Motor:</strong> {motores.find(m => m.id.toString() === formData.motores_db_id.toString())?.nombre}</p>
-                <p><strong>Host:</strong> {formData.host}</p>
+                <p>
+                  <strong>Nombre:</strong> {formData.nombre}
+                </p>
+                <p>
+                  <strong>Motor:</strong>{" "}
+                  {
+                    motores.find(
+                      (m) =>
+                        m.id.toString() === formData.motores_db_id.toString(),
+                    )?.nombre
+                  }
+                </p>
+                <p>
+                  <strong>Host:</strong> {formData.host}
+                </p>
               </Col>
               <Col md={6}>
-                <p><strong>Puerto:</strong> {formData.port}</p>
-                <p><strong>Usuario:</strong> {formData.username}</p>
-                <p><strong>Base de datos:</strong> {formData.database_name}</p>
+                <p>
+                  <strong>Puerto:</strong> {formData.port}
+                </p>
+                <p>
+                  <strong>Usuario:</strong> {formData.username}
+                </p>
+                <p>
+                  <strong>Base de datos:</strong> {formData.database_name}
+                </p>
               </Col>
             </Row>
 
@@ -485,7 +533,7 @@ const EditarConexion = () => {
         </Card>
 
         {testResult && (
-          <Alert variant={testResult.success ? 'success' : 'danger'}>
+          <Alert variant={testResult.success ? "success" : "danger"}>
             {testResult.message}
           </Alert>
         )}
@@ -511,9 +559,7 @@ const EditarConexion = () => {
       <div className="mb-4">
         <h1>Editar Conexión</h1>
         {originalData && (
-          <p className="text-muted">
-            Editando: {originalData.nombre}
-          </p>
+          <p className="text-muted">Editando: {originalData.nombre}</p>
         )}
       </div>
 
@@ -524,13 +570,15 @@ const EditarConexion = () => {
         <Card.Body className="p-4">
           {renderStepIndicator()}
 
-          <div className="step-content py-3">
-            {renderStepContent()}
-          </div>
+          <div className="step-content py-3">{renderStepContent()}</div>
 
           <div className="d-flex justify-content-between mt-4">
             {step > 1 && (
-              <Button variant="outline-secondary" onClick={handlePrevStep} size="md">
+              <Button
+                variant="outline-secondary"
+                onClick={handlePrevStep}
+                size="md"
+              >
                 Anterior
               </Button>
             )}
@@ -540,7 +588,7 @@ const EditarConexion = () => {
                 variant="primary"
                 onClick={handleNextStep}
                 size="md"
-                className={step > 1 ? '' : 'ms-auto'}
+                className={step > 1 ? "" : "ms-auto"}
               >
                 Siguiente
               </Button>
