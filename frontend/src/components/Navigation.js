@@ -36,6 +36,29 @@ const Navigation = () => {
             >
               Inicio
             </Nav.Link>
+            <Nav.Link
+              as={Link}
+              to="/como-funciona"
+              className={location.pathname === "/como-funciona" ? "active" : ""}
+            >
+              Cómo funciona
+            </Nav.Link>
+            <Nav.Link
+              as={Link}
+              to="/planes"
+              className={location.pathname === "/planes" ? "active" : ""}
+            >
+              Planes
+            </Nav.Link>
+            <Nav.Link
+              as={Link}
+              to="/sobre-nosotros"
+              className={
+                location.pathname === "/sobre-nosotros" ? "active" : ""
+              }
+            >
+              Sobre nosotros
+            </Nav.Link>
             {currentUser && (
               <>
                 <Nav.Link

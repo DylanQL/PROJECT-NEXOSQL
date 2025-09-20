@@ -25,6 +25,9 @@ import EditarConexion from "./pages/EditarConexion";
 import Subscriptions from "./pages/Subscriptions";
 import SubscriptionSuccess from "./pages/SubscriptionSuccess";
 import SubscriptionCancel from "./pages/SubscriptionCancel";
+import ComoFunciona from "./pages/ComoFunciona";
+import Planes from "./pages/Planes";
+import SobreNosotros from "./pages/SobreNosotros";
 
 // Contexts
 import { AuthProvider } from "./contexts/AuthContext";
@@ -74,6 +77,9 @@ function App() {
                 <Routes>
                   {/* Public Routes */}
                   <Route path="/" element={<Home />} />
+                  <Route path="/como-funciona" element={<ComoFunciona />} />
+                  <Route path="/planes" element={<Planes />} />
+                  <Route path="/sobre-nosotros" element={<SobreNosotros />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
 
