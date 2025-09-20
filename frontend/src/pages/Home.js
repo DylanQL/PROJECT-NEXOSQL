@@ -56,7 +56,7 @@ const Home = () => {
                   onClick={() => navigate("/register")}
                   className="me-md-2"
                 >
-                  Comenzar Gratis
+                  Comenzar Ahora
                   <ArrowRight className="ms-2" />
                 </Button>
                 <Button
@@ -152,7 +152,7 @@ const Home = () => {
                     size="lg"
                     onClick={() => navigate("/register")}
                   >
-                    Crear Cuenta Gratuita
+                    Crear Cuenta Ahora
                     <ArrowRight className="ms-2" />
                   </Button>
                 </Card.Body>
