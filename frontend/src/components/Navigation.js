@@ -1,5 +1,5 @@
-import React from "react";
-import { Navbar, Nav, Container, Button, Badge } from "react-bootstrap";
+import React, { useState, useRef, useEffect } from "react";
+import { Navbar, Nav, Container, Badge } from "react-bootstrap";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useSubscription } from "../contexts/SubscriptionContext";
@@ -10,15 +10,60 @@ const Navigation = () => {
     useSubscription();
   const navigate = useNavigate();
   const location = useLocation();
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const dropdownRef = useRef(null);
 
   const handleLogout = async () => {
     try {
       await logout();
       navigate("/login");
+      setShowProfileDropdown(false);
     } catch (error) {
       console.error("Failed to log out", error);
     }
   };
+
+  const toggleProfileDropdown = () => {
+    setShowProfileDropdown(!showProfileDropdown);
+  };
+
+  const handleProfileMenuClick = () => {
+    setShowProfileDropdown(false);
+  };
+
+  // Get user initials for avatar
+  const getUserInitials = () => {
+    if (userProfile && userProfile.nombres && userProfile.apellidos) {
+      return `${userProfile.nombres.charAt(0)}${userProfile.apellidos.charAt(0)}`.toUpperCase();
+    } else if (currentUser && currentUser.email) {
+      return currentUser.email.charAt(0).toUpperCase();
+    }
+    return "U";
+  };
+
+  // Get user display name
+  const getUserDisplayName = () => {
+    if (userProfile && userProfile.nombres && userProfile.apellidos) {
+      return `${userProfile.nombres} ${userProfile.apellidos}`;
+    } else if (currentUser && currentUser.email) {
+      return currentUser.email;
+    }
+    return "Usuario";
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowProfileDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   return (
     <Navbar bg="dark" variant="dark" expand="lg">
@@ -65,84 +110,89 @@ const Navigation = () => {
                 </Nav.Link>
               </>
             )}
-            {currentUser && (
-              <>
-                {userProfile && (
-                  <>
-                    <Nav.Link
-                      as={Link}
-                      to="/profile"
-                      className={
-                        location.pathname === "/profile" ? "active" : ""
-                      }
-                    >
-                      Mi Perfil
-                    </Nav.Link>
-                    <Nav.Link
-                      as={Link}
-                      to="/subscriptions"
-                      className={
-                        location.pathname === "/subscriptions" ? "active" : ""
-                      }
-                    >
-                      Suscripciones
-                      {hasActiveSubscription && (
-                        <Badge bg="success" className="ms-1">
-                          ✓
-                        </Badge>
-                      )}
-                    </Nav.Link>
-                    <Nav.Link
-                      as={Link}
-                      to="/conexiones"
-                      className={
-                        location.pathname.startsWith("/conexiones") ||
-                        location.pathname.startsWith("/crear-conexion") ||
-                        location.pathname.startsWith("/editar-conexion")
-                          ? "active"
-                          : ""
-                      }
-                    >
-                      Conexiones
-                    </Nav.Link>
-                  </>
-                )}
-              </>
-            )}
           </Nav>
           <Nav>
             {currentUser ? (
-              <>
-                <Navbar.Text className="me-3">
-                  {autoSyncActive && (
-                    <Badge bg="warning" className="me-2">
-                      <i className="bi bi-arrow-clockwise me-1"></i>
-                      Sincronizando
-                    </Badge>
-                  )}
-                  {hasActiveSubscription && currentSubscription && (
-                    <Badge
-                      bg={
-                        currentSubscription.planType === "oro"
-                          ? "warning"
-                          : currentSubscription.planType === "plata"
-                            ? "info"
-                            : "secondary"
-                      }
-                      className="me-2"
+              <div className="profile-dropdown" ref={dropdownRef}>
+                <div
+                  className="profile-avatar"
+                  onClick={toggleProfileDropdown}
+                  title="Menú de perfil"
+                >
+                  {getUserInitials()}
+                </div>
+
+                {showProfileDropdown && (
+                  <div className="profile-dropdown-menu">
+                    <div className="profile-dropdown-header">
+                      <div className="profile-dropdown-name">
+                        {getUserDisplayName()}
+                      </div>
+                      <div className="profile-dropdown-badges">
+                        {autoSyncActive && (
+                          <span className="profile-badge sync-badge">
+                            <i className="bi bi-arrow-clockwise me-1"></i>
+                            Sincronizando
+                          </span>
+                        )}
+                        {hasActiveSubscription && currentSubscription && (
+                          <span
+                            className={`profile-badge plan-badge-${currentSubscription.planType}`}
+                          >
+                            Plan{" "}
+                            {currentSubscription.planType
+                              .charAt(0)
+                              .toUpperCase() +
+                              currentSubscription.planType.slice(1)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <Link
+                      to="/profile"
+                      className="profile-dropdown-item"
+                      onClick={handleProfileMenuClick}
                     >
-                      {currentSubscription.planType.charAt(0).toUpperCase() +
-                        currentSubscription.planType.slice(1)}
-                    </Badge>
-                  )}
-                  {userProfile
-                    ? `${userProfile.nombres} ${userProfile.apellidos}`
-                    : currentUser.email}
-                </Navbar.Text>
-                <Button variant="outline-light" onClick={handleLogout}>
-                  Cerrar Sesión
-                </Button>
-              </>
+                      <i className="bi bi-person"></i>
+                      Mi Perfil
+                    </Link>
+
+                    <Link
+                      to="/subscriptions"
+                      className="profile-dropdown-item"
+                      onClick={handleProfileMenuClick}
+                    >
+                      <i className="bi bi-credit-card"></i>
+                      Suscripciones
+                      {hasActiveSubscription && (
+                        <Badge bg="success" className="ms-auto">
+                          ✓
+                        </Badge>
+                      )}
+                    </Link>
+
+                    <Link
+                      to="/conexiones"
+                      className="profile-dropdown-item"
+                      onClick={handleProfileMenuClick}
+                    >
+                      <i className="bi bi-server"></i>
+                      Conexiones
+                    </Link>
+
+                    <div className="profile-dropdown-logout">
+                      <button
+                        className="profile-dropdown-item"
+                        onClick={handleLogout}
+                      >
+                        <i className="bi bi-box-arrow-right"></i>
+                        Cerrar Sesión
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             ) : (
               <>
                 <Nav.Link
