@@ -68,8 +68,8 @@ const Navigation = () => {
   }, []);
 
   return (
-    <Navbar bg="dark" variant="dark" expand="lg">
-      <Container>
+    <Navbar bg="dark" variant="dark" expand="lg" className="px-0">
+      <Container fluid className="px-3">
         <Navbar.Brand as={Link} to="/" className="d-flex align-items-center">
           <img src={logo} alt="NexoSQL Logo" height="30" className="me-2" />
           NexoSQL
