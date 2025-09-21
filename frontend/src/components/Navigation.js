@@ -194,22 +194,13 @@ const Navigation = () => {
                 )}
               </div>
             ) : (
-              <>
-                <Nav.Link
-                  as={Link}
-                  to="/login"
-                  className={location.pathname === "/login" ? "active" : ""}
-                >
-                  Iniciar Sesión
-                </Nav.Link>
-                <Nav.Link
-                  as={Link}
-                  to="/register"
-                  className={location.pathname === "/register" ? "active" : ""}
-                >
-                  Registrarse
-                </Nav.Link>
-              </>
+              <Nav.Link
+                as={Link}
+                to="/login"
+                className={location.pathname === "/login" ? "active" : ""}
+              >
+                Iniciar Sesión
+              </Nav.Link>
             )}
           </Nav>
         </Navbar.Collapse>
