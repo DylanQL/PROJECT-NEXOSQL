@@ -10,6 +10,7 @@ import {
 } from "react-bootstrap";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import logoNexoSQL from "../assets/logo_nexosql.svg";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -75,6 +76,21 @@ const Login = () => {
         <Col md={6}>
           <Card className="shadow">
             <Card.Body className="p-4">
+              <div className="text-center mb-4">
+                <div className="d-flex align-items-center justify-content-center">
+                  <img
+                    src={logoNexoSQL}
+                    alt="NexoSQL Logo"
+                    style={{ height: "80px", marginRight: "15px" }}
+                  />
+                  <h1
+                    className="mb-0"
+                    style={{ color: "#007bff", fontWeight: "bold" }}
+                  >
+                    NexoSQL
+                  </h1>
+                </div>
+              </div>
               <h2 className="text-center mb-4">Iniciar Sesión</h2>
 
               {error && <Alert variant="danger">{error}</Alert>}
