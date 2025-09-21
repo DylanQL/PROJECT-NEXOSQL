@@ -14,7 +14,7 @@ const getUserConnections = async (req, res) => {
         {
           model: MotorDB,
           as: "motor",
-          attributes: ["id", "nombre", "icono"],
+          attributes: ["id", "nombre"],
         },
       ],
       order: [["createdAt", "DESC"]],
@@ -57,7 +57,7 @@ const getConnectionById = async (req, res) => {
         {
           model: MotorDB,
           as: "motor",
-          attributes: ["id", "nombre", "icono"],
+          attributes: ["id", "nombre"],
         },
       ],
     });

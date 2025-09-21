@@ -1,4 +1,4 @@
-const { MotorDB } = require('../models');
+const { MotorDB } = require("../models");
 
 /**
  * Get all database engines
@@ -6,13 +6,15 @@ const { MotorDB } = require('../models');
 const getAllMotores = async (req, res) => {
   try {
     const motores = await MotorDB.findAll({
-      order: [['nombre', 'ASC']]
+      order: [["nombre", "ASC"]],
     });
 
     return res.status(200).json(motores);
   } catch (error) {
-    console.error('Error fetching database engines:', error);
-    return res.status(500).json({ error: 'Error al obtener los motores de base de datos' });
+    console.error("Error fetching database engines:", error);
+    return res
+      .status(500)
+      .json({ error: "Error al obtener los motores de base de datos" });
   }
 };
 
@@ -26,13 +28,17 @@ const getMotorById = async (req, res) => {
     const motor = await MotorDB.findByPk(id);
 
     if (!motor) {
-      return res.status(404).json({ error: 'Motor de base de datos no encontrado' });
+      return res
+        .status(404)
+        .json({ error: "Motor de base de datos no encontrado" });
     }
 
     return res.status(200).json(motor);
   } catch (error) {
-    console.error('Error fetching database engine:', error);
-    return res.status(500).json({ error: 'Error al obtener el motor de base de datos' });
+    console.error("Error fetching database engine:", error);
+    return res
+      .status(500)
+      .json({ error: "Error al obtener el motor de base de datos" });
   }
 };
 
@@ -41,30 +47,35 @@ const getMotorById = async (req, res) => {
  */
 const createMotor = async (req, res) => {
   try {
-    const { nombre, icono } = req.body;
+    const { nombre } = req.body;
 
     if (!nombre) {
-      return res.status(400).json({ error: 'El nombre del motor es requerido' });
+      return res
+        .status(400)
+        .json({ error: "El nombre del motor es requerido" });
     }
 
     // Check if engine already exists
     const existingMotor = await MotorDB.findOne({ where: { nombre } });
     if (existingMotor) {
-      return res.status(409).json({ error: 'Ya existe un motor con ese nombre' });
+      return res
+        .status(409)
+        .json({ error: "Ya existe un motor con ese nombre" });
     }
 
     const nuevoMotor = await MotorDB.create({
       nombre,
-      icono
     });
 
     return res.status(201).json({
-      message: 'Motor de base de datos creado exitosamente',
-      motor: nuevoMotor
+      message: "Motor de base de datos creado exitosamente",
+      motor: nuevoMotor,
     });
   } catch (error) {
-    console.error('Error creating database engine:', error);
-    return res.status(500).json({ error: 'Error al crear el motor de base de datos' });
+    console.error("Error creating database engine:", error);
+    return res
+      .status(500)
+      .json({ error: "Error al crear el motor de base de datos" });
   }
 };
 
@@ -74,27 +85,30 @@ const createMotor = async (req, res) => {
 const updateMotor = async (req, res) => {
   try {
     const { id } = req.params;
-    const { nombre, icono, activo } = req.body;
+    const { nombre, activo } = req.body;
 
     const motor = await MotorDB.findByPk(id);
 
     if (!motor) {
-      return res.status(404).json({ error: 'Motor de base de datos no encontrado' });
+      return res
+        .status(404)
+        .json({ error: "Motor de base de datos no encontrado" });
     }
 
     // Update fields if provided
     if (nombre !== undefined) motor.nombre = nombre;
-    if (icono !== undefined) motor.icono = icono;
 
     await motor.save();
 
     return res.status(200).json({
-      message: 'Motor de base de datos actualizado exitosamente',
-      motor
+      message: "Motor de base de datos actualizado exitosamente",
+      motor,
     });
   } catch (error) {
-    console.error('Error updating database engine:', error);
-    return res.status(500).json({ error: 'Error al actualizar el motor de base de datos' });
+    console.error("Error updating database engine:", error);
+    return res
+      .status(500)
+      .json({ error: "Error al actualizar el motor de base de datos" });
   }
 };
 
@@ -109,16 +123,22 @@ const deleteMotor = async (req, res) => {
     const motor = await MotorDB.findByPk(id);
 
     if (!motor) {
-      return res.status(404).json({ error: 'Motor de base de datos no encontrado' });
+      return res
+        .status(404)
+        .json({ error: "Motor de base de datos no encontrado" });
     }
 
     // Hard delete since we don't have activo field anymore
     await motor.destroy();
 
-    return res.status(200).json({ message: 'Motor de base de datos eliminado exitosamente' });
+    return res
+      .status(200)
+      .json({ message: "Motor de base de datos eliminado exitosamente" });
   } catch (error) {
-    console.error('Error deleting database engine:', error);
-    return res.status(500).json({ error: 'Error al eliminar el motor de base de datos' });
+    console.error("Error deleting database engine:", error);
+    return res
+      .status(500)
+      .json({ error: "Error al eliminar el motor de base de datos" });
   }
 };
 
@@ -127,5 +147,5 @@ module.exports = {
   getMotorById,
   createMotor,
   updateMotor,
-  deleteMotor
+  deleteMotor,
 };

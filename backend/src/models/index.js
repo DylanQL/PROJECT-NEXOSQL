@@ -44,12 +44,12 @@ const initializeModels = async () => {
 const initializeDefaultEngines = async () => {
   try {
     const engines = [
-      { nombre: "MySQL", icono: "mysql.png" },
-      { nombre: "PostgreSQL", icono: "postgresql.png" },
-      { nombre: "SQL Server", icono: "sqlserver.png" },
-      { nombre: "Oracle", icono: "oracle.png" },
-      { nombre: "MariaDB", icono: "mariadb.png" },
-      { nombre: "MongoDB", icono: "mongodb.png" },
+      { nombre: "MySQL" },
+      { nombre: "PostgreSQL" },
+      { nombre: "SQL Server" },
+      { nombre: "Oracle" },
+      { nombre: "MariaDB" },
+      { nombre: "MongoDB" },
     ];
 
     for (const engine of engines) {
