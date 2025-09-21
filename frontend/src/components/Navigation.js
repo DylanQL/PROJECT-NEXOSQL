@@ -3,6 +3,7 @@ import { Navbar, Nav, Container, Badge } from "react-bootstrap";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useSubscription } from "../contexts/SubscriptionContext";
+import logo from "../assets/logo_nexosql.svg";
 
 const Navigation = () => {
   const { currentUser, userProfile, logout, isAuthenticated } = useAuth();
@@ -69,7 +70,8 @@ const Navigation = () => {
   return (
     <Navbar bg="dark" variant="dark" expand="lg">
       <Container>
-        <Navbar.Brand as={Link} to="/">
+        <Navbar.Brand as={Link} to="/" className="d-flex align-items-center">
+          <img src={logo} alt="NexoSQL Logo" height="30" className="me-2" />
           NexoSQL
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
