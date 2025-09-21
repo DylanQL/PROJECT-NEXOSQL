@@ -15,6 +15,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { conexionDBApi, motorDBApi } from "../services/api";
 import ConnectionLimitInfo from "../components/ConnectionLimitInfo";
 import { useSubscription } from "../contexts/SubscriptionContext";
+import { dbLogos } from "../assets/db-logos";
 
 const CrearConexion = () => {
   const { id } = useParams(); // For edit mode, id will be present
@@ -306,7 +307,15 @@ const CrearConexion = () => {
               >
                 <Card.Body className="text-center">
                   <div className="mb-3">
-                    <i className={`bi bi-database fs-1`}></i>
+                    {dbLogos[motor.nombre.toLowerCase()] ? (
+                      <img
+                        src={dbLogos[motor.nombre.toLowerCase()]}
+                        alt={`${motor.nombre} logo`}
+                        style={{ height: "60px", width: "auto" }}
+                      />
+                    ) : (
+                      <i className={`bi bi-database fs-1`}></i>
+                    )}
                   </div>
                   <Card.Title>{motor.nombre}</Card.Title>
                   <Form.Check

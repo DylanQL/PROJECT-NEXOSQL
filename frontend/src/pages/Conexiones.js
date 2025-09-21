@@ -14,6 +14,7 @@ import { useNavigate } from "react-router-dom";
 
 import { conexionDBApi } from "../services/api";
 import ConnectionLimitInfo from "../components/ConnectionLimitInfo";
+import { dbLogos } from "../assets/db-logos";
 
 const Conexiones = () => {
   const navigate = useNavigate();
@@ -94,6 +95,11 @@ const Conexiones = () => {
     return motor?.nombre || "Desconocido";
   };
 
+  const getMotorLogo = (motor) => {
+    if (!motor?.nombre) return null;
+    return dbLogos[motor.nombre.toLowerCase()] || null;
+  };
+
   if (loading && conexiones.length === 0) {
     return (
       <Container className="py-5 text-center">
@@ -144,10 +150,32 @@ const Conexiones = () => {
                 style={{ cursor: "pointer" }}
               >
                 <Card.Body>
-                  <Card.Title>{conexion.nombre}</Card.Title>
-                  <Card.Subtitle className="mb-3 text-muted">
-                    Motor: {getMotorIcon(conexion.motor)}
-                  </Card.Subtitle>
+                  <div className="d-flex align-items-center mb-3">
+                    {getMotorLogo(conexion.motor) ? (
+                      <img
+                        src={getMotorLogo(conexion.motor)}
+                        alt={`${getMotorIcon(conexion.motor)} logo`}
+                        style={{
+                          height: "40px",
+                          width: "auto",
+                          marginRight: "10px",
+                        }}
+                      />
+                    ) : (
+                      <i
+                        className="bi bi-database me-2"
+                        style={{ fontSize: "1.5rem" }}
+                      ></i>
+                    )}
+                    <div>
+                      <Card.Title className="mb-0">
+                        {conexion.nombre}
+                      </Card.Title>
+                      <Card.Subtitle className="text-muted">
+                        {getMotorIcon(conexion.motor)}
+                      </Card.Subtitle>
+                    </div>
+                  </div>
                   <ListGroup variant="flush" className="mb-3">
                     <ListGroup.Item>
                       <strong>Host:</strong> {conexion.host}

@@ -13,6 +13,7 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { motorDBApi, conexionDBApi } from "../services/api";
+import { dbLogos } from "../assets/db-logos";
 
 const EditarConexion = () => {
   const { id } = useParams();
@@ -331,7 +332,15 @@ const EditarConexion = () => {
               >
                 <Card.Body className="text-center">
                   <div className="mb-3">
-                    <i className={`bi bi-database fs-1`}></i>
+                    {dbLogos[motor.nombre.toLowerCase()] ? (
+                      <img
+                        src={dbLogos[motor.nombre.toLowerCase()]}
+                        alt={`${motor.nombre} logo`}
+                        style={{ height: "60px", width: "auto" }}
+                      />
+                    ) : (
+                      <i className={`bi bi-database fs-1`}></i>
+                    )}
                   </div>
                   <Card.Title>{motor.nombre}</Card.Title>
                   <Form.Check
