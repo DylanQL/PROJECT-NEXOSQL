@@ -38,10 +38,13 @@ class SubscriptionController {
         order: [["createdAt", "DESC"]],
       });
 
-      // If no active subscription found, look for the most recent one
+      // If no active subscription found, look for the most recent one (excluding pending)
       if (!subscription) {
         subscription = await Subscription.findOne({
-          where: { userId },
+          where: {
+            userId,
+            status: { [require("sequelize").Op.ne]: "pending" }, // Exclude pending subscriptions
+          },
           order: [["createdAt", "DESC"]],
         });
       }
