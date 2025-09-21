@@ -29,10 +29,22 @@ class SubscriptionController {
     try {
       const userId = req.user.id;
 
-      const subscription = await Subscription.findOne({
-        where: { userId },
+      // First try to find an active subscription
+      let subscription = await Subscription.findOne({
+        where: {
+          userId,
+          status: "active",
+        },
         order: [["createdAt", "DESC"]],
       });
+
+      // If no active subscription found, look for the most recent one
+      if (!subscription) {
+        subscription = await Subscription.findOne({
+          where: { userId },
+          order: [["createdAt", "DESC"]],
+        });
+      }
 
       if (!subscription) {
         return res.json({
@@ -239,6 +251,50 @@ class SubscriptionController {
       }
 
       await subscription.update(updates);
+
+      // If this subscription is replacing another one and is now active, cancel the old one
+      if (shouldActivate && subscription.replacingSubscriptionId) {
+        console.log(
+          `Subscription ${subscriptionId} is active and replacing subscription ${subscription.replacingSubscriptionId}`,
+        );
+
+        try {
+          const oldSubscription = await Subscription.findByPk(
+            subscription.replacingSubscriptionId,
+          );
+
+          if (oldSubscription && oldSubscription.status === "active") {
+            console.log(
+              `Cancelling old subscription ${oldSubscription.subscriptionId}...`,
+            );
+
+            // Cancel in PayPal
+            const isInGracePeriod = oldSubscription.isInGracePeriod();
+            if (!isInGracePeriod) {
+              await paypalService.cancelSubscription(
+                oldSubscription.subscriptionId,
+                "Reemplazado por nueva suscripción",
+              );
+            }
+
+            // Update old subscription status
+            await oldSubscription.update({
+              status: "cancelled",
+              endDate: new Date(),
+            });
+
+            console.log(
+              `Old subscription ${oldSubscription.subscriptionId} cancelled successfully`,
+            );
+          }
+
+          // Clear the replacingSubscriptionId field since we've handled it
+          await subscription.update({ replacingSubscriptionId: null });
+        } catch (cancelError) {
+          console.error(`Error cancelling old subscription:`, cancelError);
+          // Don't fail the main operation if cancelling the old subscription fails
+        }
+      }
 
       console.log(`Subscription ${subscriptionId} updated:`, {
         oldStatus: subscription.status,
@@ -448,31 +504,7 @@ class SubscriptionController {
         });
       }
 
-      // Check if subscription is in grace period (already cancelled in PayPal)
-      const isInGracePeriod = currentSubscription.isInGracePeriod();
-      console.log(`Subscription in grace period: ${isInGracePeriod}`);
-
-      if (!isInGracePeriod) {
-        // Only cancel in PayPal if not already cancelled
-        console.log(`Cancelling current subscription in PayPal...`);
-        await paypalService.cancelSubscription(
-          currentSubscription.subscriptionId,
-          "Cambiando a un nuevo plan",
-        );
-      } else {
-        console.log(
-          `Subscription already cancelled in PayPal, skipping cancellation...`,
-        );
-      }
-
-      // Update current subscription status regardless
-      console.log(`Updating current subscription status to cancelled...`);
-      await currentSubscription.update({
-        status: "cancelled",
-        endDate: new Date(),
-      });
-
-      // Create new subscription
+      // Create new subscription first without cancelling the current one
       console.log(`Creating new subscription with plan: ${newPlanType}`);
       const planDetails = Subscription.getPlanDetails(newPlanType);
       console.log(`Plan details:`, planDetails);
@@ -507,6 +539,8 @@ class SubscriptionController {
         price: planDetails.price,
         currency: "USD",
         paypalData: paypalSubscription.fullResponse,
+        // Store the ID of the subscription that will be replaced when this one is confirmed
+        replacingSubscriptionId: currentSubscription.id,
       });
       console.log(`New subscription created with ID: ${newSubscription.id}`);
 

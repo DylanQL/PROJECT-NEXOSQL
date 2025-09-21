@@ -91,6 +91,12 @@ const Subscription = sequelize.define(
         }
       },
     },
+    replacingSubscriptionId: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      comment:
+        "ID of the subscription that will be replaced when this one is confirmed",
+    },
   },
   {
     tableName: "subscriptions",
