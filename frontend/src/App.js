@@ -65,7 +65,7 @@ function AppNotifications() {
 }
 
 function App() {
-  const { loading } = useAuth();
+  const { loading, isAuthenticated } = useAuth();
 
   // Show loading screen while authentication state is being verified
   if (loading) {
@@ -138,14 +138,16 @@ function App() {
                 <Route path="*" element={<Navigate to="/" />} />
               </Routes>
             </Container>
-            <footer className="bg-dark text-center text-white py-3 mt-auto">
-              <Container>
-                <p className="mb-0">
-                  &copy; {new Date().getFullYear()} NexoSQL. Todos los derechos
-                  reservados.
-                </p>
-              </Container>
-            </footer>
+            {!isAuthenticated && (
+              <footer className="bg-dark text-center text-white py-3 mt-auto">
+                <Container>
+                  <p className="mb-0">
+                    &copy; {new Date().getFullYear()} NexoSQL. Todos los
+                    derechos reservados.
+                  </p>
+                </Container>
+              </footer>
+            )}
           </div>
         </Router>
       </ConnectionProvider>
