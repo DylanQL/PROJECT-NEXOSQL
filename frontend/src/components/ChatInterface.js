@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   Container,
   Row,
@@ -33,6 +33,7 @@ const ChatInterface = () => {
   const [error, setError] = useState(null);
   // State for sidebar visibility on mobile
   const [sidebarVisible, setSidebarVisible] = useState(false);
+  const [sidebarAnimating, setSidebarAnimating] = useState(false);
   const [navbarHeight, setNavbarHeight] = useState(56);
 
   // Close profile dropdown when sidebar opens (improve UX)
@@ -94,13 +95,53 @@ const ChatInterface = () => {
     };
   }, [sidebarVisible]);
 
+  // Handle smooth sidebar open/close animations
+  const handleOpenSidebar = useCallback(() => {
+    if (sidebarAnimating) return;
+    setSidebarAnimating(true);
+    setSidebarVisible(true);
+
+    // Reset animation state after animation completes
+    setTimeout(() => {
+      setSidebarAnimating(false);
+    }, 350);
+  }, [sidebarAnimating]);
+
+  const handleCloseSidebar = useCallback(() => {
+    if (sidebarAnimating) return;
+    setSidebarAnimating(true);
+
+    // Add slide-out animation class
+    const sidebar = document.querySelector(".mobile-sidebar");
+    if (sidebar) {
+      sidebar.classList.add("sliding-out");
+    }
+
+    // Hide sidebar after animation
+    setTimeout(() => {
+      setSidebarVisible(false);
+      setSidebarAnimating(false);
+      if (sidebar) {
+        sidebar.classList.remove("sliding-out");
+      }
+    }, 350);
+  }, [sidebarAnimating]);
+
+  const handleToggleSidebar = useCallback(() => {
+    if (sidebarVisible) {
+      handleCloseSidebar();
+    } else {
+      handleOpenSidebar();
+    }
+  }, [sidebarVisible, handleCloseSidebar, handleOpenSidebar]);
+
   // Close sidebar when clicking outside on mobile
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (sidebarVisible && window.innerWidth < 768) {
         const sidebar = document.querySelector(".mobile-sidebar");
         if (sidebar && !sidebar.contains(event.target)) {
-          setSidebarVisible(false);
+          handleCloseSidebar();
         }
       }
     };
@@ -109,13 +150,13 @@ const ChatInterface = () => {
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [sidebarVisible]);
+  }, [sidebarVisible, handleCloseSidebar]);
 
   // Close sidebar on window resize to desktop size
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 768 && sidebarVisible) {
-        setSidebarVisible(false);
+        handleCloseSidebar();
       }
     };
 
@@ -123,7 +164,7 @@ const ChatInterface = () => {
     return () => {
       window.removeEventListener("resize", handleResize);
     };
-  }, [sidebarVisible]);
+  }, [sidebarVisible, handleCloseSidebar]);
 
   // Detect navbar height on mount
   useEffect(() => {
@@ -147,27 +188,33 @@ const ChatInterface = () => {
     };
   }, []);
 
-  const handleCreateChat = (title = "Nueva consulta") => {
-    if (!activeConnection) return;
+  const handleCreateChat = useCallback(
+    (title = "Nueva consulta") => {
+      if (!activeConnection) return;
 
-    const newChat = chatService.createChat(activeConnection.id, title);
-    setChats([newChat, ...chats]);
-    setSelectedChatId(newChat.id);
-    setUserInput("");
-    // Close sidebar on mobile when creating a chat
-    if (window.innerWidth < 768) {
-      setSidebarVisible(false);
-    }
-  };
+      const newChat = chatService.createChat(activeConnection.id, title);
+      setChats([newChat, ...chats]);
+      setSelectedChatId(newChat.id);
+      setUserInput("");
+      // Close sidebar on mobile when creating a chat with smooth animation
+      if (window.innerWidth < 768) {
+        handleCloseSidebar();
+      }
+    },
+    [activeConnection, chats, handleCloseSidebar],
+  );
 
-  const handleSelectChat = (chatId) => {
-    setSelectedChatId(chatId);
-    setUserInput("");
-    // Close sidebar on mobile when selecting a chat
-    if (window.innerWidth < 768) {
-      setSidebarVisible(false);
-    }
-  };
+  const handleSelectChat = useCallback(
+    (chatId) => {
+      setSelectedChatId(chatId);
+      setUserInput("");
+      // Close sidebar on mobile when selecting a chat with smooth animation
+      if (window.innerWidth < 768) {
+        handleCloseSidebar();
+      }
+    },
+    [handleCloseSidebar],
+  );
 
   const handleDeleteChat = (chatId) => {
     try {
@@ -378,13 +425,13 @@ const ChatInterface = () => {
         {/* Mobile overlay */}
         {sidebarVisible && (
           <div
-            className="position-fixed w-100 bg-dark bg-opacity-50 d-md-none mobile-overlay"
+            className={`position-fixed w-100 bg-dark bg-opacity-50 d-md-none mobile-overlay ${sidebarVisible ? "show" : ""}`}
             style={{
               zIndex: 1040,
               top: `${navbarHeight}px`,
               height: `calc(100vh - ${navbarHeight}px)`,
             }}
-            onClick={() => setSidebarVisible(false)}
+            onClick={handleCloseSidebar}
           />
         )}
 
@@ -447,7 +494,7 @@ const ChatInterface = () => {
               onCreateChat={handleCreateChat}
               onDeleteChat={handleDeleteChat}
               onChatRenamed={handleChatRenamed}
-              onSidebarToggle={() => setSidebarVisible(false)}
+              onSidebarToggle={handleCloseSidebar}
             />
           </div>
         </Col>
@@ -465,8 +512,9 @@ const ChatInterface = () => {
             <Button
               variant="outline-secondary"
               size="sm"
-              onClick={() => setSidebarVisible(!sidebarVisible)}
+              onClick={handleToggleSidebar}
               className="mobile-menu-button"
+              disabled={sidebarAnimating}
             >
               <List size={20} />
             </Button>
