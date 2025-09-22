@@ -74,10 +74,88 @@ const Navigation = () => {
           <img src={logo} alt="NexoSQL Logo" height="30" className="me-2" />
           NexoSQL
         </Navbar.Brand>
-        <Navbar.Toggle aria-controls="basic-navbar-nav" />
-        <Navbar.Collapse id="basic-navbar-nav">
-          <Nav className="me-auto">
-            {!currentUser && (
+        {!isAuthenticated && <Navbar.Toggle aria-controls="basic-navbar-nav" />}
+        {isAuthenticated ? (
+          <div className="d-flex align-items-center">
+            <div className="profile-dropdown" ref={dropdownRef}>
+              <div
+                className="profile-avatar"
+                onClick={toggleProfileDropdown}
+                title="Menú de perfil"
+              >
+                {getUserInitials()}
+              </div>
+
+              {showProfileDropdown && (
+                <div className="profile-dropdown-menu">
+                  <div className="profile-dropdown-header">
+                    <div className="profile-dropdown-name">
+                      {getUserDisplayName()}
+                    </div>
+                    <div className="profile-dropdown-badges">
+                      {autoSyncActive && (
+                        <span className="profile-badge sync-badge">
+                          <i className="bi bi-arrow-clockwise me-1"></i>
+                          Sincronizando
+                        </span>
+                      )}
+                      {hasActiveSubscription && currentSubscription && (
+                        <span
+                          className={`profile-badge plan-badge-${currentSubscription.planType}`}
+                        >
+                          Plan{" "}
+                          {currentSubscription.planType
+                            .charAt(0)
+                            .toUpperCase() +
+                            currentSubscription.planType.slice(1)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <Link
+                    to="/profile"
+                    className="profile-dropdown-item"
+                    onClick={handleProfileMenuClick}
+                  >
+                    <i className="bi bi-person"></i>
+                    Mi Perfil
+                  </Link>
+
+                  <Link
+                    to="/subscriptions"
+                    className="profile-dropdown-item"
+                    onClick={handleProfileMenuClick}
+                  >
+                    <i className="bi bi-credit-card"></i>
+                    Suscripciones
+                  </Link>
+
+                  <Link
+                    to="/conexiones"
+                    className="profile-dropdown-item"
+                    onClick={handleProfileMenuClick}
+                  >
+                    <i className="bi bi-server"></i>
+                    Conexiones
+                  </Link>
+
+                  <div className="profile-dropdown-logout">
+                    <button
+                      className="profile-dropdown-item"
+                      onClick={handleLogout}
+                    >
+                      <i className="bi bi-box-arrow-right"></i>
+                      Cerrar Sesión
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <Navbar.Collapse id="basic-navbar-nav">
+            <Nav className="me-auto">
               <Nav.Link
                 as={Link}
                 to="/"
@@ -85,115 +163,33 @@ const Navigation = () => {
               >
                 Inicio
               </Nav.Link>
-            )}
-            {!currentUser && (
-              <>
-                <Nav.Link
-                  as={Link}
-                  to="/como-funciona"
-                  className={
-                    location.pathname === "/como-funciona" ? "active" : ""
-                  }
-                >
-                  Cómo funciona
-                </Nav.Link>
-                <Nav.Link
-                  as={Link}
-                  to="/planes"
-                  className={location.pathname === "/planes" ? "active" : ""}
-                >
-                  Planes
-                </Nav.Link>
-                <Nav.Link
-                  as={Link}
-                  to="/sobre-nosotros"
-                  className={
-                    location.pathname === "/sobre-nosotros" ? "active" : ""
-                  }
-                >
-                  Sobre nosotros
-                </Nav.Link>
-              </>
-            )}
-          </Nav>
-          <Nav>
-            {isAuthenticated ? (
-              <div className="profile-dropdown" ref={dropdownRef}>
-                <div
-                  className="profile-avatar"
-                  onClick={toggleProfileDropdown}
-                  title="Menú de perfil"
-                >
-                  {getUserInitials()}
-                </div>
-
-                {showProfileDropdown && (
-                  <div className="profile-dropdown-menu">
-                    <div className="profile-dropdown-header">
-                      <div className="profile-dropdown-name">
-                        {getUserDisplayName()}
-                      </div>
-                      <div className="profile-dropdown-badges">
-                        {autoSyncActive && (
-                          <span className="profile-badge sync-badge">
-                            <i className="bi bi-arrow-clockwise me-1"></i>
-                            Sincronizando
-                          </span>
-                        )}
-                        {hasActiveSubscription && currentSubscription && (
-                          <span
-                            className={`profile-badge plan-badge-${currentSubscription.planType}`}
-                          >
-                            Plan{" "}
-                            {currentSubscription.planType
-                              .charAt(0)
-                              .toUpperCase() +
-                              currentSubscription.planType.slice(1)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <Link
-                      to="/profile"
-                      className="profile-dropdown-item"
-                      onClick={handleProfileMenuClick}
-                    >
-                      <i className="bi bi-person"></i>
-                      Mi Perfil
-                    </Link>
-
-                    <Link
-                      to="/subscriptions"
-                      className="profile-dropdown-item"
-                      onClick={handleProfileMenuClick}
-                    >
-                      <i className="bi bi-credit-card"></i>
-                      Suscripciones
-                    </Link>
-
-                    <Link
-                      to="/conexiones"
-                      className="profile-dropdown-item"
-                      onClick={handleProfileMenuClick}
-                    >
-                      <i className="bi bi-server"></i>
-                      Conexiones
-                    </Link>
-
-                    <div className="profile-dropdown-logout">
-                      <button
-                        className="profile-dropdown-item"
-                        onClick={handleLogout}
-                      >
-                        <i className="bi bi-box-arrow-right"></i>
-                        Cerrar Sesión
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
+              <Nav.Link
+                as={Link}
+                to="/como-funciona"
+                className={
+                  location.pathname === "/como-funciona" ? "active" : ""
+                }
+              >
+                Cómo funciona
+              </Nav.Link>
+              <Nav.Link
+                as={Link}
+                to="/planes"
+                className={location.pathname === "/planes" ? "active" : ""}
+              >
+                Planes
+              </Nav.Link>
+              <Nav.Link
+                as={Link}
+                to="/sobre-nosotros"
+                className={
+                  location.pathname === "/sobre-nosotros" ? "active" : ""
+                }
+              >
+                Sobre nosotros
+              </Nav.Link>
+            </Nav>
+            <Nav>
               <Nav.Link
                 as={Link}
                 to="/login"
@@ -201,9 +197,9 @@ const Navigation = () => {
               >
                 Iniciar Sesión
               </Nav.Link>
-            )}
-          </Nav>
-        </Navbar.Collapse>
+            </Nav>
+          </Navbar.Collapse>
+        )}
       </Container>
     </Navbar>
   );
