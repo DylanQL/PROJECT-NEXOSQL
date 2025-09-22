@@ -1,6 +1,6 @@
 {
   "files": {
-    "main.css": "/static/css/main.f9df7012.css",
+    "main.css": "/static/css/main.2c42b9ef.css",
     "main.js": "/static/js/main.a9550b7f.js",
     "static/js/453.1aab9bb8.chunk.js": "/static/js/453.1aab9bb8.chunk.js",
     "static/media/logo_nexosql.svg": "/static/media/logo_nexosql.6624e8ba1f02f24beb1ca065fad953a9.svg",
@@ -11,12 +11,12 @@
     "static/media/mongodb_logo.svg": "/static/media/mongodb_logo.eb842895e80bd61dd471f2b70345feab.svg",
     "static/media/oracledb_logo.svg": "/static/media/oracledb_logo.f388d645cd2612f140069a1df41a9d74.svg",
     "index.html": "/index.html",
-    "main.f9df7012.css.map": "/static/css/main.f9df7012.css.map",
+    "main.2c42b9ef.css.map": "/static/css/main.2c42b9ef.css.map",
     "main.a9550b7f.js.map": "/static/js/main.a9550b7f.js.map",
     "453.1aab9bb8.chunk.js.map": "/static/js/453.1aab9bb8.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.f9df7012.css",
+    "static/css/main.2c42b9ef.css",
     "static/js/main.a9550b7f.js"
   ]
 }

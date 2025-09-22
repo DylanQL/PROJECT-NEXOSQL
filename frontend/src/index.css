@@ -3,6 +3,10 @@
 }
 
 /* Z-INDEX HIERARCHY (to avoid conflicts):
+ * 1090 - Bootstrap dropdowns in modals (highest)
+ * 1085 - Bootstrap tooltips and popovers
+ * 1080 - Bootstrap modals (above navbar)
+ * 1075 - Modal backdrops
  * 1070 - Navbar (always on top)
  * 1060 - Profile dropdown menu (above sidebar)
  * 1050 - Mobile sidebar (below profile menu)
@@ -28,6 +32,44 @@ body {
 /* Navbar z-index */
 .navbar {
     z-index: 1070;
+}
+
+/* Bootstrap components z-index override */
+.modal,
+.modal.show,
+.modal.fade.show {
+    z-index: 1080 !important;
+}
+
+.modal-backdrop,
+.modal-backdrop.show {
+    z-index: 1075 !important;
+}
+
+.tooltip {
+    z-index: 1085 !important;
+}
+
+.popover {
+    z-index: 1085 !important;
+}
+
+.dropdown-menu.show {
+    z-index: 1090 !important;
+}
+
+/* Specific override for chat area modals */
+.container-fluid .modal {
+    z-index: 1080 !important;
+}
+
+.container-fluid .modal-backdrop {
+    z-index: 1075 !important;
+}
+
+/* Ensure modal dialogs are positioned correctly */
+.modal-dialog {
+    z-index: 1081 !important;
 }
 
 code {
