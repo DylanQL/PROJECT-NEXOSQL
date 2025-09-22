@@ -277,10 +277,14 @@ const ChatInterface = () => {
   }
 
   return (
-    <Container fluid className="p-0" style={{ height: "calc(100vh - 136px)" }}>
-      <Row className="g-0 h-100">
+    <Container
+      fluid
+      className="p-0 w-100"
+      style={{ height: "calc(100vh - 136px)", maxWidth: "100%" }}
+    >
+      <Row className="g-0 h-100 w-100">
         {/* Sidebar with chat list */}
-        <Col xs={12} md={3} lg={3} className="h-100 d-flex flex-column">
+        <Col xs={12} md={3} lg={2} className="h-100 d-flex flex-column">
           <div className="p-3 bg-light border-bottom">
             <Form.Group>
               <Form.Label>Conexión activa</Form.Label>
@@ -326,7 +330,7 @@ const ChatInterface = () => {
         </Col>
 
         {/* Chat window */}
-        <Col xs={12} md={9} lg={9} className="h-100 d-flex flex-column">
+        <Col xs={12} md={9} lg={10} className="h-100 d-flex flex-column">
           {!selectedChat ? (
             <div className="flex-grow-1 d-flex flex-column justify-content-center align-items-center bg-light text-center p-4">
               <Database size={64} className="mb-4 text-secondary" />

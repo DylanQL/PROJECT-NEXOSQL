@@ -96,10 +96,21 @@ function App() {
           <div className="d-flex flex-column min-vh-100">
             <Navigation />
             <AppNotifications />
-            <Container className="flex-grow-1">
+            <Container
+              fluid
+              className="flex-grow-1 p-0"
+              style={{ maxWidth: "100%" }}
+            >
               <Routes>
                 {/* Public Routes */}
-                <Route path="/" element={<Home />} />
+                <Route
+                  path="/"
+                  element={
+                    <div className="w-100 p-0">
+                      <Home />
+                    </div>
+                  }
+                />
                 <Route path="/como-funciona" element={<ComoFunciona />} />
                 <Route path="/planes" element={<Planes />} />
                 <Route path="/sobre-nosotros" element={<SobreNosotros />} />

@@ -242,7 +242,7 @@ const Home = () => {
 
   // Show the chat interface
   return (
-    <div data-connection-context>
+    <div data-connection-context className="w-100" style={{ maxWidth: "100%" }}>
       <ChatInterface />
     </div>
   );

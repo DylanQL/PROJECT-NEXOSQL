@@ -7,6 +7,9 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     background-color: #f8f9fa;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
 code {
@@ -587,6 +590,44 @@ footer {
     border: 1px solid #b8722c;
 }
 
+/* Añadiendo estilos para aprovechar todo el ancho disponible */
+.container-fluid {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    max-width: 100vw !important;
+    width: 100vw !important;
+}
+
+.row {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+}
+
+/* Mejorando el uso del espacio en la interfaz del chat */
+[data-connection-context] {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* Asegurando que las columnas usen el espacio correctamente */
+.col-lg-10,
+.col-md-9 {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
+
+/* Mejorando el contraste visual entre la barra lateral y el área de chat */
+.chat-message .message-content {
+    max-width: 90% !important;
+}
+
+.assistant-message .message-content {
+    max-width: 90% !important;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .profile-dropdown-menu {
@@ -596,5 +637,17 @@ footer {
 
     .profile-dropdown-menu::before {
         right: 20px;
+    }
+
+    /* Ajustes adicionales para móviles */
+    .container-fluid {
+        overflow-x: hidden !important;
+    }
+}
+
+/* Ajustes para pantallas grandes */
+@media (min-width: 1200px) {
+    .chat-messages {
+        padding: 1rem 2rem !important;
     }
 }

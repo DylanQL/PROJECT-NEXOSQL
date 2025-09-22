@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   ListGroup,
   Button,
@@ -6,10 +6,16 @@ import {
   InputGroup,
   Modal,
   Dropdown,
-  DropdownButton
-} from 'react-bootstrap';
-import { PlusLg, ChatLeftText, Pencil, Trash, ThreeDots } from 'react-bootstrap-icons';
-import chatService from '../services/chatService';
+  DropdownButton,
+} from "react-bootstrap";
+import {
+  PlusLg,
+  ChatLeftText,
+  Pencil,
+  Trash,
+  ThreeDots,
+} from "react-bootstrap-icons";
+import chatService from "../services/chatService";
 
 const ChatSidebar = ({
   connectionId,
@@ -18,18 +24,18 @@ const ChatSidebar = ({
   onSelectChat,
   onCreateChat,
   onDeleteChat,
-  onChatRenamed
+  onChatRenamed,
 }) => {
   const [showNewChatModal, setShowNewChatModal] = useState(false);
-  const [newChatTitle, setNewChatTitle] = useState('');
+  const [newChatTitle, setNewChatTitle] = useState("");
   const [showRenameModal, setShowRenameModal] = useState(false);
   const [chatToRename, setChatToRename] = useState(null);
-  const [renameValue, setRenameValue] = useState('');
+  const [renameValue, setRenameValue] = useState("");
 
   const handleCreateChat = () => {
-    const title = newChatTitle.trim() || 'Nueva consulta';
+    const title = newChatTitle.trim() || "Nueva consulta";
     onCreateChat(title);
-    setNewChatTitle('');
+    setNewChatTitle("");
     setShowNewChatModal(false);
   };
 
@@ -38,7 +44,7 @@ const ChatSidebar = ({
       onChatRenamed(chatToRename.id, renameValue.trim());
       setShowRenameModal(false);
       setChatToRename(null);
-      setRenameValue('');
+      setRenameValue("");
     }
   };
 
@@ -57,9 +63,9 @@ const ChatSidebar = ({
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString(undefined, {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
+      month: "short",
+      day: "numeric",
+      year: "numeric",
     });
   };
 
@@ -78,8 +84,8 @@ const ChatSidebar = ({
   }
 
   return (
-    <div className="d-flex flex-column h-100 border-end">
-      <div className="p-3 border-bottom d-flex justify-content-between align-items-center">
+    <div className="d-flex flex-column h-100 border-end w-100">
+      <div className="p-2 border-bottom d-flex justify-content-between align-items-center">
         <h5 className="mb-0">Chats</h5>
         <Button
           variant="primary"
@@ -92,9 +98,9 @@ const ChatSidebar = ({
 
       <div className="overflow-auto flex-grow-1">
         {chats.length === 0 ? (
-          <div className="p-4 text-center text-muted">
-            <ChatLeftText size={48} className="mb-3" />
-            <p>No hay chats para esta conexión</p>
+          <div className="p-3 text-center text-muted">
+            <ChatLeftText size={36} className="mb-2" />
+            <p className="small">No hay chats para esta conexión</p>
             <Button
               variant="outline-primary"
               size="sm"
@@ -105,17 +111,21 @@ const ChatSidebar = ({
           </div>
         ) : (
           <ListGroup variant="flush">
-            {chats.map(chat => (
+            {chats.map((chat) => (
               <ListGroup.Item
                 key={chat.id}
                 action
                 active={selectedChatId === chat.id}
                 onClick={() => onSelectChat(chat.id)}
-                className="d-flex justify-content-between align-items-center py-3"
+                className="d-flex justify-content-between align-items-center py-2"
               >
-                <div className="text-truncate">
-                  <div className="fw-medium text-truncate">{chat.title}</div>
-                  <small className="text-muted">{formatDate(chat.updatedAt)}</small>
+                <div className="text-truncate flex-grow-1">
+                  <div className="fw-medium text-truncate small">
+                    {chat.title}
+                  </div>
+                  <small className="text-muted d-block text-truncate">
+                    {formatDate(chat.updatedAt)}
+                  </small>
                 </div>
                 <DropdownButton
                   variant={selectedChatId === chat.id ? "dark" : "light"}
@@ -161,7 +171,10 @@ const ChatSidebar = ({
           </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowNewChatModal(false)}>
+          <Button
+            variant="secondary"
+            onClick={() => setShowNewChatModal(false)}
+          >
             Cancelar
           </Button>
           <Button variant="primary" onClick={handleCreateChat}>
