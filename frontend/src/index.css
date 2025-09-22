@@ -2,6 +2,15 @@
     --navbar-height: 56px; /* Bootstrap navbar height */
 }
 
+/* Z-INDEX HIERARCHY (to avoid conflicts):
+ * 1070 - Navbar (always on top)
+ * 1060 - Profile dropdown menu (above sidebar)
+ * 1050 - Mobile sidebar (below profile menu)
+ * 1040 - Mobile overlay (below sidebar)
+ * 1030 - Mobile chat header (sticky header)
+ * 1000 - Chat main container
+ */
+
 body {
     margin: 0;
     font-family:
@@ -14,6 +23,11 @@ body {
     width: 100%;
     max-width: 100%;
     overflow-x: hidden;
+}
+
+/* Navbar z-index */
+.navbar {
+    z-index: 1070;
 }
 
 code {
@@ -442,7 +456,7 @@ footer {
     border-radius: 12px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
     min-width: 280px;
-    z-index: 1000;
+    z-index: 1060;
     overflow: hidden;
     animation: dropdownFadeIn 0.2s ease-out;
     margin-top: 8px;
@@ -685,7 +699,7 @@ footer {
         left: auto !important;
         width: 280px !important;
         max-width: calc(100vw - 20px) !important;
-        z-index: 9999 !important;
+        z-index: 1060 !important;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
     }
 

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Navbar, Nav, Container, Badge } from "react-bootstrap";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Navbar, Nav, Container } from "react-bootstrap";
+import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useSubscription } from "../contexts/SubscriptionContext";
 import logo from "../assets/logo_nexosql.svg";
@@ -9,7 +9,7 @@ const Navigation = () => {
   const { currentUser, userProfile, logout, isAuthenticated } = useAuth();
   const { hasActiveSubscription, currentSubscription, autoSyncActive } =
     useSubscription();
-  const navigate = useNavigate();
+
   const location = useLocation();
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const dropdownRef = useRef(null);
@@ -61,9 +61,22 @@ const Navigation = () => {
       }
     };
 
+    const handleCloseProfileDropdown = () => {
+      setShowProfileDropdown(false);
+    };
+
     document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener(
+      "closeProfileDropdown",
+      handleCloseProfileDropdown,
+    );
+
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener(
+        "closeProfileDropdown",
+        handleCloseProfileDropdown,
+      );
     };
   }, []);
 

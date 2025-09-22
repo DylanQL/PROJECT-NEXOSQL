@@ -35,6 +35,15 @@ const ChatInterface = () => {
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [navbarHeight, setNavbarHeight] = useState(56);
 
+  // Close profile dropdown when sidebar opens (improve UX)
+  useEffect(() => {
+    if (sidebarVisible && window.innerWidth < 768) {
+      // Dispatch custom event to close profile dropdown
+      const closeProfileEvent = new CustomEvent("closeProfileDropdown");
+      document.dispatchEvent(closeProfileEvent);
+    }
+  }, [sidebarVisible]);
+
   // Load chats when active connection changes
   useEffect(() => {
     const createInitialChat = (title = "Nueva consulta") => {

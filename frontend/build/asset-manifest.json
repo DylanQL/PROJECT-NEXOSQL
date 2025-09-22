@@ -1,15 +1,22 @@
 {
   "files": {
-    "main.css": "/static/css/main.a633b068.css",
-    "main.js": "/static/js/main.1dba3a3e.js",
+    "main.css": "/static/css/main.f9df7012.css",
+    "main.js": "/static/js/main.a9550b7f.js",
     "static/js/453.1aab9bb8.chunk.js": "/static/js/453.1aab9bb8.chunk.js",
+    "static/media/logo_nexosql.svg": "/static/media/logo_nexosql.6624e8ba1f02f24beb1ca065fad953a9.svg",
+    "static/media/sqlserver_logo.svg": "/static/media/sqlserver_logo.d26cb5390ee7c51a1183403790ceac72.svg",
+    "static/media/postgresql_logo.svg": "/static/media/postgresql_logo.9aed68683d15cfc3c3fd8ddf1d89ff4e.svg",
+    "static/media/mariadb_logo.svg": "/static/media/mariadb_logo.a6c24b7bd1f5646266c3b6f5c06de527.svg",
+    "static/media/mysql_logo.svg": "/static/media/mysql_logo.c7cf06c150d9ae01731da43c9450d5b8.svg",
+    "static/media/mongodb_logo.svg": "/static/media/mongodb_logo.eb842895e80bd61dd471f2b70345feab.svg",
+    "static/media/oracledb_logo.svg": "/static/media/oracledb_logo.f388d645cd2612f140069a1df41a9d74.svg",
     "index.html": "/index.html",
-    "main.a633b068.css.map": "/static/css/main.a633b068.css.map",
-    "main.1dba3a3e.js.map": "/static/js/main.1dba3a3e.js.map",
+    "main.f9df7012.css.map": "/static/css/main.f9df7012.css.map",
+    "main.a9550b7f.js.map": "/static/js/main.a9550b7f.js.map",
     "453.1aab9bb8.chunk.js.map": "/static/js/453.1aab9bb8.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.a633b068.css",
-    "static/js/main.1dba3a3e.js"
+    "static/css/main.f9df7012.css",
+    "static/js/main.a9550b7f.js"
   ]
 }
