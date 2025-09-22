@@ -3,7 +3,6 @@ import {
   ListGroup,
   Button,
   Form,
-  InputGroup,
   Modal,
   Dropdown,
   DropdownButton,
@@ -15,7 +14,6 @@ import {
   Trash,
   ThreeDots,
 } from "react-bootstrap-icons";
-import chatService from "../services/chatService";
 
 const ChatSidebar = ({
   connectionId,
@@ -25,6 +23,7 @@ const ChatSidebar = ({
   onCreateChat,
   onDeleteChat,
   onChatRenamed,
+  onSidebarToggle,
 }) => {
   const [showNewChatModal, setShowNewChatModal] = useState(false);
   const [newChatTitle, setNewChatTitle] = useState("");
@@ -37,6 +36,10 @@ const ChatSidebar = ({
     onCreateChat(title);
     setNewChatTitle("");
     setShowNewChatModal(false);
+    // Close sidebar on mobile after creating chat
+    if (onSidebarToggle && window.innerWidth < 768) {
+      onSidebarToggle();
+    }
   };
 
   const handleRenameChat = () => {
@@ -116,7 +119,13 @@ const ChatSidebar = ({
                 key={chat.id}
                 action
                 active={selectedChatId === chat.id}
-                onClick={() => onSelectChat(chat.id)}
+                onClick={() => {
+                  onSelectChat(chat.id);
+                  // Close sidebar on mobile after selecting chat
+                  if (onSidebarToggle && window.innerWidth < 768) {
+                    onSidebarToggle();
+                  }
+                }}
                 className="d-flex justify-content-between align-items-center py-2"
               >
                 <div className="text-truncate flex-grow-1">

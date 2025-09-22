@@ -11,7 +11,7 @@ import {
   Dropdown,
   InputGroup,
 } from "react-bootstrap";
-import { SendFill, Database } from "react-bootstrap-icons";
+import { SendFill, Database, List } from "react-bootstrap-icons";
 import ReactMarkdown from "react-markdown";
 import { useConnection } from "../contexts/ConnectionContext";
 import chatService from "../services/chatService";
@@ -31,11 +31,19 @@ const ChatInterface = () => {
   const messageEndRef = useRef(null);
   const inputRef = useRef(null);
   const [error, setError] = useState(null);
-  // State to track loading message
-  const [loadingMessage] = useState("");
+  // State for sidebar visibility on mobile
+  const [sidebarVisible, setSidebarVisible] = useState(false);
 
   // Load chats when active connection changes
   useEffect(() => {
+    const createInitialChat = (title = "Nueva consulta") => {
+      if (!activeConnection) return;
+      const newChat = chatService.createChat(activeConnection.id, title);
+      setChats([newChat]);
+      setSelectedChatId(newChat.id);
+      setUserInput("");
+    };
+
     if (activeConnection) {
       const connectionChats = chatService.getChats(activeConnection.id);
       setChats(connectionChats);
@@ -44,8 +52,7 @@ const ChatInterface = () => {
       if (connectionChats.length > 0) {
         setSelectedChatId(connectionChats[0].id);
       } else {
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-        handleCreateChat();
+        createInitialChat();
       }
     } else {
       setChats([]);
@@ -63,6 +70,51 @@ const ChatInterface = () => {
     inputRef.current?.focus();
   }, [selectedChatId]);
 
+  // Handle body scroll lock when sidebar is open on mobile
+  useEffect(() => {
+    if (sidebarVisible) {
+      document.body.classList.add("mobile-sidebar-open");
+    } else {
+      document.body.classList.remove("mobile-sidebar-open");
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.body.classList.remove("mobile-sidebar-open");
+    };
+  }, [sidebarVisible]);
+
+  // Close sidebar when clicking outside on mobile
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (sidebarVisible && window.innerWidth < 768) {
+        const sidebar = document.querySelector(".mobile-sidebar");
+        if (sidebar && !sidebar.contains(event.target)) {
+          setSidebarVisible(false);
+        }
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [sidebarVisible]);
+
+  // Close sidebar on window resize to desktop size
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768 && sidebarVisible) {
+        setSidebarVisible(false);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [sidebarVisible]);
+
   const handleCreateChat = (title = "Nueva consulta") => {
     if (!activeConnection) return;
 
@@ -70,11 +122,19 @@ const ChatInterface = () => {
     setChats([newChat, ...chats]);
     setSelectedChatId(newChat.id);
     setUserInput("");
+    // Close sidebar on mobile when creating a chat
+    if (window.innerWidth < 768) {
+      setSidebarVisible(false);
+    }
   };
 
   const handleSelectChat = (chatId) => {
     setSelectedChatId(chatId);
     setUserInput("");
+    // Close sidebar on mobile when selecting a chat
+    if (window.innerWidth < 768) {
+      setSidebarVisible(false);
+    }
   };
 
   const handleDeleteChat = (chatId) => {
@@ -282,9 +342,32 @@ const ChatInterface = () => {
       className="p-0 w-100"
       style={{ height: "calc(100vh - 136px)", maxWidth: "100%" }}
     >
-      <Row className="g-0 h-100 w-100">
+      <Row className="g-0 h-100 w-100 position-relative">
+        {/* Mobile overlay */}
+        {sidebarVisible && (
+          <div
+            className="position-fixed w-100 h-100 bg-dark bg-opacity-50 d-md-none mobile-overlay"
+            style={{ zIndex: 1040 }}
+            onClick={() => setSidebarVisible(false)}
+          />
+        )}
+
         {/* Sidebar with chat list */}
-        <Col xs={12} md={3} lg={2} className="h-100 d-flex flex-column">
+        <Col
+          xs={12}
+          md={3}
+          lg={2}
+          className={`h-100 d-flex flex-column position-md-relative bg-white mobile-sidebar ${
+            sidebarVisible ? "d-block position-fixed" : "d-none d-md-block"
+          }`}
+          style={{
+            zIndex: sidebarVisible ? 1050 : "auto",
+            width: sidebarVisible ? "80%" : undefined,
+            maxWidth: sidebarVisible ? "300px" : undefined,
+            left: sidebarVisible ? 0 : undefined,
+            top: sidebarVisible ? 0 : undefined,
+          }}
+        >
           <div className="p-3 bg-light border-bottom">
             <Form.Group>
               <Form.Label>Conexión activa</Form.Label>
@@ -325,12 +408,34 @@ const ChatInterface = () => {
               onCreateChat={handleCreateChat}
               onDeleteChat={handleDeleteChat}
               onChatRenamed={handleChatRenamed}
+              onSidebarToggle={() => setSidebarVisible(false)}
             />
           </div>
         </Col>
 
         {/* Chat window */}
-        <Col xs={12} md={9} lg={10} className="h-100 d-flex flex-column">
+        <Col
+          xs={12}
+          md={9}
+          lg={10}
+          className="h-100 d-flex flex-column chat-main-container"
+          style={{ marginLeft: 0 }}
+        >
+          {/* Mobile header with hamburger menu */}
+          <div className="d-md-none p-2 border-bottom bg-white d-flex align-items-center justify-content-between mobile-chat-header">
+            <Button
+              variant="outline-secondary"
+              size="sm"
+              onClick={() => setSidebarVisible(!sidebarVisible)}
+              className="mobile-menu-button"
+            >
+              <List size={20} />
+            </Button>
+            <h6 className="mb-0 flex-grow-1 text-center text-truncate">
+              {selectedChat?.title || "Asistente SQL"}
+            </h6>
+            <div style={{ width: "40px" }}></div> {/* Spacer for centering */}
+          </div>
           {!selectedChat ? (
             <div className="flex-grow-1 d-flex flex-column justify-content-center align-items-center bg-light text-center p-4">
               <Database size={64} className="mb-4 text-secondary" />
@@ -347,8 +452,8 @@ const ChatInterface = () => {
             </div>
           ) : (
             <>
-              {/* Chat header */}
-              <div className="p-3 border-bottom">
+              {/* Chat header - hidden on mobile since we have the mobile header */}
+              <div className="p-3 border-bottom d-none d-md-block">
                 <h5 className="mb-0">{selectedChat.title}</h5>
                 <small className="text-muted">
                   Conexión: {activeConnection?.nombre} (

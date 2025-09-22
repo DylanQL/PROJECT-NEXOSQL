@@ -628,6 +628,50 @@ footer {
     max-width: 90% !important;
 }
 
+/* Mobile sidebar styles */
+.mobile-sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1040;
+    transition: opacity 0.3s ease;
+}
+
+.mobile-sidebar {
+    transition: transform 0.3s ease;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.mobile-sidebar.show {
+    transform: translateX(0);
+}
+
+.mobile-sidebar.hide {
+    transform: translateX(-100%);
+}
+
+/* Mobile header styles */
+.mobile-chat-header {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-bottom: 2px solid #dee2e6;
+    min-height: 56px;
+}
+
+.mobile-menu-button {
+    border: 1px solid #dee2e6;
+    background-color: white;
+    transition: all 0.2s ease;
+}
+
+.mobile-menu-button:hover {
+    background-color: #f8f9fa;
+    border-color: #0d6efd;
+    color: #0d6efd;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .profile-dropdown-menu {
@@ -649,6 +693,25 @@ footer {
     .container-fluid {
         overflow-x: hidden !important;
     }
+
+    /* Chat interface mobile adjustments */
+    .chat-messages {
+        padding: 0.5rem !important;
+    }
+
+    .user-message .message-content,
+    .assistant-message .message-content {
+        max-width: 95% !important;
+    }
+
+    .chat-input-container {
+        padding: 0.75rem !important;
+    }
+
+    /* Hide desktop elements on mobile */
+    .d-md-none {
+        display: block !important;
+    }
 }
 
 /* Para pantallas muy pequeñas */
@@ -661,11 +724,137 @@ footer {
     .profile-dropdown-menu::before {
         right: 25px;
     }
+
+    /* Smaller mobile adjustments */
+    .mobile-sidebar {
+        width: 85% !important;
+        max-width: 280px !important;
+    }
+
+    .user-message .message-content,
+    .assistant-message .message-content {
+        max-width: 98% !important;
+    }
+
+    .chat-input-container {
+        padding: 0.5rem !important;
+    }
+}
+
+/* Mobile sidebar specific styles */
+@media (max-width: 767.98px) {
+    .position-fixed.mobile-sidebar {
+        top: 0;
+        left: 0;
+        height: 100vh;
+        width: 80%;
+        max-width: 300px;
+        z-index: 1050;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+
+    .position-fixed.mobile-sidebar.d-block {
+        transform: translateX(0);
+    }
+
+    .mobile-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1040;
+    }
 }
 
 /* Ajustes para pantallas grandes */
 @media (min-width: 1200px) {
     .chat-messages {
         padding: 1rem 2rem !important;
+    }
+}
+
+/* Smooth transitions for sidebar */
+.sidebar-transition {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Ensure proper z-index stacking */
+.chat-sidebar-container {
+    z-index: 1050;
+}
+
+.chat-main-container {
+    z-index: 1000;
+}
+
+/* Mobile sidebar animation */
+.mobile-sidebar {
+    transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Safe area adjustments for mobile devices */
+@supports (padding-top: env(safe-area-inset-top)) {
+    .mobile-chat-header {
+        padding-top: max(0.5rem, env(safe-area-inset-top));
+    }
+
+    .position-fixed.mobile-sidebar {
+        padding-top: env(safe-area-inset-top);
+    }
+}
+
+/* Prevent body scroll when sidebar is open on mobile */
+.mobile-sidebar-open {
+    overflow: hidden !important;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+}
+
+/* Better button styling for mobile menu */
+@media (max-width: 767.98px) {
+    .mobile-menu-button {
+        min-width: 40px;
+        min-height: 40px;
+        padding: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Ensure sidebar takes full height on mobile */
+    .position-fixed.mobile-sidebar {
+        height: 100vh !important;
+        overflow-y: auto;
+        box-shadow: 2px 0 15px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Chat main area adjustments for mobile */
+    .chat-main-container {
+        width: 100% !important;
+        margin-left: 0 !important;
+    }
+
+    /* Mobile header improvements */
+    .mobile-chat-header {
+        position: sticky;
+        top: 0;
+        z-index: 1030;
+        backdrop-filter: blur(10px);
+    }
+
+    /* Better touch targets for mobile */
+    .list-group-item {
+        min-height: 60px;
+        padding: 12px 16px;
+    }
+
+    /* Improve dropdown behavior on mobile */
+    .dropdown-menu {
+        font-size: 14px;
+        min-width: 160px;
     }
 }
