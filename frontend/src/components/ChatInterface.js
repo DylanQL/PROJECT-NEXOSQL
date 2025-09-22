@@ -33,6 +33,7 @@ const ChatInterface = () => {
   const [error, setError] = useState(null);
   // State for sidebar visibility on mobile
   const [sidebarVisible, setSidebarVisible] = useState(false);
+  const [navbarHeight, setNavbarHeight] = useState(56);
 
   // Load chats when active connection changes
   useEffect(() => {
@@ -114,6 +115,28 @@ const ChatInterface = () => {
       window.removeEventListener("resize", handleResize);
     };
   }, [sidebarVisible]);
+
+  // Detect navbar height on mount
+  useEffect(() => {
+    const detectNavbarHeight = () => {
+      const navbar = document.querySelector(".navbar");
+      if (navbar) {
+        const height = navbar.offsetHeight;
+        setNavbarHeight(height);
+        document.documentElement.style.setProperty(
+          "--navbar-height",
+          `${height}px`,
+        );
+      }
+    };
+
+    detectNavbarHeight();
+    window.addEventListener("resize", detectNavbarHeight);
+
+    return () => {
+      window.removeEventListener("resize", detectNavbarHeight);
+    };
+  }, []);
 
   const handleCreateChat = (title = "Nueva consulta") => {
     if (!activeConnection) return;
@@ -346,8 +369,12 @@ const ChatInterface = () => {
         {/* Mobile overlay */}
         {sidebarVisible && (
           <div
-            className="position-fixed w-100 h-100 bg-dark bg-opacity-50 d-md-none mobile-overlay"
-            style={{ zIndex: 1040 }}
+            className="position-fixed w-100 bg-dark bg-opacity-50 d-md-none mobile-overlay"
+            style={{
+              zIndex: 1040,
+              top: `${navbarHeight}px`,
+              height: `calc(100vh - ${navbarHeight}px)`,
+            }}
             onClick={() => setSidebarVisible(false)}
           />
         )}
@@ -365,7 +392,10 @@ const ChatInterface = () => {
             width: sidebarVisible ? "80%" : undefined,
             maxWidth: sidebarVisible ? "300px" : undefined,
             left: sidebarVisible ? 0 : undefined,
-            top: sidebarVisible ? 0 : undefined,
+            top: sidebarVisible ? `${navbarHeight}px` : undefined,
+            height: sidebarVisible
+              ? `calc(100vh - ${navbarHeight}px)`
+              : undefined,
           }}
         >
           <div className="p-3 bg-light border-bottom">
