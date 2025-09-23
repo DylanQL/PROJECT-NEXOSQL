@@ -137,6 +137,86 @@ code {
     padding: 1rem 0;
 }
 
+/* Chat Sidebar Scroll Fix - More Specific */
+.chat-sidebar-container {
+    height: 100% !important;
+    max-height: 100% !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+.chat-sidebar-header {
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+}
+
+.chat-sidebar-content {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    height: calc(100% - 60px) !important; /* Subtract header height */
+}
+
+.chat-list-container {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    /* Force scrollbar visibility when needed */
+    scrollbar-width: thin;
+    scrollbar-color: #6c757d #f8f9fa;
+    /* Add max-height to force scrolling */
+    max-height: 100% !important;
+    height: 100% !important;
+}
+
+/* Webkit scrollbar styling */
+.chat-list-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chat-list-container::-webkit-scrollbar-track {
+    background: #f8f9fa;
+}
+
+.chat-list-container::-webkit-scrollbar-thumb {
+    background: #6c757d;
+    border-radius: 3px;
+}
+
+.chat-list-container::-webkit-scrollbar-thumb:hover {
+    background: #495057;
+}
+
+/* Ensure ListGroup works with scroll */
+.chat-list-container .list-group {
+    height: auto !important;
+    min-height: 100%;
+    overflow: visible;
+}
+
+.chat-list-container .list-group-item {
+    border-left: none;
+    border-right: none;
+}
+
+/* Force scroll testing - set a fixed height */
+@media (min-width: 768px) {
+    .chat-sidebar-content {
+        max-height: 400px !important; /* Temporary for testing */
+    }
+}
+
+/* For mobile */
+@media (max-width: 767.98px) {
+    .chat-sidebar-content {
+        max-height: 300px !important; /* Temporary for testing */
+    }
+}
+
 .chat-message {
     display: flex;
     width: 100%;
@@ -920,6 +1000,19 @@ footer {
         transform: translateX(0);
         animation: slideInFromLeft 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94)
             forwards;
+    }
+
+    /* Ensure sidebar content scrolls properly on mobile */
+    .position-fixed.mobile-sidebar .chat-sidebar-container {
+        height: 100%;
+    }
+
+    .position-fixed.mobile-sidebar .chat-sidebar-content {
+        height: calc(100% - 60px); /* Subtract header height */
+    }
+
+    .position-fixed.mobile-sidebar .chat-list-container {
+        max-height: 100%;
     }
 
     .mobile-overlay {

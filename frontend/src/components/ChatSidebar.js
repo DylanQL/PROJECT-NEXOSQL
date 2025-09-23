@@ -87,8 +87,8 @@ const ChatSidebar = ({
   }
 
   return (
-    <div className="d-flex flex-column h-100 border-end w-100">
-      <div className="p-2 border-bottom d-flex justify-content-between align-items-center flex-shrink-0">
+    <div className="chat-sidebar-container border-end w-100" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div className="chat-sidebar-header p-2 border-bottom d-flex justify-content-between align-items-center" style={{ flexShrink: 0 }}>
         <h5 className="mb-0">Chats</h5>
         <Button
           variant="primary"
@@ -99,64 +99,76 @@ const ChatSidebar = ({
         </Button>
       </div>
 
-      <div className="overflow-auto flex-grow-1" style={{ minHeight: 0 }}>
-        {chats.length === 0 ? (
-          <div className="p-3 text-center text-muted">
-            <ChatLeftText size={36} className="mb-2" />
-            <p className="small">No hay chats para esta conexión</p>
-            <Button
-              variant="outline-primary"
-              size="sm"
-              onClick={() => setShowNewChatModal(true)}
-            >
-              Crear primer chat
-            </Button>
-          </div>
-        ) : (
-          <ListGroup variant="flush">
-            {chats.map((chat) => (
-              <ListGroup.Item
-                key={chat.id}
-                action
-                active={selectedChatId === chat.id}
-                onClick={() => {
-                  onSelectChat(chat.id);
-                  // Close sidebar on mobile after selecting chat
-                  if (onSidebarToggle && window.innerWidth < 768) {
-                    onSidebarToggle();
-                  }
-                }}
-                className="d-flex justify-content-between align-items-center py-2"
+      {/* Direct content without extra wrapper */}
+      <div 
+        className="chat-list-container"
+        style={{
+          flex: '1 1 auto',
+          minHeight: 0,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          maxHeight: '300px', // Fixed height for testing
+          height: '300px',     // Fixed height for testing
+          border: '2px solid red' // Temporary border to see the container
+        }}
+      >
+          {chats.length === 0 ? (
+            <div className="p-3 text-center text-muted">
+              <ChatLeftText size={36} className="mb-2" />
+              <p className="small">No hay chats para esta conexión</p>
+              <Button
+                variant="outline-primary"
+                size="sm"
+                onClick={() => setShowNewChatModal(true)}
               >
-                <div className="text-truncate flex-grow-1">
-                  <div className="fw-medium text-truncate small">
-                    {chat.title}
-                  </div>
-                  <small className="text-muted d-block text-truncate">
-                    {formatDate(chat.updatedAt)}
-                  </small>
-                </div>
-                <DropdownButton
-                  variant={selectedChatId === chat.id ? "dark" : "light"}
-                  size="sm"
-                  title={<ThreeDots />}
-                  onClick={(e) => e.stopPropagation()}
+                Crear primer chat
+              </Button>
+            </div>
+          ) : (
+            <ListGroup variant="flush">
+              {chats.map((chat) => (
+                <ListGroup.Item
+                  key={chat.id}
+                  action
+                  active={selectedChatId === chat.id}
+                  onClick={() => {
+                    onSelectChat(chat.id);
+                    // Close sidebar on mobile after selecting chat
+                    if (onSidebarToggle && window.innerWidth < 768) {
+                      onSidebarToggle();
+                    }
+                  }}
+                  className="d-flex justify-content-between align-items-center py-2"
                 >
-                  <Dropdown.Item onClick={(e) => openRenameModal(chat, e)}>
-                    <Pencil className="me-2" /> Renombrar
-                  </Dropdown.Item>
-                  <Dropdown.Item
-                    className="text-danger"
-                    onClick={(e) => handleDeleteChat(chat.id, e)}
+                  <div className="text-truncate flex-grow-1">
+                    <div className="fw-medium text-truncate small">
+                      {chat.title}
+                    </div>
+                    <small className="text-muted d-block text-truncate">
+                      {formatDate(chat.updatedAt)}
+                    </small>
+                  </div>
+                  <DropdownButton
+                    variant={selectedChatId === chat.id ? "dark" : "light"}
+                    size="sm"
+                    title={<ThreeDots />}
+                    onClick={(e) => e.stopPropagation()}
                   >
-                    <Trash className="me-2" /> Eliminar
-                  </Dropdown.Item>
-                </DropdownButton>
-              </ListGroup.Item>
-            ))}
-          </ListGroup>
-        )}
-      </div>
+                    <Dropdown.Item onClick={(e) => openRenameModal(chat, e)}>
+                      <Pencil className="me-2" /> Renombrar
+                    </Dropdown.Item>
+                    <Dropdown.Item
+                      className="text-danger"
+                      onClick={(e) => handleDeleteChat(chat.id, e)}
+                    >
+                      <Trash className="me-2" /> Eliminar
+                    </Dropdown.Item>
+                  </DropdownButton>
+                </ListGroup.Item>
+              ))}
+            </ListGroup>
+          )}
+        </div>
 
       {/* New Chat Modal */}
       <Modal show={showNewChatModal} onHide={() => setShowNewChatModal(false)}>
