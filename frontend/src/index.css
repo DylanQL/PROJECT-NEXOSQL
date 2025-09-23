@@ -27,18 +27,20 @@ body {
     width: 100%;
     max-width: 100%;
     overflow-x: hidden;
-    overflow-y: hidden !important;
-    height: 100vh;
+    overflow-y: auto;
+    min-height: 100vh;
 }
 
 html {
-    height: 100vh;
-    overflow: hidden;
+    height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
 #root {
-    height: 100vh;
-    overflow: hidden;
+    min-height: 100vh;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
 /* Reset de Bootstrap que podría estar causando problemas */
@@ -46,7 +48,10 @@ html {
     box-sizing: border-box;
 }
 
-body, html, #root {
+/* Styles specific to chat interface */
+.chat-interface-page body,
+.chat-interface-page html,
+.chat-interface-page #root {
     height: 100vh !important;
     max-height: 100vh !important;
     overflow: hidden !important;
@@ -54,11 +59,9 @@ body, html, #root {
 
 .min-vh-100 {
     min-height: 100vh !important;
-    max-height: 100vh !important;
-    overflow: hidden;
 }
 
-/* Específico para el ChatInterface */
+/* Chat interface specific styles */
 .chat-interface-container {
     height: calc(100vh - var(--navbar-height)) !important;
     max-height: calc(100vh - var(--navbar-height)) !important;

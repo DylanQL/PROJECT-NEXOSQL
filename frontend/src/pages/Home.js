@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Container,
   Row,
@@ -25,6 +25,21 @@ const Home = () => {
   const { currentUser, userProfile } = useAuth();
   const { connections, loading, error } = useConnection();
   const navigate = useNavigate();
+
+  // Effect to manage body class for chat interface
+  useEffect(() => {
+    if (currentUser && userProfile && connections.length > 0) {
+      // Add class when showing chat interface
+      document.body.classList.add("chat-interface-page");
+      return () => {
+        // Remove class when component unmounts or conditions change
+        document.body.classList.remove("chat-interface-page");
+      };
+    } else {
+      // Remove class for other views
+      document.body.classList.remove("chat-interface-page");
+    }
+  }, [currentUser, userProfile, connections.length]);
 
   // If user is not logged in - Show landing page
   if (!currentUser) {
@@ -242,7 +257,11 @@ const Home = () => {
 
   // Show the chat interface
   return (
-    <div data-connection-context className="w-100 h-100 chat-interface-container" style={{ maxWidth: "100%", overflow: "hidden" }}>
+    <div
+      data-connection-context
+      className="w-100 h-100 chat-interface-container"
+      style={{ maxWidth: "100%" }}
+    >
       <ChatInterface />
     </div>
   );
