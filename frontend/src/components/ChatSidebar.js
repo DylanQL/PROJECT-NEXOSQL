@@ -88,7 +88,7 @@ const ChatSidebar = ({
 
   return (
     <div className="d-flex flex-column h-100 border-end w-100">
-      <div className="p-2 border-bottom d-flex justify-content-between align-items-center">
+      <div className="p-2 border-bottom d-flex justify-content-between align-items-center flex-shrink-0">
         <h5 className="mb-0">Chats</h5>
         <Button
           variant="primary"
@@ -99,7 +99,7 @@ const ChatSidebar = ({
         </Button>
       </div>
 
-      <div className="overflow-auto flex-grow-1">
+      <div className="overflow-auto flex-grow-1" style={{ minHeight: 0, maxHeight: "calc(100vh - 120px)" }}>
         {chats.length === 0 ? (
           <div className="p-3 text-center text-muted">
             <ChatLeftText size={36} className="mb-2" />

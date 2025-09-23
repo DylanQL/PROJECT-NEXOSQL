@@ -419,7 +419,7 @@ const ChatInterface = () => {
     <Container
       fluid
       className="p-0 w-100"
-      style={{ height: "calc(100vh - 136px)", maxWidth: "100%" }}
+      style={{ height: "100vh", maxWidth: "100%" }}
     >
       <Row className="g-0 h-100 w-100 position-relative">
         {/* Mobile overlay */}
@@ -485,7 +485,7 @@ const ChatInterface = () => {
               </Dropdown>
             </Form.Group>
           </div>
-          <div className="flex-grow-1 overflow-hidden">
+          <div className="flex-grow-1 d-flex flex-column" style={{ minHeight: 0, height: "calc(100vh - 120px)" }}>
             <ChatSidebar
               connectionId={activeConnection?.id}
               chats={chats}
