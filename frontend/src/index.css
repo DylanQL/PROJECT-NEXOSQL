@@ -899,9 +899,9 @@ footer {
 /* Mobile sidebar specific styles */
 @media (max-width: 767.98px) {
     .position-fixed.mobile-sidebar {
-        top: var(--navbar-height);
+        top: var(--navbar-height) !important;
         left: 0;
-        height: calc(100vh - var(--navbar-height));
+        height: calc(100vh - var(--navbar-height)) !important;
         width: 80%;
         max-width: 300px;
         z-index: 1050;
@@ -912,6 +912,8 @@ footer {
         will-change: transform;
         backface-visibility: hidden;
         perspective: 1000px;
+        overflow-y: auto;
+        overflow-x: hidden;
     }
 
     .position-fixed.mobile-sidebar.d-block {
@@ -922,10 +924,10 @@ footer {
 
     .mobile-overlay {
         position: fixed;
-        top: var(--navbar-height);
+        top: var(--navbar-height) !important;
         left: 0;
         width: 100vw;
-        height: calc(100vh - var(--navbar-height));
+        height: calc(100vh - var(--navbar-height)) !important;
         background-color: rgba(0, 0, 0, 0.5);
         z-index: 1040;
         opacity: 0;
@@ -1005,17 +1007,14 @@ footer {
 
     @media (max-width: 767.98px) {
         .position-fixed.mobile-sidebar {
-            top: calc(var(--navbar-height) + env(safe-area-inset-top));
-            height: calc(
-                100vh - var(--navbar-height) - env(safe-area-inset-top)
-            );
+            top: var(--navbar-height) !important;
+            height: calc(100vh - var(--navbar-height)) !important;
+            /* Apply safe area padding only to content inside sidebar */
         }
 
         .mobile-overlay {
-            top: calc(var(--navbar-height) + env(safe-area-inset-top));
-            height: calc(
-                100vh - var(--navbar-height) - env(safe-area-inset-top)
-            );
+            top: var(--navbar-height) !important;
+            height: calc(100vh - var(--navbar-height)) !important;
         }
     }
 }
@@ -1048,6 +1047,7 @@ footer {
 
     /* Ensure sidebar takes proper height on mobile */
     .position-fixed.mobile-sidebar {
+        top: var(--navbar-height) !important;
         height: calc(100vh - var(--navbar-height)) !important;
         overflow-y: auto;
         overflow-x: hidden;

@@ -177,14 +177,27 @@ const ChatInterface = () => {
           "--navbar-height",
           `${height}px`,
         );
+      } else {
+        // Fallback to default Bootstrap navbar height
+        setNavbarHeight(56);
+        document.documentElement.style.setProperty(
+          "--navbar-height",
+          "56px",
+        );
       }
     };
 
+    // Initial detection
     detectNavbarHeight();
+    
+    // Use a timeout to ensure navbar is rendered
+    const timeoutId = setTimeout(detectNavbarHeight, 100);
+    
     window.addEventListener("resize", detectNavbarHeight);
 
     return () => {
       window.removeEventListener("resize", detectNavbarHeight);
+      clearTimeout(timeoutId);
     };
   }, []);
 
