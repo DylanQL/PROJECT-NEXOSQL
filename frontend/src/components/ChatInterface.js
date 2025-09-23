@@ -419,17 +419,20 @@ const ChatInterface = () => {
     <Container
       fluid
       className="p-0 w-100"
-      style={{ height: "100vh", maxWidth: "100%" }}
+      style={{ 
+        maxWidth: "100%",
+        overflow: "hidden"
+      }}
     >
-      <Row className="g-0 h-100 w-100 position-relative">
+      <Row className="g-0 w-100 position-relative" style={{ height: "100%" }}>
         {/* Mobile overlay */}
         {sidebarVisible && (
           <div
             className={`position-fixed w-100 bg-dark bg-opacity-50 d-md-none mobile-overlay ${sidebarVisible ? "show" : ""}`}
             style={{
               zIndex: 1040,
-              top: `${navbarHeight}px`,
-              height: `calc(100vh - ${navbarHeight}px)`,
+              top: 0,
+              height: "100%",
             }}
             onClick={handleCloseSidebar}
           />
@@ -440,18 +443,16 @@ const ChatInterface = () => {
           xs={12}
           md={3}
           lg={2}
-          className={`h-100 d-flex flex-column position-md-relative bg-white mobile-sidebar ${
+          className={`d-flex flex-column position-md-relative bg-white mobile-sidebar ${
             sidebarVisible ? "d-block position-fixed" : "d-none d-md-block"
           }`}
           style={{
+            height: "100%",
             zIndex: sidebarVisible ? 1050 : "auto",
             width: sidebarVisible ? "80%" : undefined,
             maxWidth: sidebarVisible ? "300px" : undefined,
             left: sidebarVisible ? 0 : undefined,
-            top: sidebarVisible ? `${navbarHeight}px` : undefined,
-            height: sidebarVisible
-              ? `calc(100vh - ${navbarHeight}px)`
-              : undefined,
+            top: sidebarVisible ? 0 : undefined,
           }}
         >
           <div className="p-3 bg-light border-bottom">
@@ -485,7 +486,7 @@ const ChatInterface = () => {
               </Dropdown>
             </Form.Group>
           </div>
-          <div className="flex-grow-1 d-flex flex-column" style={{ minHeight: 0, height: "calc(100vh - 120px)" }}>
+          <div className="flex-grow-1 d-flex flex-column" style={{ minHeight: 0 }}>
             <ChatSidebar
               connectionId={activeConnection?.id}
               chats={chats}
@@ -504,8 +505,8 @@ const ChatInterface = () => {
           xs={12}
           md={9}
           lg={10}
-          className="h-100 d-flex flex-column chat-main-container"
-          style={{ marginLeft: 0 }}
+          className="d-flex flex-column chat-main-container"
+          style={{ marginLeft: 0, height: "100%" }}
         >
           {/* Mobile header with hamburger menu */}
           <div className="d-md-none p-2 border-bottom bg-white d-flex align-items-center justify-content-between mobile-chat-header">

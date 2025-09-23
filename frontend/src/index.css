@@ -27,6 +27,58 @@ body {
     width: 100%;
     max-width: 100%;
     overflow-x: hidden;
+    overflow-y: hidden !important;
+    height: 100vh;
+}
+
+html {
+    height: 100vh;
+    overflow: hidden;
+}
+
+#root {
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Reset de Bootstrap que podría estar causando problemas */
+* {
+    box-sizing: border-box;
+}
+
+body, html, #root {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
+}
+
+.min-vh-100 {
+    min-height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden;
+}
+
+/* Específico para el ChatInterface */
+.chat-interface-container {
+    height: calc(100vh - var(--navbar-height)) !important;
+    max-height: calc(100vh - var(--navbar-height)) !important;
+    overflow: hidden !important;
+}
+
+.chat-interface-container .container-fluid {
+    height: 100% !important;
+    max-height: 100% !important;
+    overflow: hidden !important;
+}
+
+.chat-interface-container .row {
+    height: 100% !important;
+    max-height: 100% !important;
+    overflow: hidden !important;
+}
+
+.chat-interface-container .col {
+    overflow: hidden !important;
 }
 
 /* Navbar z-index */

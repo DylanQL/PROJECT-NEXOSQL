@@ -93,20 +93,20 @@ function App() {
     <SubscriptionProvider>
       <ConnectionProvider>
         <Router>
-          <div className="d-flex flex-column min-vh-100">
+          <div className="d-flex flex-column" style={{ height: "100vh", overflow: "hidden" }}>
             <Navigation />
             <AppNotifications />
             <Container
               fluid
               className="flex-grow-1 p-0"
-              style={{ maxWidth: "100%" }}
+              style={{ maxWidth: "100%", overflow: "hidden" }}
             >
               <Routes>
                 {/* Public Routes */}
                 <Route
                   path="/"
                   element={
-                    <div className="w-100 p-0">
+                    <div className="w-100 p-0 h-100" style={{ overflow: "hidden" }}>
                       <Home />
                     </div>
                   }

@@ -99,7 +99,7 @@ const ChatSidebar = ({
         </Button>
       </div>
 
-      <div className="overflow-auto flex-grow-1" style={{ minHeight: 0, maxHeight: "calc(100vh - 120px)" }}>
+      <div className="overflow-auto flex-grow-1" style={{ minHeight: 0 }}>
         {chats.length === 0 ? (
           <div className="p-3 text-center text-muted">
             <ChatLeftText size={36} className="mb-2" />
