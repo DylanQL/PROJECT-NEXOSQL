@@ -99,7 +99,7 @@ const ChatSidebar = ({
         </Button>
       </div>
 
-      {/* Direct content without extra wrapper */}
+      {/* Chat list with optimized scroll */}
       <div 
         className="chat-list-container"
         style={{
@@ -107,9 +107,8 @@ const ChatSidebar = ({
           minHeight: 0,
           overflowY: 'auto',
           overflowX: 'hidden',
-          maxHeight: '300px', // Fixed height for testing
-          height: '300px',     // Fixed height for testing
-          border: '2px solid red' // Temporary border to see the container
+          maxHeight: 'calc(100vh - 120px)', // Better height calculation
+          height: 'auto'
         }}
       >
           {chats.length === 0 ? (

@@ -165,30 +165,40 @@ code {
     min-height: 0 !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
-    /* Force scrollbar visibility when needed */
-    scrollbar-width: thin;
-    scrollbar-color: #6c757d #f8f9fa;
-    /* Add max-height to force scrolling */
+    /* Force scrollbar to be always visible for testing */
+    scrollbar-width: auto !important;
+    scrollbar-color: #6c757d #f8f9fa !important;
+    /* Allow full height utilization */
     max-height: 100% !important;
     height: 100% !important;
+    /* Force scroll behavior */
+    overflow-y: scroll !important; /* Changed from auto to scroll */
 }
 
-/* Webkit scrollbar styling */
+/* Webkit scrollbar styling - Clean and functional */
 .chat-list-container::-webkit-scrollbar {
-    width: 6px;
+    width: 8px !important;
+    display: block !important;
 }
 
 .chat-list-container::-webkit-scrollbar-track {
-    background: #f8f9fa;
+    background: #f8f9fa !important;
+    border-radius: 4px !important;
 }
 
 .chat-list-container::-webkit-scrollbar-thumb {
-    background: #6c757d;
-    border-radius: 3px;
+    background: #6c757d !important;
+    border-radius: 4px !important;
 }
 
 .chat-list-container::-webkit-scrollbar-thumb:hover {
-    background: #495057;
+    background: #495057 !important;
+}
+
+/* Force scrollbar visibility on all browsers */
+.chat-list-container {
+    scrollbar-width: thin !important; /* Firefox */
+    -ms-overflow-style: scrollbar !important; /* IE/Edge */
 }
 
 /* Ensure ListGroup works with scroll */
@@ -201,19 +211,24 @@ code {
 .chat-list-container .list-group-item {
     border-left: none;
     border-right: none;
+    min-height: 60px; /* Ensure each item has minimum height */
 }
 
-/* Force scroll testing - set a fixed height */
+/* Optimized scrolling for all platforms */
 @media (min-width: 768px) {
-    .chat-sidebar-content {
-        max-height: 400px !important; /* Temporary for testing */
+    .chat-list-container {
+        /* Use most of available height on desktop */
+        max-height: calc(100vh - 140px) !important;
+        min-height: 200px;
     }
 }
 
 /* For mobile */
 @media (max-width: 767.98px) {
-    .chat-sidebar-content {
-        max-height: 300px !important; /* Temporary for testing */
+    .chat-list-container {
+        /* Use most of available height on mobile */
+        max-height: calc(100vh - 160px) !important;
+        min-height: 150px;
     }
 }
 
