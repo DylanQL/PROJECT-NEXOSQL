@@ -1,5 +1,6 @@
 const aiService = require('../services/aiService');
 const conexionDBModel = require('../models/conexionDBModel');
+const { Chat, ChatMessage } = require('../models');
 
 /**
  * AI Controller for handling natural language queries to databases
@@ -12,7 +13,7 @@ class AIController {
    */
   async processQuery(req, res) {
     try {
-      const { connectionId, question } = req.body;
+      const { connectionId, question, chatId = null } = req.body;
       const userId = req.user.id;
 
       if (!connectionId) {
@@ -39,8 +40,38 @@ class AIController {
         });
       }
 
+      // Si se proporciona un chatId, verificar que pertenece al usuario
+      let chat = null;
+      if (chatId) {
+        chat = await Chat.findOne({
+          where: { id: chatId, userId, conexionId: connectionId },
+        });
+
+        if (!chat) {
+          return res.status(404).json({
+            success: false,
+            error: 'Chat no encontrado o no tienes permisos para acceder a él'
+          });
+        }
+      } else {
+        // Si no se proporciona chatId, crear un nuevo chat
+        chat = await Chat.create({
+          userId,
+          conexionId: connectionId,
+          title: this.generateChatTitle(question),
+        });
+      }
+
+      // Guardar el mensaje del usuario
+      const userMessage = await ChatMessage.create({
+        chatId: chat.id,
+        type: 'user',
+        content: question,
+      });
+
       // Process the query with the AI service
       console.log('Processing AI query:', {
+        chatId: chat.id,
         connectionId,
         question: question.substring(0, 100) + (question.length > 100 ? '...' : ''),
         motorType: connection.motor.nombre,
@@ -56,10 +87,37 @@ class AIController {
         queriesExecuted: result.metadata?.queriesExecuted
       });
 
+      // Guardar la respuesta del asistente
+      const assistantMessage = await ChatMessage.create({
+        chatId: chat.id,
+        type: 'assistant',
+        content: result.answer,
+        metadata: result.metadata,
+        isError: !result.answer || result.metadata?.error ? true : false,
+      });
+
+      // Actualizar el timestamp del chat
+      await chat.update({ updatedAt: new Date() });
+
       return res.json({
         success: true,
         answer: result.answer,
-        metadata: result.metadata
+        metadata: result.metadata,
+        chatId: chat.id,
+        userMessage: {
+          id: userMessage.id,
+          type: 'user',
+          content: question,
+          timestamp: userMessage.timestamp,
+        },
+        assistantMessage: {
+          id: assistantMessage.id,
+          type: 'assistant',
+          content: result.answer,
+          metadata: result.metadata,
+          error: assistantMessage.isError,
+          timestamp: assistantMessage.timestamp,
+        }
       });
     } catch (error) {
       console.error('Error in AI controller:', {
@@ -81,6 +139,20 @@ class AIController {
         error: `Error al procesar la consulta: ${userFriendlyMessage}`
       });
     }
+  }
+
+  /**
+   * Generate a chat title based on the user's question
+   * @param {string} question - The user's question
+   * @returns {string} - Generated title
+   */
+  generateChatTitle(question) {
+    // Truncate to 50 characters and add ellipsis if needed
+    const maxLength = 50;
+    if (question.length <= maxLength) {
+      return question;
+    }
+    return question.substring(0, maxLength - 3) + '...';
   }
 
   /**

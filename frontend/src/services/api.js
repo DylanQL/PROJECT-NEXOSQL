@@ -194,11 +194,12 @@ export const conexionDBApi = {
 // AI-related API calls
 export const aiApi = {
   // Process a natural language query
-  processQuery: async (connectionId, question) => {
+  processQuery: async (connectionId, question, chatId = null) => {
     try {
       const response = await api.post("/ai/query", {
         connectionId,
         question,
+        chatId,
       });
       return { data: response.data, error: null };
     } catch (error) {
@@ -219,6 +220,107 @@ export const aiApi = {
         data: null,
         error:
           error.response?.data?.error || "Error fetching schema information",
+      };
+    }
+  },
+};
+
+// Chat-related API calls
+export const chatApi = {
+  // Get all chats for a specific connection
+  getChatsByConnection: async (connectionId) => {
+    try {
+      const response = await api.get(`/chats/connection/${connectionId}`);
+      return { data: response.data, error: null };
+    } catch (error) {
+      return {
+        data: null,
+        error: error.response?.data?.error || "Error fetching chats",
+      };
+    }
+  },
+
+  // Create a new chat
+  createChat: async (connectionId, title = "Nueva consulta") => {
+    try {
+      const response = await api.post(`/chats/connection/${connectionId}`, {
+        title,
+      });
+      return { data: response.data, error: null };
+    } catch (error) {
+      return {
+        data: null,
+        error: error.response?.data?.error || "Error creating chat",
+      };
+    }
+  },
+
+  // Get a specific chat with its messages
+  getChatById: async (chatId) => {
+    try {
+      const response = await api.get(`/chats/${chatId}`);
+      return { data: response.data, error: null };
+    } catch (error) {
+      return {
+        data: null,
+        error: error.response?.data?.error || "Error fetching chat",
+      };
+    }
+  },
+
+  // Update chat title
+  updateChatTitle: async (chatId, title) => {
+    try {
+      const response = await api.put(`/chats/${chatId}/title`, { title });
+      return { data: response.data, error: null };
+    } catch (error) {
+      return {
+        data: null,
+        error: error.response?.data?.error || "Error updating chat title",
+      };
+    }
+  },
+
+  // Delete a chat
+  deleteChat: async (chatId) => {
+    try {
+      const response = await api.delete(`/chats/${chatId}`);
+      return { data: response.data, error: null };
+    } catch (error) {
+      return {
+        data: null,
+        error: error.response?.data?.error || "Error deleting chat",
+      };
+    }
+  },
+
+  // Add a message to a chat
+  addMessage: async (chatId, type, content, metadata = null, isError = false) => {
+    try {
+      const response = await api.post(`/chats/${chatId}/messages`, {
+        type,
+        content,
+        metadata,
+        isError,
+      });
+      return { data: response.data, error: null };
+    } catch (error) {
+      return {
+        data: null,
+        error: error.response?.data?.error || "Error adding message",
+      };
+    }
+  },
+
+  // Migrate chats from localStorage
+  migrateLocalStorageChats: async (chatsData) => {
+    try {
+      const response = await api.post("/chats/migrate", { chatsData });
+      return { data: response.data, error: null };
+    } catch (error) {
+      return {
+        data: null,
+        error: error.response?.data?.error || "Error migrating chats",
       };
     }
   },

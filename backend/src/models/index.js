@@ -3,6 +3,8 @@ const User = require("./User");
 const MotorDB = require("./MotorDB");
 const ConexionDB = require("./ConexionDB");
 const Subscription = require("./Subscription");
+const Chat = require("./Chat");
+const ChatMessage = require("./ChatMessage");
 
 // Initialize associations
 const models = {
@@ -10,6 +12,8 @@ const models = {
   MotorDB,
   ConexionDB,
   Subscription,
+  Chat,
+  ChatMessage,
 };
 
 // Set up associations

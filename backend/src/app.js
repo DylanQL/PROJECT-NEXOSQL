@@ -5,6 +5,7 @@ const motorDBRoutes = require("./routes/motorDBRoutes");
 const conexionDBRoutes = require("./routes/conexionDBRoutes");
 const aiRoutes = require("./routes/aiRoutes");
 const subscriptionRoutes = require("./routes/subscriptionRoutes");
+const chatRoutes = require("./routes/chatRoutes");
 
 // Create Express app
 const app = express();
@@ -25,6 +26,7 @@ app.use("/api/motores", motorDBRoutes);
 app.use("/api/conexiones", conexionDBRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/subscriptions", subscriptionRoutes);
+app.use("/api/chats", chatRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

@@ -47,28 +47,44 @@ const ChatInterface = () => {
 
   // Load chats when active connection changes
   useEffect(() => {
-    const createInitialChat = (title = "Nueva consulta") => {
-      if (!activeConnection) return;
-      const newChat = chatService.createChat(activeConnection.id, title);
-      setChats([newChat]);
-      setSelectedChatId(newChat.id);
+    const loadChats = async () => {
+      if (!activeConnection) {
+        setChats([]);
+        setSelectedChatId(null);
+        return;
+      }
+
+      try {
+        const connectionChats = await chatService.getChats(activeConnection.id);
+        setChats(connectionChats);
+
+        // Select the first chat if available, or create a new one if none exist
+        if (connectionChats.length > 0) {
+          setSelectedChatId(connectionChats[0].id);
+        } else {
+          // Create initial chat
+          const newChat = await chatService.createChat(activeConnection.id, "Nueva consulta");
+          setChats([newChat]);
+          setSelectedChatId(newChat.id);
+        }
+      } catch (error) {
+        console.error("Error loading chats:", error);
+        setError("Error cargando el historial de chats");
+        // Fallback: create a new chat
+        try {
+          const newChat = await chatService.createChat(activeConnection.id, "Nueva consulta");
+          setChats([newChat]);
+          setSelectedChatId(newChat.id);
+        } catch (createError) {
+          console.error("Error creating chat:", createError);
+          setError("Error creando un nuevo chat");
+        }
+      }
+
       setUserInput("");
     };
 
-    if (activeConnection) {
-      const connectionChats = chatService.getChats(activeConnection.id);
-      setChats(connectionChats);
-
-      // Select the first chat if available, or create a new one if none exist
-      if (connectionChats.length > 0) {
-        setSelectedChatId(connectionChats[0].id);
-      } else {
-        createInitialChat();
-      }
-    } else {
-      setChats([]);
-      setSelectedChatId(null);
-    }
+    loadChats();
   }, [activeConnection]);
 
   // Scroll to bottom when messages change
@@ -213,16 +229,21 @@ const ChatInterface = () => {
   }, []);
 
   const handleCreateChat = useCallback(
-    (title = "Nueva consulta") => {
+    async (title = "Nueva consulta") => {
       if (!activeConnection) return;
 
-      const newChat = chatService.createChat(activeConnection.id, title);
-      setChats([newChat, ...chats]);
-      setSelectedChatId(newChat.id);
-      setUserInput("");
-      // Close sidebar on mobile when creating a chat with smooth animation
-      if (window.innerWidth < 768) {
-        handleCloseSidebar();
+      try {
+        const newChat = await chatService.createChat(activeConnection.id, title);
+        setChats([newChat, ...chats]);
+        setSelectedChatId(newChat.id);
+        setUserInput("");
+        // Close sidebar on mobile when creating a chat with smooth animation
+        if (window.innerWidth < 768) {
+          handleCloseSidebar();
+        }
+      } catch (error) {
+        setError("No se pudo crear el chat");
+        console.error(error);
       }
     },
     [activeConnection, chats, handleCloseSidebar],
@@ -240,9 +261,9 @@ const ChatInterface = () => {
     [handleCloseSidebar],
   );
 
-  const handleDeleteChat = (chatId) => {
+  const handleDeleteChat = async (chatId) => {
     try {
-      chatService.deleteChat(activeConnection.id, chatId);
+      await chatService.deleteChat(activeConnection.id, chatId);
 
       // Update local state
       const updatedChats = chats.filter((chat) => chat.id !== chatId);
@@ -253,7 +274,7 @@ const ChatInterface = () => {
         if (updatedChats.length > 0) {
           setSelectedChatId(updatedChats[0].id);
         } else {
-          handleCreateChat();
+          await handleCreateChat();
         }
       }
     } catch (error) {
@@ -262,9 +283,9 @@ const ChatInterface = () => {
     }
   };
 
-  const handleChatRenamed = (chatId, newTitle) => {
+  const handleChatRenamed = async (chatId, newTitle) => {
     try {
-      const updatedChat = chatService.renameChat(
+      const updatedChat = await chatService.renameChat(
         activeConnection.id,
         chatId,
         newTitle,
@@ -294,14 +315,23 @@ const ChatInterface = () => {
       setIsProcessing(true);
       setError(null);
 
-      await chatService.sendQuestion(
+      const result = await chatService.sendQuestion(
         activeConnection.id,
         selectedChatId,
         userInput.trim(),
       );
 
-      // Update the chats from storage to get the updated messages
-      setChats(chatService.getChats(activeConnection.id));
+      // Update the chats with the new messages from the API response
+      const updatedChats = await chatService.getChats(activeConnection.id);
+      setChats(updatedChats);
+      
+      // Update the selected chat to show the new messages
+      const updatedSelectedChat = updatedChats.find(chat => chat.id === selectedChatId);
+      if (updatedSelectedChat) {
+        // The chat was updated with new messages via the API
+        console.log('Chat updated with new messages:', updatedSelectedChat.messages.length);
+      }
+      
       setUserInput("");
     } catch (error) {
       setError(
