@@ -613,7 +613,7 @@ footer {
 
 /* Navigation */
 .navbar {
-    margin-bottom: 2rem;
+    margin-bottom: 0;
 }
 
 /* Make buttons more rounded */
