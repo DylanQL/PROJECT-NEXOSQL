@@ -138,6 +138,8 @@ code {
     flex-direction: column;
     gap: 0.75rem;
     padding: 1rem 0;
+    padding-bottom: 120px; /* Space for fixed input */
+    min-height: 100%;
 }
 
 /* Chat Sidebar Scroll Fix - More Specific */
@@ -435,32 +437,38 @@ details > summary {
 }
 
 .chat-input-container-fixed {
-    padding: 0.5rem 0.5rem 0 0.5rem !important;
+    padding: 1rem !important;
     border-top: 1px solid #dee2e6;
     background-color: #fff;
     margin: 0 !important;
-    position: relative;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
 }
 
 /* En pantallas desktop, ajustar para el sidebar */
 @media (min-width: 768px) {
     .chat-main-container .chat-input-container-fixed {
-        position: fixed;
-        bottom: 0;
         left: 25%;
         right: 0;
-        z-index: 100;
+        z-index: 1000;
     }
 }
 
 /* En pantallas móviles, usar todo el ancho */
 @media (max-width: 767.98px) {
     .chat-input-container-fixed {
-        position: fixed;
-        bottom: 0;
         left: 0;
         right: 0;
-        z-index: 100;
+        z-index: 1000;
+        padding: 0.75rem !important;
+    }
+
+    .chat-messages {
+        padding-bottom: 140px; /* More space on mobile */
     }
 }
 
@@ -1085,7 +1093,8 @@ footer {
 /* Ajustes para pantallas grandes */
 @media (min-width: 1200px) {
     .chat-messages {
-        padding: 1rem 2rem !important;
+        padding: 1.5rem 0;
+        padding-bottom: 120px;
     }
 }
 
@@ -1101,6 +1110,9 @@ footer {
 
 .chat-main-container {
     z-index: 1000;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
 }
 
 /* Mobile sidebar animations */

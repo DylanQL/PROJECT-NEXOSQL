@@ -31,9 +31,9 @@ const ChatInterface = () => {
   const messageEndRef = useRef(null);
   const inputRef = useRef(null);
   const [error, setError] = useState(null);
-  // State for sidebar visibility on mobile
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [sidebarAnimating, setSidebarAnimating] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [navbarHeight, setNavbarHeight] = useState(56);
 
   // Close profile dropdown when sidebar opens (improve UX)
@@ -73,7 +73,14 @@ const ChatInterface = () => {
 
   // Scroll to bottom when messages change
   useEffect(() => {
-    messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const timer = setTimeout(() => {
+      messageEndRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "end",
+      });
+    }, 100);
+
+    return () => clearTimeout(timer);
   }, [selectedChatId, chats]);
 
   // Focus input field when chat changes
@@ -192,9 +199,16 @@ const ChatInterface = () => {
 
     window.addEventListener("resize", detectNavbarHeight);
 
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+      detectNavbarHeight();
+    };
+
+    window.addEventListener("resize", handleResize);
+
     return () => {
-      window.removeEventListener("resize", detectNavbarHeight);
       clearTimeout(timeoutId);
+      window.removeEventListener("resize", handleResize);
     };
   }, []);
 
@@ -522,7 +536,12 @@ const ChatInterface = () => {
           md={9}
           lg={10}
           className="d-flex flex-column chat-main-container"
-          style={{ marginLeft: 0, height: "100%" }}
+          style={{
+            marginLeft: 0,
+            height: "100vh",
+            maxHeight: "100vh",
+            position: "relative",
+          }}
         >
           {/* Mobile header with hamburger menu */}
           <div className="d-md-none p-2 border-bottom bg-white d-flex align-items-center justify-content-between mobile-chat-header">
@@ -566,7 +585,14 @@ const ChatInterface = () => {
               </div>
 
               {/* Messages area */}
-              <div className="flex-grow-1 p-3 overflow-auto bg-light">
+              <div
+                className="flex-grow-1 p-3 overflow-auto bg-light"
+                style={{
+                  height: "calc(100vh - 200px)",
+                  maxHeight: "calc(100vh - 200px)",
+                  minHeight: "400px",
+                }}
+              >
                 {error && (
                   <Alert
                     variant="danger"
@@ -603,7 +629,20 @@ const ChatInterface = () => {
               </div>
 
               {/* Input area */}
-              <div className="chat-input-container-fixed">
+              <div
+                className="chat-input-container-fixed"
+                style={{
+                  position: "fixed",
+                  bottom: 0,
+                  left: isMobile ? 0 : "25%",
+                  right: 0,
+                  zIndex: 1000,
+                  backgroundColor: "#fff",
+                  borderTop: "1px solid #dee2e6",
+                  padding: "1rem",
+                  boxShadow: "0 -2px 10px rgba(0, 0, 0, 0.1)",
+                }}
+              >
                 <Form onSubmit={handleSubmit}>
                   <InputGroup>
                     <Form.Control
