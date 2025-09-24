@@ -629,20 +629,7 @@ const ChatInterface = () => {
               </div>
 
               {/* Input area */}
-              <div
-                className="chat-input-container-fixed"
-                style={{
-                  position: "fixed",
-                  bottom: 0,
-                  left: isMobile ? 0 : "25%",
-                  right: 0,
-                  zIndex: 1000,
-                  backgroundColor: "#fff",
-                  borderTop: "1px solid #dee2e6",
-                  padding: "1rem",
-                  boxShadow: "0 -2px 10px rgba(0, 0, 0, 0.1)",
-                }}
-              >
+              <div className="chat-input-container-fixed">
                 <Form onSubmit={handleSubmit}>
                   <InputGroup>
                     <Form.Control
