@@ -243,14 +243,17 @@ export const chatApi = {
   // Create a new chat
   createChat: async (connectionId, title = "Nueva consulta") => {
     try {
+      console.log('Creating chat API call:', { connectionId, title });
       const response = await api.post(`/chats/connection/${connectionId}`, {
         title,
       });
+      console.log('Chat creation response:', response.data);
       return { data: response.data, error: null };
     } catch (error) {
+      console.error('Chat creation error:', error.response?.data || error.message);
       return {
         data: null,
-        error: error.response?.data?.error || "Error creating chat",
+        error: error.response?.data?.error || error.message || "Error creating chat",
       };
     }
   },

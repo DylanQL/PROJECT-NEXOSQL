@@ -10,7 +10,7 @@ class ChatController {
 
       // Verificar que la conexión pertenece al usuario
       const conexion = await ConexionDB.findOne({
-        where: { id: conexionId, userId },
+        where: { id: conexionId, usuarios_id: userId },
       });
 
       if (!conexion) {
@@ -64,10 +64,14 @@ class ChatController {
       const { title = "Nueva consulta" } = req.body;
       const userId = req.user.id;
 
+      console.log('Creating chat:', { conexionId, title, userId });
+
       // Verificar que la conexión pertenece al usuario
       const conexion = await ConexionDB.findOne({
-        where: { id: conexionId, userId },
+        where: { id: conexionId, usuarios_id: userId },
       });
+
+      console.log('Found connection:', conexion ? 'Yes' : 'No');
 
       if (!conexion) {
         return res.status(404).json({
@@ -81,6 +85,10 @@ class ChatController {
         conexionId,
         title,
       });
+
+      console.log('Chat created successfully:', chat);
+      console.log('Chat id:', chat ? chat.id : 'No id available');
+      console.log('Chat object keys:', Object.keys(chat));
 
       res.status(201).json({
         success: true,

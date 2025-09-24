@@ -73,5 +73,7 @@ module.exports = {
   MotorDB,
   ConexionDB,
   Subscription,
+  Chat,
+  ChatMessage,
   initializeModels,
 };

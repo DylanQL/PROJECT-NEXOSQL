@@ -26,14 +26,25 @@ const authMiddleware = async (req, res, next) => {
 
     // Try to find the user in our database
     try {
-      const user = await User.findOne({
+      let user = await User.findOne({
         where: { firebaseUid: devFirebaseUid },
       });
-      if (user) {
-        req.user = user;
+      
+      // If user doesn't exist, create a temporary one for development
+      if (!user) {
+        console.log("Development mode: Creating temporary user for", devFirebaseUid);
+        user = await User.create({
+          nombres: "Dev",
+          apellidos: "User",
+          email: `dev-${devFirebaseUid}@example.com`,
+          firebaseUid: devFirebaseUid,
+        });
       }
+      
+      req.user = user;
     } catch (err) {
-      console.error("Development mode: User lookup failed:", err);
+      console.error("Development mode: User lookup/creation failed:", err);
+      return res.status(500).json({ error: "Internal server error during authentication" });
     }
 
     return next();

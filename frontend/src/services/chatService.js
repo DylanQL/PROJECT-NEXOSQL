@@ -81,15 +81,22 @@ class ChatService {
   // Create a new chat
   async createChat(connectionId, title = "Nueva consulta") {
     try {
+      console.log('Creating chat with:', { connectionId, title });
       const { data, error } = await chatApi.createChat(connectionId, title);
+      console.log('Chat API response:', { data, error });
+      
       if (error) {
         console.error("Error creating chat:", error);
-        throw new Error(error);
+        throw new Error(typeof error === 'string' ? error : error.message || 'Error desconocido');
       }
       return data.chat;
     } catch (error) {
       console.error("Error creating chat:", error);
-      throw new Error("No se pudo crear el chat");
+      if (error.message) {
+        throw new Error(error.message);
+      } else {
+        throw new Error("No se pudo crear el chat");
+      }
     }
   }
 
