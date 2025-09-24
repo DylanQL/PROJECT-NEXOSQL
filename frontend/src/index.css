@@ -434,6 +434,36 @@ details > summary {
     background-color: #fff;
 }
 
+.chat-input-container-fixed {
+    padding: 0.5rem 0.5rem 0 0.5rem !important;
+    border-top: 1px solid #dee2e6;
+    background-color: #fff;
+    margin: 0 !important;
+    position: relative;
+}
+
+/* En pantallas desktop, ajustar para el sidebar */
+@media (min-width: 768px) {
+    .chat-main-container .chat-input-container-fixed {
+        position: fixed;
+        bottom: 0;
+        left: 25%;
+        right: 0;
+        z-index: 100;
+    }
+}
+
+/* En pantallas móviles, usar todo el ancho */
+@media (max-width: 767.98px) {
+    .chat-input-container-fixed {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 100;
+    }
+}
+
 .chat-input {
     border-radius: 1.5rem;
     padding-right: 4rem;

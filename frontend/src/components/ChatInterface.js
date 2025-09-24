@@ -180,19 +180,16 @@ const ChatInterface = () => {
       } else {
         // Fallback to default Bootstrap navbar height
         setNavbarHeight(56);
-        document.documentElement.style.setProperty(
-          "--navbar-height",
-          "56px",
-        );
+        document.documentElement.style.setProperty("--navbar-height", "56px");
       }
     };
 
     // Initial detection
     detectNavbarHeight();
-    
+
     // Use a timeout to ensure navbar is rendered
     const timeoutId = setTimeout(detectNavbarHeight, 100);
-    
+
     window.addEventListener("resize", detectNavbarHeight);
 
     return () => {
@@ -431,10 +428,13 @@ const ChatInterface = () => {
   return (
     <Container
       fluid
-      className="p-0 w-100"
-      style={{ 
+      className="p-0 w-100 m-0"
+      style={{
         maxWidth: "100%",
-        overflow: "hidden"
+        overflow: "hidden",
+        margin: 0,
+        padding: 0,
+        height: "100%",
       }}
     >
       <Row className="g-0 w-100 position-relative" style={{ height: "100%" }}>
@@ -499,7 +499,10 @@ const ChatInterface = () => {
               </Dropdown>
             </Form.Group>
           </div>
-          <div className="flex-grow-1 d-flex flex-column" style={{ minHeight: 0 }}>
+          <div
+            className="flex-grow-1 d-flex flex-column"
+            style={{ minHeight: 0 }}
+          >
             <ChatSidebar
               connectionId={activeConnection?.id}
               chats={chats}
@@ -600,7 +603,7 @@ const ChatInterface = () => {
               </div>
 
               {/* Input area */}
-              <div className="p-3 border-top">
+              <div className="chat-input-container-fixed">
                 <Form onSubmit={handleSubmit}>
                   <InputGroup>
                     <Form.Control
