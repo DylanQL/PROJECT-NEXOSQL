@@ -34,7 +34,9 @@ const ChatInterface = () => {
   const abortControllerRef = useRef(null);
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [sidebarAnimating, setSidebarAnimating] = useState(false);
+  // eslint-disable-next-line no-unused-vars
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  // eslint-disable-next-line no-unused-vars
   const [navbarHeight, setNavbarHeight] = useState(56);
 
   // Close profile dropdown when sidebar opens (improve UX)
@@ -305,6 +307,8 @@ const ChatInterface = () => {
     // Create AbortController for this request
     abortControllerRef.current = new AbortController();
 
+    const userMessage = userInput.trim();
+    
     try {
       setIsProcessing(true);
       setError(null);
@@ -320,14 +324,46 @@ const ChatInterface = () => {
         chatId = newChat.id;
       }
 
+      // Show user message immediately in the chat
+      const tempUserMessage = {
+        id: `temp-user-${Date.now()}`,
+        type: 'user',
+        content: userMessage,
+        timestamp: new Date().toISOString()
+      };
+
+      // Add temporary user message and loading assistant message
+      setChats(prevChats => {
+        return prevChats.map(chat => {
+          if (chat.id === chatId) {
+            const tempAssistantMessage = {
+              id: `temp-assistant-${Date.now()}`,
+              type: 'assistant',
+              content: 'Procesando consulta...',
+              loading: true,
+              timestamp: new Date().toISOString()
+            };
+            return {
+              ...chat,
+              messages: [...chat.messages, tempUserMessage, tempAssistantMessage]
+            };
+          }
+          return chat;
+        });
+      });
+
+      // Clear input immediately
+      setUserInput("");
+
+      // eslint-disable-next-line no-unused-vars
       const result = await chatService.sendQuestion(
         activeConnection.id,
         chatId,
-        userInput.trim(),
+        userMessage,
         abortControllerRef.current.signal
       );
 
-      // Update the chats with the new messages from the API response
+      // Update the chats with the real messages from the API response
       const updatedChats = await chatService.getChats(activeConnection.id);
       setChats(updatedChats);
       
@@ -338,14 +374,70 @@ const ChatInterface = () => {
         console.log('Chat updated with new messages:', updatedSelectedChat.messages.length);
       }
       
-      setUserInput("");
     } catch (error) {
       // Don't show error if request was aborted
       if (error.name === 'AbortError') {
         console.log('Request was cancelled');
-        setError("Consulta cancelada por el usuario");
+        // Remove temporary messages and show cancellation message
+        setChats(prevChats => {
+          return prevChats.map(chat => {
+            if (chat.id === selectedChatId) {
+              // Remove temporary messages and add cancellation message
+              const filteredMessages = chat.messages.filter(msg => 
+                !msg.id.startsWith('temp-user-') && !msg.id.startsWith('temp-assistant-')
+              );
+              const userMsg = {
+                id: `cancelled-user-${Date.now()}`,
+                type: 'user',
+                content: userMessage,
+                timestamp: new Date().toISOString()
+              };
+              const cancellationMessage = {
+                id: `cancelled-${Date.now()}`,
+                type: 'assistant',
+                content: 'Consulta cancelada por el usuario',
+                error: true,
+                timestamp: new Date().toISOString()
+              };
+              return {
+                ...chat,
+                messages: [...filteredMessages, userMsg, cancellationMessage]
+              };
+            }
+            return chat;
+          });
+        });
         return;
       }
+      
+      // Remove temporary messages and add error message
+      setChats(prevChats => {
+        return prevChats.map(chat => {
+          if (chat.id === selectedChatId) {
+            const filteredMessages = chat.messages.filter(msg => 
+              !msg.id.startsWith('temp-user-') && !msg.id.startsWith('temp-assistant-')
+            );
+            const userMsg = {
+              id: `error-user-${Date.now()}`,
+              type: 'user',
+              content: userMessage,
+              timestamp: new Date().toISOString()
+            };
+            const errorMessage = {
+              id: `error-${Date.now()}`,
+              type: 'assistant',
+              content: `Error al procesar tu consulta: ${error.message || "Por favor, intenta de nuevo."}`,
+              error: true,
+              timestamp: new Date().toISOString()
+            };
+            return {
+              ...chat,
+              messages: [...filteredMessages, userMsg, errorMessage]
+            };
+          }
+          return chat;
+        });
+      });
       
       setError(
         `Error al procesar tu consulta: ${error.message || "Por favor, intenta de nuevo."}`,
@@ -725,29 +817,24 @@ const ChatInterface = () => {
                       onChange={(e) => setUserInput(e.target.value)}
                       disabled={isProcessing || !activeConnection}
                     />
-                    <Button
-                      type="submit"
-                      variant="primary"
-                      disabled={
-                        isProcessing || !userInput.trim() || !activeConnection
-                      }
-                    >
-                      {isProcessing ? (
-                        <Spinner animation="border" size="sm" />
-                      ) : (
-                        <SendFill />
-                      )}
-                    </Button>
-                    {isProcessing && (
+                    {isProcessing ? (
                       <Button
                         type="button"
                         variant="outline-danger"
                         onClick={handleCancelRequest}
-                        className="ms-2"
                         title="Cancelar consulta"
-                        size="sm"
                       >
                         <XCircleFill />
+                      </Button>
+                    ) : (
+                      <Button
+                        type="submit"
+                        variant="primary"
+                        disabled={
+                          !userInput.trim() || !activeConnection
+                        }
+                      >
+                        <SendFill />
                       </Button>
                     )}
                   </InputGroup>
