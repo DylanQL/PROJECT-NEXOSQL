@@ -11,7 +11,7 @@ import {
   Dropdown,
   InputGroup,
 } from "react-bootstrap";
-import { SendFill, Database, List } from "react-bootstrap-icons";
+import { SendFill, Database, List, XCircleFill } from "react-bootstrap-icons";
 import ReactMarkdown from "react-markdown";
 import { useConnection } from "../contexts/ConnectionContext";
 import chatService from "../services/chatService";
@@ -31,6 +31,7 @@ const ChatInterface = () => {
   const messageEndRef = useRef(null);
   const inputRef = useRef(null);
   const [error, setError] = useState(null);
+  const abortControllerRef = useRef(null);
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [sidebarAnimating, setSidebarAnimating] = useState(false);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -58,27 +59,18 @@ const ChatInterface = () => {
         const connectionChats = await chatService.getChats(activeConnection.id);
         setChats(connectionChats);
 
-        // Select the first chat if available, or create a new one if none exist
+        // Select the first chat if available
         if (connectionChats.length > 0) {
           setSelectedChatId(connectionChats[0].id);
         } else {
-          // Create initial chat
-          const newChat = await chatService.createChat(activeConnection.id, "Nueva consulta");
-          setChats([newChat]);
-          setSelectedChatId(newChat.id);
+          // Don't create a chat automatically - wait for user to send a message
+          setSelectedChatId(null);
         }
       } catch (error) {
         console.error("Error loading chats:", error);
         setError("Error cargando el historial de chats");
-        // Fallback: create a new chat
-        try {
-          const newChat = await chatService.createChat(activeConnection.id, "Nueva consulta");
-          setChats([newChat]);
-          setSelectedChatId(newChat.id);
-        } catch (createError) {
-          console.error("Error creating chat:", createError);
-          setError("Error creando un nuevo chat");
-        }
+        setChats([]);
+        setSelectedChatId(null);
       }
 
       setUserInput("");
@@ -304,21 +296,35 @@ const ChatInterface = () => {
 
     if (
       !activeConnection ||
-      !selectedChatId ||
       !userInput.trim() ||
       isProcessing
     ) {
       return;
     }
 
+    // Create AbortController for this request
+    abortControllerRef.current = new AbortController();
+
     try {
       setIsProcessing(true);
       setError(null);
 
+      let chatId = selectedChatId;
+
+      // If no chat is selected, create a new one
+      if (!chatId) {
+        console.log('No chat selected, creating new chat for message');
+        const newChat = await chatService.createChat(activeConnection.id, "Nueva consulta");
+        setChats(prevChats => [newChat, ...prevChats]);
+        setSelectedChatId(newChat.id);
+        chatId = newChat.id;
+      }
+
       const result = await chatService.sendQuestion(
         activeConnection.id,
-        selectedChatId,
+        chatId,
         userInput.trim(),
+        abortControllerRef.current.signal
       );
 
       // Update the chats with the new messages from the API response
@@ -326,7 +332,7 @@ const ChatInterface = () => {
       setChats(updatedChats);
       
       // Update the selected chat to show the new messages
-      const updatedSelectedChat = updatedChats.find(chat => chat.id === selectedChatId);
+      const updatedSelectedChat = updatedChats.find(chat => chat.id === chatId);
       if (updatedSelectedChat) {
         // The chat was updated with new messages via the API
         console.log('Chat updated with new messages:', updatedSelectedChat.messages.length);
@@ -334,12 +340,28 @@ const ChatInterface = () => {
       
       setUserInput("");
     } catch (error) {
+      // Don't show error if request was aborted
+      if (error.name === 'AbortError') {
+        console.log('Request was cancelled');
+        setError("Consulta cancelada por el usuario");
+        return;
+      }
+      
       setError(
         `Error al procesar tu consulta: ${error.message || "Por favor, intenta de nuevo."}`,
       );
       console.error(error);
     } finally {
       setIsProcessing(false);
+      abortControllerRef.current = null;
+    }
+  };
+
+  const handleCancelRequest = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      setIsProcessing(false);
+      setError("Consulta cancelada por el usuario");
     }
   };
 
@@ -593,13 +615,21 @@ const ChatInterface = () => {
             <div className="flex-grow-1 d-flex flex-column justify-content-center align-items-center bg-light text-center p-4">
               <Database size={64} className="mb-4 text-secondary" />
               <h4>Asistente SQL NexoSQL</h4>
-              <p className="text-muted">
-                Selecciona un chat existente o crea uno nuevo para comenzar a
-                interactuar con tus bases de datos a través de lenguaje natural.
+              <p className="text-muted mb-3">
+                ¡Bienvenido! Escribe tu pregunta sobre la base de datos y se creará 
+                automáticamente un nuevo chat para tu conversación.
+              </p>
+              <p className="text-muted small">
+                También puedes crear un chat manualmente o seleccionar uno existente 
+                desde el menú lateral.
               </p>
               {activeConnection && (
-                <Button variant="primary" onClick={() => handleCreateChat()}>
-                  Nuevo Chat
+                <Button 
+                  variant="outline-primary" 
+                  onClick={() => handleCreateChat()}
+                  className="mt-2"
+                >
+                  Crear Chat Manualmente
                 </Button>
               )}
             </div>
@@ -644,15 +674,40 @@ const ChatInterface = () => {
                   </div>
                 ) : (
                   <div className="chat-messages">
-                    {[
-                      ...new Map(
-                        selectedChat.messages.map((msg) => [msg.id, msg]),
-                      ).values(),
-                    ].map((message) => (
-                      <div key={message.id} className="mb-3">
-                        {renderMessage(message)}
-                      </div>
-                    ))}
+                    {(() => {
+                      const sortedMessages = selectedChat.messages
+                        .filter((msg, index, arr) => 
+                          // Remove duplicates while preserving order
+                          arr.findIndex(m => m.id === msg.id) === index
+                        )
+                        .sort((a, b) => {
+                          // Primary sort by timestamp
+                          const timestampA = new Date(a.timestamp || a.createdAt);
+                          const timestampB = new Date(b.timestamp || b.createdAt);
+                          const timeDiff = timestampA - timestampB;
+                          
+                          if (timeDiff !== 0) return timeDiff;
+                          
+                          // Secondary sort: user messages before assistant messages for same timestamp
+                          if (a.type === 'user' && b.type === 'assistant') return -1;
+                          if (a.type === 'assistant' && b.type === 'user') return 1;
+                          
+                          return 0;
+                        });
+                      
+                      // Debug log to check order
+                      console.log('Messages order:', sortedMessages.map(msg => ({
+                        type: msg.type,
+                        timestamp: msg.timestamp || msg.createdAt,
+                        content: msg.content.substring(0, 30) + '...'
+                      })));
+                      
+                      return sortedMessages;
+                    })().map((message) => (
+                        <div key={message.id} className="mb-3">
+                          {renderMessage(message)}
+                        </div>
+                      ))}
                     <div ref={messageEndRef} />
                   </div>
                 )}
@@ -683,6 +738,18 @@ const ChatInterface = () => {
                         <SendFill />
                       )}
                     </Button>
+                    {isProcessing && (
+                      <Button
+                        type="button"
+                        variant="outline-danger"
+                        onClick={handleCancelRequest}
+                        className="ms-2"
+                        title="Cancelar consulta"
+                        size="sm"
+                      >
+                        <XCircleFill />
+                      </Button>
+                    )}
                   </InputGroup>
                 </Form>
               </div>
