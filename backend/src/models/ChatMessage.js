@@ -44,6 +44,16 @@ ChatMessage.init(
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },
+    cancelado: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      comment: "Indica si el mensaje fue cancelado por el usuario",
+    },
+    hilo_conversacion: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      comment: "ID del hilo de conversación que agrupa mensaje del usuario y respuesta del asistente",
+    },
     timestamp: {
       type: DataTypes.DATE,
       allowNull: false,
@@ -74,6 +84,9 @@ ChatMessage.init(
       },
       {
         fields: ["type"],
+      },
+      {
+        fields: ["hilo_conversacion"],
       },
     ],
   }

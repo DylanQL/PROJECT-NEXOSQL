@@ -12,6 +12,9 @@ router.use(profileMiddleware);
 // Process a natural language query
 router.post('/query', aiController.processQuery);
 
+// Cancel a message by thread ID
+router.post('/cancel/:hiloConversacion', aiController.cancelMessage);
+
 // Get schema information for a connection
 router.get('/schema/:connectionId', aiController.getSchemaInfo);
 

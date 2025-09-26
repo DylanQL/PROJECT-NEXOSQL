@@ -28,6 +28,7 @@ const ChatInterface = () => {
   const [selectedChatId, setSelectedChatId] = useState(null);
   const [userInput, setUserInput] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [currentThreadId, setCurrentThreadId] = useState(null); // Para el hilo de conversación activo
   const messageEndRef = useRef(null);
   const inputRef = useRef(null);
   const [error, setError] = useState(null);
@@ -363,6 +364,11 @@ const ChatInterface = () => {
         abortControllerRef.current.signal
       );
 
+      // Store the thread ID for cancellation purposes
+      if (result.userMessage && result.userMessage.hilo_conversacion) {
+        setCurrentThreadId(result.userMessage.hilo_conversacion);
+      }
+
       // Update the chats with the real messages from the API response
       const updatedChats = await chatService.getChats(activeConnection.id);
       setChats(updatedChats);
@@ -445,16 +451,30 @@ const ChatInterface = () => {
       console.error(error);
     } finally {
       setIsProcessing(false);
+      setCurrentThreadId(null);
       abortControllerRef.current = null;
     }
   };
 
-  const handleCancelRequest = () => {
+  const handleCancelRequest = async () => {
+    if (currentThreadId) {
+      try {
+        // Cancelar usando el hilo de conversación
+        await chatService.cancelMessage(currentThreadId);
+        console.log('Message cancelled via thread ID:', currentThreadId);
+      } catch (error) {
+        console.error('Error cancelling via thread ID:', error);
+      }
+    }
+
+    // También cancelar la petición HTTP si está activa
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
-      setIsProcessing(false);
-      setError("Consulta cancelada por el usuario");
     }
+
+    setIsProcessing(false);
+    setCurrentThreadId(null);
+    setError("Consulta cancelada por el usuario");
   };
 
   const selectedChat = selectedChatId
@@ -483,12 +503,17 @@ const ChatInterface = () => {
           );
         }
 
-        if (message.error) {
+        if (message.error || message.cancelado) {
+          const variant = message.cancelado ? "warning" : "danger";
+          const content = message.cancelado ? 
+            "Esta consulta fue cancelada por el usuario" : 
+            message.content;
+          
           return (
             <div className="chat-message assistant-message">
-              <div className="message-content bg-light p-3 rounded-3 border-danger">
-                <Alert variant="danger" className="mb-0">
-                  {message.content}
+              <div className={`message-content bg-light p-3 rounded-3 border-${variant}`}>
+                <Alert variant={variant} className="mb-0">
+                  {content}
                 </Alert>
               </div>
             </div>

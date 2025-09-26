@@ -174,6 +174,21 @@ class ChatService {
     }
   }
 
+  // Cancel a message by thread ID
+  async cancelMessage(hiloConversacion) {
+    try {
+      const { data, error } = await aiApi.cancelMessage(hiloConversacion);
+      if (error) {
+        console.error("Error cancelling message:", error);
+        throw new Error(error);
+      }
+      return data;
+    } catch (error) {
+      console.error("Error cancelling message:", error);
+      throw new Error("No se pudo cancelar el mensaje");
+    }
+  }
+
   // Legacy methods for localStorage (kept for fallback and migration)
   _getAllChatsFromStorage() {
     try {

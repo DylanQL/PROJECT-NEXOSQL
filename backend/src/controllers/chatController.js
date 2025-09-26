@@ -44,6 +44,8 @@ class ChatController {
           content: message.content,
           metadata: message.metadata,
           error: message.isError,
+          cancelado: message.cancelado,
+          hilo_conversacion: message.hilo_conversacion,
           timestamp: message.timestamp,
         })),
       }));
@@ -142,6 +144,8 @@ class ChatController {
           content: message.content,
           metadata: message.metadata,
           error: message.isError,
+          cancelado: message.cancelado,
+          hilo_conversacion: message.hilo_conversacion,
           timestamp: message.timestamp,
         })),
       };
@@ -227,7 +231,7 @@ class ChatController {
   async addMessage(req, res) {
     try {
       const { chatId } = req.params;
-      const { type, content, metadata = null, isError = false } = req.body;
+      const { type, content, metadata = null, isError = false, hilo_conversacion = null } = req.body;
       const userId = req.user.id;
 
       // Validar datos requeridos
@@ -261,6 +265,7 @@ class ChatController {
         content,
         metadata,
         isError,
+        hilo_conversacion,
       });
 
       // Actualizar la fecha de modificación del chat
@@ -274,6 +279,8 @@ class ChatController {
           content: message.content,
           metadata: message.metadata,
           error: message.isError,
+          cancelado: message.cancelado,
+          hilo_conversacion: message.hilo_conversacion,
           timestamp: message.timestamp,
         },
       });

@@ -223,6 +223,19 @@ export const aiApi = {
       };
     }
   },
+
+  // Cancel a message by thread ID
+  cancelMessage: async (hiloConversacion) => {
+    try {
+      const response = await api.post(`/ai/cancel/${hiloConversacion}`);
+      return { data: response.data, error: null };
+    } catch (error) {
+      return {
+        data: null,
+        error: error.response?.data?.error || "Error cancelling message",
+      };
+    }
+  },
 };
 
 // Chat-related API calls

@@ -4,6 +4,7 @@ const postgres = require('pg');
 const mssql = require('mssql');
 const oracledb = require('oracledb');
 const { MongoClient } = require('mongodb');
+const { ChatMessage } = require('../models');
 
 class AIService {
   constructor() {
@@ -19,12 +20,38 @@ class AIService {
   }
 
   /**
+   * Check if a conversation thread has been cancelled
+   * @param {string} hiloConversacion - Thread conversation ID
+   * @returns {boolean} - True if cancelled
+   */
+  async isThreadCancelled(hiloConversacion) {
+    if (!hiloConversacion) {
+      return false;
+    }
+
+    try {
+      const cancelledMessage = await ChatMessage.findOne({
+        where: { 
+          hilo_conversacion: hiloConversacion, 
+          cancelado: true 
+        }
+      });
+
+      return !!cancelledMessage;
+    } catch (error) {
+      console.error('Error checking thread cancellation:', error);
+      return false;
+    }
+  }
+
+  /**
    * Process a natural language query against a database
    * @param {Object} connection - Database connection details
    * @param {string} question - Natural language question
+   * @param {string} hiloConversacion - Thread conversation ID
    * @returns {Object} - Answer and metadata
    */
-  async processQuery(connection, question) {
+  async processQuery(connection, question, hiloConversacion) {
     // Create a database client based on the motor type
     const dbClient = await this.createDatabaseClient(connection);
 
@@ -36,7 +63,7 @@ class AIService {
       const systemPrompt = this.createSystemPrompt(schemaInfo, connection.motor.nombre);
 
       // Process the question using the AI service
-      const result = await this.processWithAI(dbClient, systemPrompt, question, connection);
+      const result = await this.processWithAI(dbClient, systemPrompt, question, connection, hiloConversacion);
 
       return result;
     } finally {
@@ -884,7 +911,7 @@ Important rules:
    * @param {Object} connection - Connection details
    * @returns {Object} - Final answer and metadata
    */
-  async processWithAI(dbClient, systemPrompt, question, connection) {
+  async processWithAI(dbClient, systemPrompt, question, connection, hiloConversacion) {
     let iterations = 0;
     let currentPrompt = `${question}`;
     const queryResults = [];
@@ -892,6 +919,21 @@ Important rules:
 
     while (iterations < this.maxIterations) {
       iterations++;
+
+      // Verificar si el hilo de conversación ha sido cancelado
+      const isCancelled = await this.isThreadCancelled(hiloConversacion);
+      if (isCancelled) {
+        console.log(`Processing cancelled for thread: ${hiloConversacion}`);
+        return {
+          answer: 'La consulta fue cancelada por el usuario.',
+          metadata: {
+            iterations,
+            queriesExecuted: queryResults.length,
+            queries: queryResults,
+            cancelled: true
+          }
+        };
+      }
 
       try {
         // Add query results to the prompt if available
@@ -959,6 +1001,21 @@ Important rules:
 
         // If the AI wants to run a query
         if (parsed.action === 'QUERY') {
+          // Verificar cancelación antes de ejecutar la consulta
+          const isCancelled = await this.isThreadCancelled(hiloConversacion);
+          if (isCancelled) {
+            console.log(`Query execution cancelled for thread: ${hiloConversacion}`);
+            return {
+              answer: 'La consulta fue cancelada por el usuario antes de ejecutar la query.',
+              metadata: {
+                iterations,
+                queriesExecuted: queryResults.length,
+                queries: queryResults,
+                cancelled: true
+              }
+            };
+          }
+
           // Execute the query
           let queryResult;
           let queryError = null;

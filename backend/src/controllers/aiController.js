@@ -62,11 +62,15 @@ class AIController {
         });
       }
 
+      // Generar ID único para el hilo de conversación
+      const hiloConversacion = require('crypto').randomUUID();
+
       // Guardar el mensaje del usuario
       const userMessage = await ChatMessage.create({
         chatId: chat.id,
         type: 'user',
         content: question,
+        hilo_conversacion: hiloConversacion,
       });
 
       // Process the query with the AI service
@@ -75,10 +79,11 @@ class AIController {
         connectionId,
         question: question.substring(0, 100) + (question.length > 100 ? '...' : ''),
         motorType: connection.motor.nombre,
-        userId
+        userId,
+        hiloConversacion
       });
 
-      const result = await aiService.processQuery(connection, question);
+      const result = await aiService.processQuery(connection, question, hiloConversacion);
 
       console.log('AI processing completed:', {
         success: !!result.answer,
@@ -94,6 +99,7 @@ class AIController {
         content: result.answer,
         metadata: result.metadata,
         isError: !result.answer || result.metadata?.error ? true : false,
+        hilo_conversacion: hiloConversacion,
       });
 
       // Actualizar el timestamp del chat
@@ -202,6 +208,70 @@ class AIController {
       return res.status(500).json({
         success: false,
         error: `Error al obtener información del esquema: ${error.message}`
+      });
+    }
+  }
+
+  /**
+   * Cancel a processing message by thread ID
+   * @param {Object} req - Express request object
+   * @param {Object} res - Express response object
+   */
+  async cancelMessage(req, res) {
+    try {
+      const { hiloConversacion } = req.params;
+      const userId = req.user.id;
+
+      if (!hiloConversacion) {
+        return res.status(400).json({
+          success: false,
+          error: 'Se requiere un ID de hilo de conversación'
+        });
+      }
+
+      // Buscar mensajes en el hilo que pertenezcan al usuario
+      const messages = await ChatMessage.findAll({
+        include: [{
+          model: Chat,
+          as: 'chat',
+          where: { userId },
+          attributes: ['id', 'userId']
+        }],
+        where: { hilo_conversacion: hiloConversacion }
+      });
+
+      if (messages.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: 'Hilo de conversación no encontrado'
+        });
+      }
+
+      // Marcar los mensajes como cancelados
+      const updatedCount = await ChatMessage.update(
+        { cancelado: true },
+        {
+          where: { hilo_conversacion: hiloConversacion },
+          include: [{
+            model: Chat,
+            as: 'chat',
+            where: { userId }
+          }]
+        }
+      );
+
+      console.log(`Marked ${updatedCount[0]} messages as cancelled for thread: ${hiloConversacion}`);
+
+      return res.json({
+        success: true,
+        message: 'Mensajes cancelados exitosamente',
+        messagesUpdated: updatedCount[0]
+      });
+    } catch (error) {
+      console.error('Error cancelling message:', error);
+      return res.status(500).json({
+        success: false,
+        error: `Error al cancelar el mensaje: ${error.message}`
       });
     }
   }
