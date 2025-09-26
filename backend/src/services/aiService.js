@@ -37,7 +37,10 @@ class AIService {
         }
       });
 
-      return !!cancelledMessage;
+      const isCancelled = !!cancelledMessage;
+      console.log(`Thread ${hiloConversacion} cancellation check: ${isCancelled}`);
+      
+      return isCancelled;
     } catch (error) {
       console.error('Error checking thread cancellation:', error);
       return false;
@@ -923,7 +926,7 @@ Important rules:
       // Verificar si el hilo de conversación ha sido cancelado
       const isCancelled = await this.isThreadCancelled(hiloConversacion);
       if (isCancelled) {
-        console.log(`Processing cancelled for thread: ${hiloConversacion}`);
+        console.log(`Processing cancelled for thread: ${hiloConversacion} at iteration ${iterations}`);
         return {
           answer: 'La consulta fue cancelada por el usuario.',
           metadata: {
@@ -982,6 +985,21 @@ Important rules:
         });
 
         const aiResponse = completion.choices[0].message.content;
+
+        // Verificar cancelación inmediatamente después de recibir respuesta de IA
+        const cancelledAfterAI = await this.isThreadCancelled(hiloConversacion);
+        if (cancelledAfterAI) {
+          console.log(`Processing cancelled for thread: ${hiloConversacion} after AI response`);
+          return {
+            answer: 'La consulta fue cancelada por el usuario.',
+            metadata: {
+              iterations,
+              queriesExecuted: queryResults.length,
+              queries: queryResults,
+              cancelled: true
+            }
+          };
+        }
 
         // Log the raw AI response for debugging
         console.log('Raw AI response:', {

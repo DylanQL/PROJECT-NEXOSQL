@@ -13,10 +13,8 @@ class AIController {
    */
   async processQuery(req, res) {
     try {
-      const { connectionId, question, chatId = null, threadId = null } = req.body;
+      const { connectionId, question, chatId = null } = req.body;
       const userId = req.user.id;
-
-      console.log('🔄 processQuery called with:', { connectionId, chatId, threadId, hasQuestion: !!question });
 
       if (!connectionId) {
         return res.status(400).json({
@@ -64,9 +62,8 @@ class AIController {
         });
       }
 
-      // Usar el thread ID del frontend o generar uno nuevo
-      const hiloConversacion = threadId || require('crypto').randomUUID();
-      console.log('🧵 Using thread ID:', hiloConversacion);
+      // Generar ID único para el hilo de conversación
+      const hiloConversacion = require('crypto').randomUUID();
 
       // Guardar el mensaje del usuario
       const userMessage = await ChatMessage.create({
@@ -76,7 +73,24 @@ class AIController {
         hilo_conversacion: hiloConversacion,
       });
 
-      console.log('💾 User message saved with thread ID:', hiloConversacion);
+      // IMPORTANTE: Enviar respuesta inmediata con el thread ID para cancelación
+      res.json({
+        success: true,
+        message: 'Consulta recibida, procesando...',
+        chatId: chat.id,
+        hiloConversacion: hiloConversacion,
+        userMessage: {
+          id: userMessage.id,
+          type: 'user',
+          content: question,
+          hilo_conversacion: hiloConversacion,
+          timestamp: userMessage.timestamp,
+        }
+      });
+
+      // Continuar procesamiento en background
+      setImmediate(async () => {
+        try {
 
       // Process the query with the AI service
       console.log('Processing AI query:', {
@@ -229,8 +243,6 @@ class AIController {
       const { hiloConversacion } = req.params;
       const userId = req.user.id;
 
-      console.log(`🚫 Cancel request received for thread: ${hiloConversacion}, user: ${userId}`);
-
       if (!hiloConversacion) {
         return res.status(400).json({
           success: false,
@@ -249,8 +261,6 @@ class AIController {
         where: { hilo_conversacion: hiloConversacion }
       });
 
-      console.log(`🔍 Found ${messages.length} messages for thread: ${hiloConversacion}`);
-
       if (messages.length === 0) {
         return res.status(404).json({
           success: false,
@@ -260,7 +270,6 @@ class AIController {
 
       // Obtener los IDs de los mensajes que pertenecen al usuario
       const messageIds = messages.map(msg => msg.id);
-      console.log(`📝 Message IDs to cancel: ${messageIds.join(', ')}`);
 
       // Marcar los mensajes como cancelados usando los IDs
       const updatedCount = await ChatMessage.update(
@@ -285,6 +294,7 @@ class AIController {
       });
       
       console.log(`🔍 Verification: Found ${verification.length} messages with cancelado=true for thread: ${hiloConversacion}`);
+      console.log(`📝 Updated message IDs: ${messageIds.join(', ')}`);
 
       return res.json({
         success: true,

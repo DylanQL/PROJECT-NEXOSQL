@@ -153,10 +153,10 @@ class ChatService {
   }
 
   // Send a question to the AI service - Updated to use database storage
-  async sendQuestion(connectionId, chatId, question) {
+  async sendQuestion(connectionId, chatId, question, threadId) {
     try {
-      // Call the AI API with the chatId to automatically save messages
-      const { data, error } = await aiApi.processQuery(connectionId, question, chatId);
+      // Call the AI API with the chatId and threadId to automatically save messages
+      const { data, error } = await aiApi.processQuery(connectionId, question, chatId, threadId);
 
       if (error) {
         throw new Error(error);

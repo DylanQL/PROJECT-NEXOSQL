@@ -194,12 +194,13 @@ export const conexionDBApi = {
 // AI-related API calls
 export const aiApi = {
   // Process a natural language query
-  processQuery: async (connectionId, question, chatId = null) => {
+  processQuery: async (connectionId, question, chatId = null, threadId = null) => {
     try {
       const response = await api.post("/ai/query", {
         connectionId,
         question,
         chatId,
+        threadId,
       });
       return { data: response.data, error: null };
     } catch (error) {

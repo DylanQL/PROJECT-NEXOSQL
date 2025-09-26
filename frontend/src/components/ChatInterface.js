@@ -353,6 +353,11 @@ const ChatInterface = () => {
         });
       });
 
+      // Generar thread ID para cancelación ANTES de enviar
+      const threadId = crypto.randomUUID();
+      console.log('🧵 Generated thread ID for cancellation:', threadId);
+      setCurrentThreadId(threadId);
+
       // Clear input immediately
       setUserInput("");
 
@@ -361,13 +366,9 @@ const ChatInterface = () => {
         activeConnection.id,
         chatId,
         userMessage,
+        threadId,
         abortControllerRef.current.signal
       );
-
-      // Store the thread ID for cancellation purposes
-      if (result.userMessage && result.userMessage.hilo_conversacion) {
-        setCurrentThreadId(result.userMessage.hilo_conversacion);
-      }
 
       // Update the chats with the real messages from the API response
       const updatedChats = await chatService.getChats(activeConnection.id);
@@ -457,18 +458,24 @@ const ChatInterface = () => {
   };
 
   const handleCancelRequest = async () => {
+    console.log('🚫 Cancel button clicked, currentThreadId:', currentThreadId);
+    
     if (currentThreadId) {
       try {
         // Cancelar usando el hilo de conversación
-        await chatService.cancelMessage(currentThreadId);
-        console.log('Message cancelled via thread ID:', currentThreadId);
+        console.log('📡 Sending cancellation request for thread:', currentThreadId);
+        const result = await chatService.cancelMessage(currentThreadId);
+        console.log('✅ Cancellation successful:', result);
       } catch (error) {
-        console.error('Error cancelling via thread ID:', error);
+        console.error('❌ Error cancelling via thread ID:', error);
       }
+    } else {
+      console.log('⚠️ No currentThreadId available for cancellation');
     }
 
     // También cancelar la petición HTTP si está activa
     if (abortControllerRef.current) {
+      console.log('🛑 Aborting HTTP request');
       abortControllerRef.current.abort();
     }
 
