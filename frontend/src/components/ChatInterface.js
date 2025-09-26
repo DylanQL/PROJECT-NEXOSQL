@@ -27,7 +27,7 @@ const ChatInterface = () => {
   const [chats, setChats] = useState([]);
   const [selectedChatId, setSelectedChatId] = useState(null);
   const [userInput, setUserInput] = useState("");
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [processingChats, setProcessingChats] = useState({}); // Objeto para rastrear procesamiento por chat
   const [currentThreadId, setCurrentThreadId] = useState(null); // Para el hilo de conversación activo
   const messageEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -98,6 +98,20 @@ const ChatInterface = () => {
   useEffect(() => {
     inputRef.current?.focus();
   }, [selectedChatId]);
+
+  // Helper functions for managing processing state per chat
+  const setChatProcessing = useCallback((chatId, isProcessing) => {
+    setProcessingChats(prev => ({
+      ...prev,
+      [chatId]: isProcessing
+    }));
+  }, []);
+
+  const isChatProcessing = useCallback((chatId) => {
+    return processingChats[chatId] || false;
+  }, [processingChats]);
+
+  const isCurrentChatProcessing = selectedChatId ? isChatProcessing(selectedChatId) : false;
 
   // Handle body scroll lock when sidebar is open on mobile
   useEffect(() => {
@@ -300,7 +314,7 @@ const ChatInterface = () => {
     if (
       !activeConnection ||
       !userInput.trim() ||
-      isProcessing
+      isCurrentChatProcessing
     ) {
       return;
     }
@@ -311,7 +325,7 @@ const ChatInterface = () => {
     const userMessage = userInput.trim();
     
     try {
-      setIsProcessing(true);
+      setChatProcessing(selectedChatId, true);
       setError(null);
 
       let chatId = selectedChatId;
@@ -451,7 +465,7 @@ const ChatInterface = () => {
       );
       console.error(error);
     } finally {
-      setIsProcessing(false);
+      setChatProcessing(selectedChatId, false);
       setCurrentThreadId(null);
       abortControllerRef.current = null;
     }
@@ -479,7 +493,7 @@ const ChatInterface = () => {
       abortControllerRef.current.abort();
     }
 
-    setIsProcessing(false);
+    setChatProcessing(selectedChatId, false);
     setCurrentThreadId(null);
     setError("Consulta cancelada por el usuario");
   };
@@ -697,6 +711,7 @@ const ChatInterface = () => {
               connectionId={activeConnection?.id}
               chats={chats}
               selectedChatId={selectedChatId}
+              processingChats={processingChats}
               onSelectChat={handleSelectChat}
               onCreateChat={handleCreateChat}
               onDeleteChat={handleDeleteChat}
@@ -847,9 +862,9 @@ const ChatInterface = () => {
                       placeholder="Escribe tu consulta en lenguaje natural..."
                       value={userInput}
                       onChange={(e) => setUserInput(e.target.value)}
-                      disabled={isProcessing || !activeConnection}
+                      disabled={isCurrentChatProcessing || !activeConnection}
                     />
-                    {isProcessing ? (
+                    {isCurrentChatProcessing ? (
                       <Button
                         type="button"
                         variant="outline-danger"

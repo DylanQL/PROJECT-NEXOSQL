@@ -19,6 +19,7 @@ const ChatSidebar = ({
   connectionId,
   chats,
   selectedChatId,
+  processingChats = {},
   onSelectChat,
   onCreateChat,
   onDeleteChat,
@@ -141,11 +142,22 @@ const ChatSidebar = ({
                   className="d-flex justify-content-between align-items-center py-2"
                 >
                   <div className="text-truncate flex-grow-1">
-                    <div className="fw-medium text-truncate small">
+                    <div className="fw-medium text-truncate small d-flex align-items-center">
                       {chat.title}
+                      {processingChats[chat.id] && (
+                        <span className="ms-2">
+                          <div
+                            className="spinner-border spinner-border-sm text-primary"
+                            role="status"
+                            style={{ width: "0.8rem", height: "0.8rem" }}
+                          >
+                            <span className="visually-hidden">Procesando...</span>
+                          </div>
+                        </span>
+                      )}
                     </div>
                     <small className="text-muted d-block text-truncate">
-                      {formatDate(chat.updatedAt)}
+                      {processingChats[chat.id] ? 'Procesando consulta...' : formatDate(chat.updatedAt)}
                     </small>
                   </div>
                   <DropdownButton
