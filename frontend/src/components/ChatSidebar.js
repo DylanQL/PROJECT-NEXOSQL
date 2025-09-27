@@ -1,18 +1,18 @@
 import React, { useState } from "react";
 import {
-  ListGroup,
   Button,
+  Dropdown,
   Form,
   Modal,
-  Dropdown,
-  DropdownButton,
+  Spinner,
 } from "react-bootstrap";
 import {
   PlusLg,
-  ChatLeftText,
+  ThreeDots,
   Pencil,
   Trash,
-  ThreeDots,
+  ChatLeftText,
+  ClockHistory,
 } from "react-bootstrap-icons";
 
 const ChatSidebar = ({
@@ -37,7 +37,6 @@ const ChatSidebar = ({
     onCreateChat(title);
     setNewChatTitle("");
     setShowNewChatModal(false);
-    // Close sidebar on mobile after creating chat
     if (onSidebarToggle && window.innerWidth < 768) {
       onSidebarToggle();
     }
@@ -52,19 +51,22 @@ const ChatSidebar = ({
     }
   };
 
-  const openRenameModal = (chat, e) => {
-    e.stopPropagation();
+  const openRenameModal = (chat, event) => {
+    event.preventDefault();
+    event.stopPropagation();
     setChatToRename(chat);
     setRenameValue(chat.title);
     setShowRenameModal(true);
   };
 
-  const handleDeleteChat = (chatId, e) => {
-    e.stopPropagation();
-    onDeleteChat(chatId);
+  const handleDelete = (chat, event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    onDeleteChat(chat.id);
   };
 
   const formatDate = (dateString) => {
+    if (!dateString) return "";
     const date = new Date(dateString);
     return date.toLocaleDateString(undefined, {
       month: "short",
@@ -75,117 +77,113 @@ const ChatSidebar = ({
 
   if (!connectionId) {
     return (
-      <div className="d-flex flex-column h-100 border-end">
-        <div className="p-3 border-bottom d-flex justify-content-between align-items-center">
-          <h5 className="mb-0">Chats</h5>
+      <aside className="chat-sidebar chat-sidebar--empty">
+        <div className="chat-sidebar__placeholder">
+          <ChatLeftText size={40} className="mb-3 text-muted" />
+          <p className="text-muted mb-0 text-center">
+            Selecciona una conexión para ver tu historial de chats.
+          </p>
         </div>
-        <div className="p-4 text-center text-muted">
-          <ChatLeftText size={48} className="mb-3" />
-          <p>Selecciona una conexión para ver tus chats</p>
-        </div>
-      </div>
+      </aside>
     );
   }
 
   return (
-    <div className="chat-sidebar-container border-end w-100" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div className="chat-sidebar-header p-2 border-bottom d-flex justify-content-between align-items-center" style={{ flexShrink: 0 }}>
-        <h5 className="mb-0">Chats</h5>
+    <aside className="chat-sidebar">
+      <div className="chat-sidebar__top">
+        <div>
+          <span className="chat-sidebar__eyebrow">Historial</span>
+          <h6 className="mb-0">Conversaciones</h6>
+        </div>
         <Button
           variant="primary"
           size="sm"
+          className="d-inline-flex align-items-center gap-1"
           onClick={() => setShowNewChatModal(true)}
         >
-          <PlusLg size={16} /> Nuevo
+          <PlusLg size={16} /> Nuevo chat
         </Button>
       </div>
 
-      {/* Chat list with optimized scroll and padding */}
-      <div 
-        className="chat-list-container"
-        style={{
-          flex: '1 1 auto',
-          minHeight: 0,
-          overflowY: 'auto',
-          overflowX: 'hidden',
-          maxHeight: 'calc(100vh - 120px)', // Slightly more conservative
-          height: 'auto',
-          paddingBottom: '100px' // Extra bottom padding
-        }}
-      >
-          {chats.length === 0 ? (
-            <div className="p-3 text-center text-muted">
-              <ChatLeftText size={36} className="mb-2" />
-              <p className="small">No hay chats para esta conexión</p>
-              <Button
-                variant="outline-primary"
-                size="sm"
-                onClick={() => setShowNewChatModal(true)}
-              >
-                Crear primer chat
-              </Button>
-            </div>
-          ) : (
-            <ListGroup variant="flush">
-              {chats.map((chat) => (
-                <ListGroup.Item
-                  key={chat.id}
-                  action
-                  active={selectedChatId === chat.id}
-                  onClick={() => {
-                    onSelectChat(chat.id);
-                    // Close sidebar on mobile after selecting chat
-                    if (onSidebarToggle && window.innerWidth < 768) {
-                      onSidebarToggle();
-                    }
-                  }}
-                  className="d-flex justify-content-between align-items-center py-2"
-                >
-                  <div className="text-truncate flex-grow-1">
-                    <div className="fw-medium text-truncate small d-flex align-items-center">
-                      {chat.title}
-                      {processingChats[chat.id] && (
-                        <span className="ms-2">
-                          <div
-                            className="spinner-border spinner-border-sm text-primary"
-                            role="status"
-                            style={{ width: "0.8rem", height: "0.8rem" }}
-                          >
-                            <span className="visually-hidden">Procesando...</span>
-                          </div>
-                        </span>
-                      )}
-                    </div>
-                    <small className="text-muted d-block text-truncate">
-                      {processingChats[chat.id] ? 'Procesando consulta...' : formatDate(chat.updatedAt)}
-                    </small>
-                  </div>
-                  <DropdownButton
-                    variant={selectedChatId === chat.id ? "dark" : "light"}
-                    size="sm"
-                    title={<ThreeDots />}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <Dropdown.Item onClick={(e) => openRenameModal(chat, e)}>
-                      <Pencil className="me-2" /> Renombrar
-                    </Dropdown.Item>
-                    <Dropdown.Item
-                      className="text-danger"
-                      onClick={(e) => handleDeleteChat(chat.id, e)}
-                    >
-                      <Trash className="me-2" /> Eliminar
-                    </Dropdown.Item>
-                  </DropdownButton>
-                </ListGroup.Item>
-              ))}
-            </ListGroup>
-          )}
-        </div>
+      <div className="chat-sidebar__list">
+        {chats.length === 0 ? (
+          <div className="chat-sidebar__empty">
+            <ChatLeftText size={36} className="mb-2 text-muted" />
+            <p className="small text-muted mb-3 text-center px-2">
+              No hay conversaciones todavía. Crea tu primer chat para comenzar.
+            </p>
+            <Button
+              variant="outline-primary"
+              size="sm"
+              onClick={() => setShowNewChatModal(true)}
+            >
+              Crear primer chat
+            </Button>
+          </div>
+        ) : (
+          chats.map((chat) => {
+            const isActive = selectedChatId === chat.id;
+            const isProcessing = Boolean(processingChats[chat.id]);
 
-      {/* New Chat Modal */}
+            return (
+              <button
+                key={chat.id}
+                type="button"
+                className={`chat-sidebar__item ${isActive ? "is-active" : ""}`}
+                onClick={() => {
+                  onSelectChat(chat.id);
+                  if (onSidebarToggle && window.innerWidth < 768) {
+                    onSidebarToggle();
+                  }
+                }}
+              >
+                <div className="chat-sidebar__item-main">
+                  <span className="chat-sidebar__item-title text-truncate">
+                    {chat.title}
+                  </span>
+                  <Dropdown align="end" onClick={(event) => event.stopPropagation()}>
+                    <Dropdown.Toggle
+                      variant="link"
+                      bsPrefix="chat-sidebar__item-toggle"
+                    >
+                      <ThreeDots />
+                    </Dropdown.Toggle>
+                    <Dropdown.Menu>
+                      <Dropdown.Item onClick={(event) => openRenameModal(chat, event)}>
+                        <Pencil className="me-2" size={14} /> Renombrar
+                      </Dropdown.Item>
+                      <Dropdown.Item
+                        className="text-danger"
+                        onClick={(event) => handleDelete(chat, event)}
+                      >
+                        <Trash className="me-2" size={14} /> Eliminar
+                      </Dropdown.Item>
+                    </Dropdown.Menu>
+                  </Dropdown>
+                </div>
+
+                <div className="chat-sidebar__item-footer">
+                  {isProcessing ? (
+                    <span className="chat-sidebar__badge">
+                      <Spinner animation="border" size="sm" className="me-2" />
+                      Procesando
+                    </span>
+                  ) : (
+                    <span className="chat-sidebar__meta">
+                      <ClockHistory size={12} className="me-1" />
+                      {formatDate(chat.updatedAt)}
+                    </span>
+                  )}
+                </div>
+              </button>
+            );
+          })
+        )}
+      </div>
+
       <Modal show={showNewChatModal} onHide={() => setShowNewChatModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>Nuevo Chat</Modal.Title>
+          <Modal.Title>Nuevo chat</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form>
@@ -195,10 +193,10 @@ const ChatSidebar = ({
                 type="text"
                 placeholder="Ejemplo: Consultas de ventas"
                 value={newChatTitle}
-                onChange={(e) => setNewChatTitle(e.target.value)}
+                onChange={(event) => setNewChatTitle(event.target.value)}
               />
               <Form.Text className="text-muted">
-                Si dejas este campo vacío, se usará un título genérico.
+                Si dejas este campo vacío, usaremos un título genérico.
               </Form.Text>
             </Form.Group>
           </Form>
@@ -216,10 +214,9 @@ const ChatSidebar = ({
         </Modal.Footer>
       </Modal>
 
-      {/* Rename Chat Modal */}
       <Modal show={showRenameModal} onHide={() => setShowRenameModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>Renombrar Chat</Modal.Title>
+          <Modal.Title>Renombrar chat</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form>
@@ -228,7 +225,7 @@ const ChatSidebar = ({
               <Form.Control
                 type="text"
                 value={renameValue}
-                onChange={(e) => setRenameValue(e.target.value)}
+                onChange={(event) => setRenameValue(event.target.value)}
               />
             </Form.Group>
           </Form>
@@ -246,7 +243,7 @@ const ChatSidebar = ({
           </Button>
         </Modal.Footer>
       </Modal>
-    </div>
+    </aside>
   );
 };
 

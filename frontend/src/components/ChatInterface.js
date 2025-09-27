@@ -1,17 +1,26 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  useCallback,
+} from "react";
 import {
-  Container,
-  Row,
-  Col,
-  Form,
-  Button,
-  Card,
-  Spinner,
   Alert,
+  Badge,
+  Button,
   Dropdown,
-  InputGroup,
+  Form,
+  Spinner,
 } from "react-bootstrap";
-import { SendFill, Database, List, XCircleFill } from "react-bootstrap-icons";
+import {
+  List,
+  SendFill,
+  XCircleFill,
+  Database,
+  LightningCharge,
+  ClockHistory,
+} from "react-bootstrap-icons";
 import ReactMarkdown from "react-markdown";
 import { useConnection } from "../contexts/ConnectionContext";
 import chatService from "../services/chatService";
@@ -19,12 +28,16 @@ import ChatSidebar from "./ChatSidebar";
 
 const CANCELLATION_CONTENT_SNIPPETS = [
   "la consulta fue cancelada por el usuario",
-  "consulta cancelada por el usuario"
+  "consulta cancelada por el usuario",
 ];
 
 const removeTempMessages = (messages = []) =>
-  messages.filter((msg) =>
-    !(msg?.id?.startsWith('temp-user-') || msg?.id?.startsWith('temp-assistant-'))
+  messages.filter(
+    (msg) =>
+      !(
+        msg?.id?.startsWith("temp-user-") ||
+        msg?.id?.startsWith("temp-assistant-")
+      ),
   );
 
 const shouldHideMessage = (message) => {
@@ -35,7 +48,9 @@ const shouldHideMessage = (message) => {
   const content = message.content?.toLowerCase();
   if (!content) return false;
 
-  return CANCELLATION_CONTENT_SNIPPETS.some((snippet) => content.includes(snippet));
+  return CANCELLATION_CONTENT_SNIPPETS.some((snippet) =>
+    content.includes(snippet),
+  );
 };
 
 const ChatInterface = () => {
@@ -45,32 +60,55 @@ const ChatInterface = () => {
     loading: connectionsLoading,
     error: connectionsError,
   } = useConnection();
+
   const [chats, setChats] = useState([]);
   const [selectedChatId, setSelectedChatId] = useState(null);
   const [userInput, setUserInput] = useState("");
-  const [processingChats, setProcessingChats] = useState({}); // Objeto para rastrear procesamiento por chat
-  const [currentThreadId, setCurrentThreadId] = useState(null); // Para el hilo de conversación activo
+  const [processingChats, setProcessingChats] = useState({});
+  const [activeRequest, setActiveRequest] = useState(null);
+  const [sidebarVisible, setSidebarVisible] = useState(false);
+  const [error, setError] = useState(null);
+
   const messageEndRef = useRef(null);
   const inputRef = useRef(null);
-  const [error, setError] = useState(null);
   const abortControllerRef = useRef(null);
-  const [sidebarVisible, setSidebarVisible] = useState(false);
-  const [sidebarAnimating, setSidebarAnimating] = useState(false);
-  // eslint-disable-next-line no-unused-vars
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  // eslint-disable-next-line no-unused-vars
-  const [navbarHeight, setNavbarHeight] = useState(56);
 
-  // Close profile dropdown when sidebar opens (improve UX)
+  const selectedChat = useMemo(
+    () => chats.find((chat) => chat.id === selectedChatId) || null,
+    [chats, selectedChatId],
+  );
+
+  const messagesToRender = useMemo(() => {
+    if (!selectedChat?.messages) return [];
+    return selectedChat.messages.filter((message) => !shouldHideMessage(message));
+  }, [selectedChat]);
+
+  const setChatProcessing = useCallback((chatId, isProcessing) => {
+    if (!chatId) return;
+    setProcessingChats((prev) => {
+      if (isProcessing) {
+        return { ...prev, [chatId]: true };
+      }
+      const next = { ...prev };
+      delete next[chatId];
+      return next;
+    });
+  }, []);
+
+  const isChatProcessing = useCallback(
+    (chatId) => Boolean(chatId && processingChats[chatId]),
+    [processingChats],
+  );
+
+  const isCurrentChatProcessing = isChatProcessing(selectedChatId);
+
   useEffect(() => {
     if (sidebarVisible && window.innerWidth < 768) {
-      // Dispatch custom event to close profile dropdown
       const closeProfileEvent = new CustomEvent("closeProfileDropdown");
       document.dispatchEvent(closeProfileEvent);
     }
   }, [sidebarVisible]);
 
-  // Load chats when active connection changes
   useEffect(() => {
     const loadChats = async () => {
       if (!activeConnection) {
@@ -82,16 +120,9 @@ const ChatInterface = () => {
       try {
         const connectionChats = await chatService.getChats(activeConnection.id);
         setChats(connectionChats);
-
-        // Select the first chat if available
-        if (connectionChats.length > 0) {
-          setSelectedChatId(connectionChats[0].id);
-        } else {
-          // Don't create a chat automatically - wait for user to send a message
-          setSelectedChatId(null);
-        }
-      } catch (error) {
-        console.error("Error loading chats:", error);
+        setSelectedChatId(connectionChats[0]?.id ?? null);
+      } catch (err) {
+        console.error("Error loading chats:", err);
         setError("Error cargando el historial de chats");
         setChats([]);
         setSelectedChatId(null);
@@ -103,159 +134,45 @@ const ChatInterface = () => {
     loadChats();
   }, [activeConnection]);
 
-  // Scroll to bottom when messages change
   useEffect(() => {
     const timer = setTimeout(() => {
-      messageEndRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "end",
-      });
-    }, 100);
+      messageEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    }, 120);
 
     return () => clearTimeout(timer);
-  }, [selectedChatId, chats]);
+  }, [messagesToRender.length, selectedChatId]);
 
-  // Focus input field when chat changes
   useEffect(() => {
     inputRef.current?.focus();
   }, [selectedChatId]);
 
-  // Helper functions for managing processing state per chat
-  const setChatProcessing = useCallback((chatId, isProcessing) => {
-    setProcessingChats(prev => ({
-      ...prev,
-      [chatId]: isProcessing
-    }));
-  }, []);
-
-  const isChatProcessing = useCallback((chatId) => {
-    return processingChats[chatId] || false;
-  }, [processingChats]);
-
-  const isCurrentChatProcessing = selectedChatId ? isChatProcessing(selectedChatId) : false;
-
-  // Handle body scroll lock when sidebar is open on mobile
   useEffect(() => {
-    if (sidebarVisible) {
+    if (sidebarVisible && window.innerWidth < 768) {
       document.body.classList.add("mobile-sidebar-open");
     } else {
       document.body.classList.remove("mobile-sidebar-open");
     }
 
-    // Cleanup on unmount
     return () => {
       document.body.classList.remove("mobile-sidebar-open");
     };
   }, [sidebarVisible]);
 
-  // Handle smooth sidebar open/close animations
-  const handleOpenSidebar = useCallback(() => {
-    if (sidebarAnimating) return;
-    setSidebarAnimating(true);
-    setSidebarVisible(true);
-
-    // Reset animation state after animation completes
-    setTimeout(() => {
-      setSidebarAnimating(false);
-    }, 350);
-  }, [sidebarAnimating]);
-
-  const handleCloseSidebar = useCallback(() => {
-    if (sidebarAnimating) return;
-    setSidebarAnimating(true);
-
-    // Add slide-out animation class
-    const sidebar = document.querySelector(".mobile-sidebar");
-    if (sidebar) {
-      sidebar.classList.add("sliding-out");
-    }
-
-    // Hide sidebar after animation
-    setTimeout(() => {
-      setSidebarVisible(false);
-      setSidebarAnimating(false);
-      if (sidebar) {
-        sidebar.classList.remove("sliding-out");
-      }
-    }, 350);
-  }, [sidebarAnimating]);
-
-  const handleToggleSidebar = useCallback(() => {
-    if (sidebarVisible) {
-      handleCloseSidebar();
-    } else {
-      handleOpenSidebar();
-    }
-  }, [sidebarVisible, handleCloseSidebar, handleOpenSidebar]);
-
-  // Close sidebar when clicking outside on mobile
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (sidebarVisible && window.innerWidth < 768) {
-        const sidebar = document.querySelector(".mobile-sidebar");
-        if (sidebar && !sidebar.contains(event.target)) {
-          handleCloseSidebar();
-        }
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [sidebarVisible, handleCloseSidebar]);
-
-  // Close sidebar on window resize to desktop size
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth >= 768 && sidebarVisible) {
-        handleCloseSidebar();
+      if (window.innerWidth >= 768) {
+        setSidebarVisible(false);
       }
     };
 
     window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, [sidebarVisible, handleCloseSidebar]);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
-  // Detect navbar height on mount
   useEffect(() => {
-    const detectNavbarHeight = () => {
-      const navbar = document.querySelector(".navbar");
-      if (navbar) {
-        const height = navbar.offsetHeight;
-        setNavbarHeight(height);
-        document.documentElement.style.setProperty(
-          "--navbar-height",
-          `${height}px`,
-        );
-      } else {
-        // Fallback to default Bootstrap navbar height
-        setNavbarHeight(56);
-        document.documentElement.style.setProperty("--navbar-height", "56px");
-      }
-    };
-
-    // Initial detection
-    detectNavbarHeight();
-
-    // Use a timeout to ensure navbar is rendered
-    const timeoutId = setTimeout(detectNavbarHeight, 100);
-
-    window.addEventListener("resize", detectNavbarHeight);
-
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-      detectNavbarHeight();
-    };
-
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      clearTimeout(timeoutId);
-      window.removeEventListener("resize", handleResize);
-    };
+    const navbar = document.querySelector(".navbar");
+    const height = navbar?.offsetHeight ?? 64;
+    document.documentElement.style.setProperty("--navbar-height", `${height}px`);
   }, []);
 
   const handleCreateChat = useCallback(
@@ -264,639 +181,554 @@ const ChatInterface = () => {
 
       try {
         const newChat = await chatService.createChat(activeConnection.id, title);
-        setChats([newChat, ...chats]);
+        setChats((prev) => [newChat, ...prev]);
         setSelectedChatId(newChat.id);
         setUserInput("");
-        // Close sidebar on mobile when creating a chat with smooth animation
-        if (window.innerWidth < 768) {
-          handleCloseSidebar();
-        }
-      } catch (error) {
+        setSidebarVisible(false);
+      } catch (err) {
         setError("No se pudo crear el chat");
-        console.error(error);
+        console.error(err);
       }
     },
-    [activeConnection, chats, handleCloseSidebar],
+    [activeConnection],
   );
 
-  const handleSelectChat = useCallback(
-    (chatId) => {
-      setSelectedChatId(chatId);
-      setUserInput("");
-      // Close sidebar on mobile when selecting a chat with smooth animation
-      if (window.innerWidth < 768) {
-        handleCloseSidebar();
-      }
-    },
-    [handleCloseSidebar],
-  );
+  const handleSelectChat = useCallback((chatId) => {
+    setSelectedChatId(chatId);
+    setUserInput("");
+    setSidebarVisible(false);
+  }, []);
 
-  const handleDeleteChat = async (chatId) => {
-    try {
-      await chatService.deleteChat(activeConnection.id, chatId);
+  const handleDeleteChat = useCallback(
+    async (chatId) => {
+      if (!activeConnection) return;
 
-      // Update local state
-      const updatedChats = chats.filter((chat) => chat.id !== chatId);
-      setChats(updatedChats);
+      try {
+        await chatService.deleteChat(activeConnection.id, chatId);
 
-      // If we deleted the selected chat, select another one or create a new one
-      if (chatId === selectedChatId) {
-        if (updatedChats.length > 0) {
-          setSelectedChatId(updatedChats[0].id);
-        } else {
-          await handleCreateChat();
+        const updatedChats = chats.filter((chat) => chat.id !== chatId);
+        setChats(updatedChats);
+
+        setProcessingChats((prev) => {
+          if (!prev[chatId]) return prev;
+          const next = { ...prev };
+          delete next[chatId];
+          return next;
+        });
+
+        if (chatId === selectedChatId) {
+          setSelectedChatId(updatedChats[0]?.id ?? null);
         }
+      } catch (err) {
+        setError("No se pudo eliminar el chat");
+        console.error(err);
       }
-    } catch (error) {
-      setError("No se pudo eliminar el chat");
-      console.error(error);
-    }
-  };
+    },
+    [activeConnection, chats, selectedChatId],
+  );
 
-  const handleChatRenamed = async (chatId, newTitle) => {
-    try {
-      const updatedChat = await chatService.renameChat(
-        activeConnection.id,
-        chatId,
-        newTitle,
-      );
+  const handleChatRenamed = useCallback(
+    async (chatId, newTitle) => {
+      if (!activeConnection) return;
 
-      // Update local state
-      setChats(chats.map((chat) => (chat.id === chatId ? updatedChat : chat)));
-    } catch (error) {
-      setError("No se pudo renombrar el chat");
-      console.error(error);
-    }
-  };
+      try {
+        const updatedChat = await chatService.renameChat(
+          activeConnection.id,
+          chatId,
+          newTitle,
+        );
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+        setChats((prev) =>
+          prev.map((chat) => (chat.id === chatId ? updatedChat : chat)),
+        );
+      } catch (err) {
+        setError("No se pudo renombrar el chat");
+        console.error(err);
+      }
+    },
+    [activeConnection],
+  );
 
-    if (
-      !activeConnection ||
-      !userInput.trim() ||
-      isCurrentChatProcessing
-    ) {
-      return;
-    }
+  const handleSubmit = async (event) => {
+    event.preventDefault();
 
-    // Create AbortController for this request
+    if (!activeConnection || !userInput.trim()) return;
+
+    let targetChatId = selectedChatId;
+    const userMessage = userInput.trim();
+
+    if (isChatProcessing(targetChatId)) return;
+
     abortControllerRef.current = new AbortController();
 
-    const userMessage = userInput.trim();
-    let chatId = selectedChatId;
-
     try {
-      setChatProcessing(selectedChatId, true);
       setError(null);
 
-      // If no chat is selected, create a new one
-      if (!chatId) {
-        console.log('No chat selected, creating new chat for message');
-        const newChat = await chatService.createChat(activeConnection.id, "Nueva consulta");
-        setChats(prevChats => [newChat, ...prevChats]);
+      if (!targetChatId) {
+        const newChat = await chatService.createChat(
+          activeConnection.id,
+          "Nueva consulta",
+        );
+        setChats((prev) => [newChat, ...prev]);
         setSelectedChatId(newChat.id);
-        chatId = newChat.id;
+        targetChatId = newChat.id;
       }
 
-      // Show user message immediately in the chat
       const tempUserMessage = {
         id: `temp-user-${Date.now()}`,
-        type: 'user',
+        type: "user",
         content: userMessage,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
 
-      // Add temporary user message and loading assistant message
-      setChats(prevChats => {
-        return prevChats.map(chat => {
-          if (chat.id === chatId) {
-            const tempAssistantMessage = {
-              id: `temp-assistant-${Date.now()}`,
-              type: 'assistant',
-              content: 'Procesando consulta...',
-              loading: true,
-              timestamp: new Date().toISOString()
-            };
-            return {
-              ...chat,
-              messages: [...removeTempMessages(chat.messages), tempUserMessage, tempAssistantMessage]
-            };
-          }
-          return chat;
-        });
-      });
+      const tempAssistantMessage = {
+        id: `temp-assistant-${Date.now()}`,
+        type: "assistant",
+        content: "Procesando consulta...",
+        loading: true,
+        timestamp: new Date().toISOString(),
+      };
 
-      // Generar thread ID para cancelación ANTES de enviar
+      setChats((prev) =>
+        prev.map((chat) =>
+          chat.id === targetChatId
+            ? {
+                ...chat,
+                messages: [
+                  ...removeTempMessages(chat.messages),
+                  tempUserMessage,
+                  tempAssistantMessage,
+                ],
+              }
+            : chat,
+        ),
+      );
+
+      setChatProcessing(targetChatId, true);
       const threadId = crypto.randomUUID();
-      console.log('🧵 Generated thread ID for cancellation:', threadId);
-      setCurrentThreadId(threadId);
-
-      // Clear input immediately
+      setActiveRequest({ chatId: targetChatId, threadId });
       setUserInput("");
 
-      // eslint-disable-next-line no-unused-vars
-      const result = await chatService.sendQuestion(
+      await chatService.sendQuestion(
         activeConnection.id,
-        chatId,
+        targetChatId,
         userMessage,
         threadId,
-        abortControllerRef.current.signal
+        abortControllerRef.current.signal,
       );
 
-      // Update the chats with the real messages from the API response
       const updatedChats = await chatService.getChats(activeConnection.id);
       setChats(updatedChats);
-      
-      // Update the selected chat to show the new messages
-      const updatedSelectedChat = updatedChats.find(chat => chat.id === chatId);
-      if (updatedSelectedChat) {
-        // The chat was updated with new messages via the API
-        console.log('Chat updated with new messages:', updatedSelectedChat.messages.length);
-      }
-      
-    } catch (error) {
-      // Don't show error if request was aborted
-      if (error.name === 'AbortError') {
-        console.log('Request was cancelled');
-        // Remove temporary messages and show cancellation message
-        setChats(prevChats => prevChats.map(chat => (
-          chat.id === chatId
-            ? { ...chat, messages: removeTempMessages(chat.messages) }
-            : chat
-        )));
+    } catch (err) {
+      if (err.name === "AbortError") {
+        setChats((prev) =>
+          prev.map((chat) =>
+            chat.id === targetChatId
+              ? { ...chat, messages: removeTempMessages(chat.messages) }
+              : chat,
+          ),
+        );
         return;
       }
-      
-      // Remove temporary messages and add error message
-      setChats(prevChats => {
-        return prevChats.map(chat => {
-          if (chat.id === selectedChatId) {
-            const filteredMessages = chat.messages.filter(msg => 
-              !msg.id.startsWith('temp-user-') && !msg.id.startsWith('temp-assistant-')
-            );
-            const userMsg = {
-              id: `error-user-${Date.now()}`,
-              type: 'user',
-              content: userMessage,
-              timestamp: new Date().toISOString()
-            };
-            const errorMessage = {
-              id: `error-${Date.now()}`,
-              type: 'assistant',
-              content: `Error al procesar tu consulta: ${error.message || "Por favor, intenta de nuevo."}`,
-              error: true,
-              timestamp: new Date().toISOString()
-            };
-            return {
-              ...chat,
-              messages: [...filteredMessages, userMsg, errorMessage]
-            };
-          }
-          return chat;
-        });
-      });
-      
-      setError(
-        `Error al procesar tu consulta: ${error.message || "Por favor, intenta de nuevo."}`,
+
+      setChats((prev) =>
+        prev.map((chat) => {
+          if (chat.id !== targetChatId) return chat;
+
+          const cleanedMessages = removeTempMessages(chat.messages);
+
+          return {
+            ...chat,
+            messages: [
+              ...cleanedMessages,
+              {
+                id: `error-user-${Date.now()}`,
+                type: "user",
+                content: userMessage,
+                timestamp: new Date().toISOString(),
+              },
+              {
+                id: `error-${Date.now()}`,
+                type: "assistant",
+                content: `Error al procesar tu consulta: ${
+                  err.message || "Por favor, intenta de nuevo."
+                }`,
+                error: true,
+                timestamp: new Date().toISOString(),
+              },
+            ],
+          };
+        }),
       );
-      console.error(error);
+
+      setError(
+        `Error al procesar tu consulta: ${
+          err.message || "Por favor, intenta de nuevo."
+        }`,
+      );
+      console.error(err);
     } finally {
-      setChatProcessing(selectedChatId, false);
-      setCurrentThreadId(null);
+      if (targetChatId) {
+        setChatProcessing(targetChatId, false);
+      }
+      setActiveRequest(null);
       abortControllerRef.current = null;
     }
   };
 
   const handleCancelRequest = async () => {
-    console.log('🚫 Cancel button clicked, currentThreadId:', currentThreadId);
-    
-    if (currentThreadId) {
-      try {
-        // Cancelar usando el hilo de conversación
-        console.log('📡 Sending cancellation request for thread:', currentThreadId);
-        const result = await chatService.cancelMessage(currentThreadId);
-        console.log('✅ Cancellation successful:', result);
-      } catch (error) {
-        console.error('❌ Error cancelling via thread ID:', error);
+    if (!activeRequest && !abortControllerRef.current) return;
+
+    try {
+      if (activeRequest?.threadId) {
+        await chatService.cancelMessage(activeRequest.threadId);
       }
-    } else {
-      console.log('⚠️ No currentThreadId available for cancellation');
+    } catch (err) {
+      console.error("Error cancelling request", err);
     }
 
-    // También cancelar la petición HTTP si está activa
     if (abortControllerRef.current) {
-      console.log('🛑 Aborting HTTP request');
       abortControllerRef.current.abort();
     }
 
-    setChatProcessing(selectedChatId, false);
-    setCurrentThreadId(null);
-
-    if (selectedChatId) {
-      setChats(prevChats => prevChats.map(chat => (
-        chat.id === selectedChatId
-          ? { ...chat, messages: removeTempMessages(chat.messages) }
-          : chat
-      )));
+    if (activeRequest?.chatId) {
+      setChatProcessing(activeRequest.chatId, false);
+      setChats((prev) =>
+        prev.map((chat) =>
+          chat.id === activeRequest.chatId
+            ? { ...chat, messages: removeTempMessages(chat.messages) }
+            : chat,
+        ),
+      );
     }
+
+    setActiveRequest(null);
   };
 
-  const selectedChat = selectedChatId
-    ? chats.find((chat) => chat.id === selectedChatId)
-    : null;
+  const handleToggleSidebar = () => {
+    setSidebarVisible((prev) => !prev);
+  };
 
   const renderMessage = (message) => {
-    switch (message.type) {
-      case "user":
-        return (
-          <div className="chat-message user-message">
-            <div className="message-content bg-primary text-white p-3 rounded-3">
-              {message.content}
-            </div>
-          </div>
-        );
-      case "assistant":
-        if (message.loading) {
-          return (
-            <div className="chat-message assistant-message">
-              <div className="message-content bg-light p-3 rounded-3">
-                <Spinner animation="border" size="sm" className="me-2" />
-                Procesando consulta...
-              </div>
-            </div>
-          );
-        }
+    if (!message) return null;
 
-        if (message.error || message.cancelado) {
-          const variant = message.cancelado ? "warning" : "danger";
-          const content = message.cancelado ? 
-            "Esta consulta fue cancelada por el usuario" : 
-            message.content;
-          
-          return (
-            <div className="chat-message assistant-message">
-              <div className={`message-content bg-light p-3 rounded-3 border-${variant}`}>
-                <Alert variant={variant} className="mb-0">
-                  {content}
-                </Alert>
-              </div>
-            </div>
-          );
-        }
-
-        return (
-          <div className="chat-message assistant-message">
-            <div className="message-content bg-light p-3 rounded-3">
-              <ReactMarkdown>{message.content}</ReactMarkdown>
-
-              {message.metadata &&
-                message.metadata.queries &&
-                message.metadata.queries.length > 0 && (
-                  <div className="mt-3 pt-3 border-top">
-                    <details>
-                      <summary className="text-muted fw-bold cursor-pointer">
-                        Consultas SQL ejecutadas (
-                        {message.metadata.queries.length})
-                      </summary>
-                      <div className="mt-2">
-                        {message.metadata.queries.map((query, index) => (
-                          <div
-                            key={`query-${index}-${message.id}`}
-                            className="mb-2"
-                          >
-                            <div className="bg-dark text-light p-2 rounded">
-                              <pre className="mb-0">
-                                <code>{query.sql}</code>
-                              </pre>
-                            </div>
-                            {query.error && (
-                              <Alert
-                                variant="danger"
-                                className="mt-1 mb-2 py-1 px-2"
-                              >
-                                <small>{query.error}</small>
-                              </Alert>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </details>
-                  </div>
-                )}
-            </div>
-          </div>
-        );
-      default:
-        return null;
+    if (message.type === "user") {
+      return (
+        <div className="chat-bubble chat-bubble--user">
+          <div className="chat-bubble__content">{message.content}</div>
+          <span className="chat-bubble__meta">Tú</span>
+        </div>
+      );
     }
+
+    if (message.type === "assistant") {
+      if (message.loading) {
+        return (
+          <div className="chat-bubble chat-bubble--assistant">
+            <div className="chat-bubble__content">
+              <Spinner animation="border" size="sm" className="me-2" />
+              Procesando consulta...
+            </div>
+          </div>
+        );
+      }
+
+      if (message.error || message.cancelado) {
+        return (
+          <div className="chat-bubble chat-bubble--assistant">
+            <Alert variant={message.cancelado ? "warning" : "danger"} className="mb-0">
+              {message.cancelado
+                ? "Esta consulta fue cancelada por el usuario"
+                : message.content}
+            </Alert>
+          </div>
+        );
+      }
+
+      return (
+        <div className="chat-bubble chat-bubble--assistant">
+          <div className="chat-bubble__content">
+            <ReactMarkdown>{message.content}</ReactMarkdown>
+          </div>
+
+          {Array.isArray(message.metadata?.queries) &&
+            message.metadata.queries.length > 0 && (
+              <div className="chat-bubble__sidebar">
+                <details>
+                  <summary className="chat-bubble__summary">
+                    Consultas SQL ejecutadas ({
+                      message.metadata.queries.length
+                    })
+                  </summary>
+                  <div className="chat-bubble__queries">
+                    {message.metadata.queries.map((query, index) => (
+                      <div key={`query-${index}-${message.id}`} className="chat-query">
+                        <pre className="chat-query__code">
+                          <code>{query.sql}</code>
+                        </pre>
+                        {query.error && (
+                          <Alert
+                            variant="danger"
+                            className="chat-query__error"
+                          >
+                            <small>{query.error}</small>
+                          </Alert>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              </div>
+            )}
+        </div>
+      );
+    }
+
+    return null;
   };
 
   if (connectionsLoading) {
     return (
-      <Container
-        className="d-flex justify-content-center align-items-center"
-        style={{ height: "80vh" }}
-      >
-        <Spinner animation="border" role="status">
-          <span className="visually-hidden">Cargando...</span>
-        </Spinner>
-      </Container>
+      <div className="chat-loader">
+        <Spinner animation="border" role="status" />
+        <p className="mt-3 text-muted">Cargando tus conexiones...</p>
+      </div>
     );
   }
 
   if (connectionsError) {
     return (
-      <Container className="py-5">
+      <div className="chat-loader">
         <Alert variant="danger">{connectionsError}</Alert>
-      </Container>
+      </div>
     );
   }
 
   if (!Array.isArray(connections) || connections.length === 0) {
     return (
-      <Container className="py-5">
-        <Card className="text-center p-5">
-          <Card.Body>
-            <Database size={64} className="mb-4 text-primary" />
-            <Card.Title>No tienes conexiones configuradas</Card.Title>
-            <Card.Text>
-              Para empezar a usar el asistente SQL, necesitas configurar al
-              menos una conexión a una base de datos.
-            </Card.Text>
-            <Button variant="primary" href="/crear-conexion">
-              Crear Primera Conexión
-            </Button>
-          </Card.Body>
-        </Card>
-      </Container>
+      <div className="chat-empty">
+        <Database size={60} className="text-primary mb-3" />
+        <h4 className="fw-semibold">Configura tu primera conexión</h4>
+        <p className="text-muted mb-4 text-center" style={{ maxWidth: 360 }}>
+          Para comenzar a usar el asistente, crea una conexión a tu base de
+          datos y obtén respuestas en segundos.
+        </p>
+        <Button href="/crear-conexion" variant="primary">
+          Crear conexión
+        </Button>
+      </div>
     );
   }
 
+  const showCancelButton =
+    Boolean(activeRequest?.chatId) && activeRequest.chatId === selectedChatId;
+
   return (
-    <Container
-      fluid
-      className="p-0 w-100 m-0"
-      style={{
-        maxWidth: "100%",
-        overflow: "hidden",
-        margin: 0,
-        padding: 0,
-        height: "100%",
-      }}
-    >
-      <Row className="g-0 w-100 position-relative" style={{ height: "100%" }}>
-        {/* Mobile overlay */}
-        {sidebarVisible && (
-          <div
-            className={`position-fixed w-100 bg-dark bg-opacity-50 d-md-none mobile-overlay ${sidebarVisible ? "show" : ""}`}
-            style={{
-              zIndex: 1040,
-              top: 0,
-              height: "100%",
-            }}
-            onClick={handleCloseSidebar}
-          />
-        )}
-
-        {/* Sidebar with chat list */}
-        <Col
-          xs={12}
-          md={3}
-          lg={2}
-          className={`d-flex flex-column position-md-relative bg-white mobile-sidebar ${
-            sidebarVisible ? "d-block position-fixed" : "d-none d-md-block"
-          }`}
-          style={{
-            height: "100%",
-            zIndex: sidebarVisible ? 1050 : "auto",
-            width: sidebarVisible ? "80%" : undefined,
-            maxWidth: sidebarVisible ? "300px" : undefined,
-            left: sidebarVisible ? 0 : undefined,
-            top: sidebarVisible ? 0 : undefined,
-          }}
-        >
-          <div className="p-3 bg-light border-bottom">
-            <Form.Group>
-              <Form.Label>Conexión activa</Form.Label>
-              <Dropdown>
-                <Dropdown.Toggle
-                  variant="outline-secondary"
-                  className="w-100 text-start d-flex align-items-center justify-content-between"
+    <div className="chat-app">
+      <div
+        className={`chat-app__sidebar ${sidebarVisible ? "is-open" : ""}`}
+      >
+        <div className="chat-app__sidebar-header">
+          <div>
+            <span className="text-uppercase text-muted small">Conexión activa</span>
+            <h5 className="mb-0 mt-1 text-truncate">
+              {activeConnection?.nombre || "Seleccionar conexión"}
+            </h5>
+          </div>
+          <Dropdown align="end">
+            <Dropdown.Toggle
+              variant="outline-secondary"
+              size="sm"
+              className="shadow-none"
+            >
+              Cambiar
+            </Dropdown.Toggle>
+            <Dropdown.Menu className="chat-app__dropdown">
+              {connections.map((conn) => (
+                <Dropdown.Item
+                  key={conn.id}
+                  active={activeConnection?.id === conn.id}
+                  onClick={() => {
+                    const event = new CustomEvent("changeConnection", {
+                      detail: { connectionId: conn.id },
+                    });
+                    document.dispatchEvent(event);
+                    setSidebarVisible(false);
+                  }}
                 >
-                  {activeConnection?.nombre || "Seleccionar conexión"}
-                </Dropdown.Toggle>
-                <Dropdown.Menu className="w-100">
-                  {Array.isArray(connections) &&
-                    connections.map((conn) => (
-                      <Dropdown.Item
-                        key={conn.id}
-                        active={activeConnection?.id === conn.id}
-                        onClick={() => {
-                          // Dispatch custom event to change connection
-                          const event = new CustomEvent("changeConnection", {
-                            detail: { connectionId: conn.id },
-                          });
-                          document.dispatchEvent(event);
-                        }}
-                      >
-                        {conn.nombre} - {conn.motor?.nombre || "Base de datos"}
-                      </Dropdown.Item>
-                    ))}
-                </Dropdown.Menu>
-              </Dropdown>
-            </Form.Group>
-          </div>
-          <div
-            className="flex-grow-1 d-flex flex-column"
-            style={{ minHeight: 0 }}
-          >
-            <ChatSidebar
-              connectionId={activeConnection?.id}
-              chats={chats}
-              selectedChatId={selectedChatId}
-              processingChats={processingChats}
-              onSelectChat={handleSelectChat}
-              onCreateChat={handleCreateChat}
-              onDeleteChat={handleDeleteChat}
-              onChatRenamed={handleChatRenamed}
-              onSidebarToggle={handleCloseSidebar}
-            />
-          </div>
-        </Col>
+                  <div className="fw-semibold">{conn.nombre}</div>
+                  <small className="text-muted">
+                    {conn.motor?.nombre || "Base de datos"}
+                  </small>
+                </Dropdown.Item>
+              ))}
+            </Dropdown.Menu>
+          </Dropdown>
+        </div>
 
-        {/* Chat window */}
-        <Col
-          xs={12}
-          md={9}
-          lg={10}
-          className="d-flex flex-column chat-main-container"
-          style={{
-            marginLeft: 0,
-            height: "100vh",
-            maxHeight: "100vh",
-            position: "relative",
-          }}
-        >
-          {/* Mobile header with hamburger menu */}
-          <div className="d-md-none p-2 border-bottom bg-white d-flex align-items-center justify-content-between mobile-chat-header">
+        <ChatSidebar
+          connectionId={activeConnection?.id}
+          chats={chats}
+          selectedChatId={selectedChatId}
+          processingChats={processingChats}
+          onSelectChat={handleSelectChat}
+          onCreateChat={handleCreateChat}
+          onDeleteChat={handleDeleteChat}
+          onChatRenamed={handleChatRenamed}
+          onSidebarToggle={() => setSidebarVisible(false)}
+        />
+      </div>
+
+      <div className="chat-app__main">
+        <div className="chat-app__header">
+          <div className="chat-app__header-left">
             <Button
               variant="outline-secondary"
               size="sm"
+              className="chat-app__menu-trigger d-md-none"
               onClick={handleToggleSidebar}
-              className="mobile-menu-button"
-              disabled={sidebarAnimating}
             >
-              <List size={20} />
+              <List size={18} />
             </Button>
-            <h6 className="mb-0 flex-grow-1 text-center text-truncate">
-              {selectedChat?.title || "Asistente SQL"}
-            </h6>
-            <div style={{ width: "40px" }}></div> {/* Spacer for centering */}
+
+            <div>
+              <div className="d-flex align-items-center gap-2">
+                <h2 className="chat-app__title mb-0 text-truncate">
+                  {selectedChat?.title || "Asistente SQL"}
+                </h2>
+                <Badge bg="primary" className="d-none d-md-inline-flex align-items-center gap-1">
+                  <LightningCharge size={14} /> IA
+                </Badge>
+              </div>
+              <div className="chat-app__subtitle text-muted mt-1">
+                <Database size={14} className="me-1" />
+                {activeConnection?.nombre}
+              </div>
+            </div>
           </div>
+
+          {selectedChat && (
+            <div className="chat-app__status">
+              <ClockHistory size={14} className="me-1 text-muted" />
+              <span className="text-muted small">
+                Actualizado {new Date(selectedChat.updatedAt).toLocaleString()}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {error && (
+          <Alert variant="danger" className="mx-3 mb-3">
+            {error}
+          </Alert>
+        )}
+
+        <div className="chat-app__body">
           {!selectedChat ? (
-            <div className="flex-grow-1 d-flex flex-column justify-content-center align-items-center bg-light text-center p-4">
-              <Database size={64} className="mb-4 text-secondary" />
-              <h4>Asistente SQL NexoSQL</h4>
-              <p className="text-muted mb-3">
-                ¡Bienvenido! Escribe tu pregunta sobre la base de datos y se creará 
-                automáticamente un nuevo chat para tu conversación.
+            <div className="chat-placeholder">
+              <div className="chat-placeholder__icon">
+                <LightningCharge size={42} />
+              </div>
+              <h4 className="fw-semibold">Comienza una nueva conversación</h4>
+              <p className="text-muted">
+                Describe lo que necesitas saber y NexoSQL traducirá tu pregunta
+                a consultas SQL optimizadas.
               </p>
-              <p className="text-muted small">
-                También puedes crear un chat manualmente o seleccionar uno existente 
-                desde el menú lateral.
-              </p>
-              {activeConnection && (
-                <Button 
-                  variant="outline-primary" 
-                  onClick={() => handleCreateChat()}
-                  className="mt-2"
-                >
-                  Crear Chat Manualmente
-                </Button>
-              )}
+              <div className="chat-placeholder__tips">
+                <span>Ejemplos:</span>
+                <ul>
+                  <li>"Muéstrame las ventas por categoría del último trimestre"</li>
+                  <li>"¿Cuántos usuarios activos tuvimos la semana pasada?"</li>
+                  <li>"Genera un resumen de ingresos por país"</li>
+                </ul>
+              </div>
+              <Button
+                variant="primary"
+                className="mt-3"
+                onClick={() => handleCreateChat("Nueva consulta")}
+              >
+                Crear primer chat
+              </Button>
             </div>
           ) : (
-            <>
-              {/* Chat header - hidden on mobile since we have the mobile header */}
-              <div className="p-3 border-bottom d-none d-md-block">
-                <h5 className="mb-0">{selectedChat.title}</h5>
-                <small className="text-muted">
-                  Conexión: {activeConnection?.nombre} (
-                  {activeConnection?.motor?.nombre})
-                </small>
-              </div>
-
-              {/* Messages area */}
-              <div
-                className="flex-grow-1 p-3 overflow-auto bg-light"
-                style={{
-                  height: "calc(100vh - 200px)",
-                  maxHeight: "calc(100vh - 200px)",
-                  minHeight: "400px",
-                }}
-              >
-                {error && (
-                  <Alert
-                    variant="danger"
-                    dismissible
-                    onClose={() => setError(null)}
-                  >
-                    {error}
-                  </Alert>
-                )}
-
-                {selectedChat.messages.length === 0 ? (
-                  <div className="text-center my-5 py-5">
-                    <Database size={48} className="mb-3 text-secondary" />
-                    <h5>¡Comienza a hacer preguntas sobre tu base de datos!</h5>
-                    <p className="text-muted">
-                      Puedes preguntar cosas como "¿Cuántos usuarios hay
-                      registrados?" o "Muéstrame las ventas del último mes"
-                    </p>
+            <div className="chat-thread">
+              {messagesToRender.length === 0 ? (
+                <div className="chat-thread__empty">
+                  <p className="text-muted mb-0">
+                    Todavía no hay mensajes en esta conversación.
+                  </p>
+                </div>
+              ) : (
+                messagesToRender.map((message) => (
+                  <div className="chat-thread__item" key={message.id}>
+                    {renderMessage(message)}
                   </div>
-                ) : (
-                  <div className="chat-messages">
-                    {(() => {
-                      const sortedMessages = selectedChat.messages
-                        .filter((msg) => !shouldHideMessage(msg))
-                        .filter((msg, index, arr) => 
-                          // Remove duplicates while preserving order
-                          arr.findIndex(m => m.id === msg.id) === index
-                        )
-                        .sort((a, b) => {
-                          // Primary sort by timestamp
-                          const timestampA = new Date(a.timestamp || a.createdAt);
-                          const timestampB = new Date(b.timestamp || b.createdAt);
-                          const timeDiff = timestampA - timestampB;
-                          
-                          if (timeDiff !== 0) return timeDiff;
-                          
-                          // Secondary sort: user messages before assistant messages for same timestamp
-                          if (a.type === 'user' && b.type === 'assistant') return -1;
-                          if (a.type === 'assistant' && b.type === 'user') return 1;
-                          
-                          return 0;
-                        });
-                      
-                      // Debug log to check order
-                      console.log('Messages order:', sortedMessages.map(msg => ({
-                        type: msg.type,
-                        timestamp: msg.timestamp || msg.createdAt,
-                        content: msg.content.substring(0, 30) + '...'
-                      })));
-                      
-                      return sortedMessages;
-                    })().map((message) => (
-                        <div key={message.id} className="mb-3">
-                          {renderMessage(message)}
-                        </div>
-                      ))}
-                    <div ref={messageEndRef} />
-                  </div>
-                )}
-              </div>
-
-              {/* Input area */}
-              <div className="chat-input-container-fixed">
-                <Form onSubmit={handleSubmit}>
-                  <InputGroup>
-                    <Form.Control
-                      ref={inputRef}
-                      type="text"
-                      placeholder="Escribe tu consulta en lenguaje natural..."
-                      value={userInput}
-                      onChange={(e) => setUserInput(e.target.value)}
-                      disabled={isCurrentChatProcessing || !activeConnection}
-                    />
-                    {isCurrentChatProcessing ? (
-                      <Button
-                        type="button"
-                        variant="outline-danger"
-                        onClick={handleCancelRequest}
-                        title="Cancelar consulta"
-                      >
-                        <XCircleFill />
-                      </Button>
-                    ) : (
-                      <Button
-                        type="submit"
-                        variant="primary"
-                        disabled={
-                          !userInput.trim() || !activeConnection
-                        }
-                      >
-                        <SendFill />
-                      </Button>
-                    )}
-                  </InputGroup>
-                </Form>
-              </div>
-            </>
+                ))
+              )}
+              <div ref={messageEndRef} />
+            </div>
           )}
-        </Col>
-      </Row>
-    </Container>
+        </div>
+
+        <div className="chat-app__composer">
+          <Form onSubmit={handleSubmit} className="chat-composer">
+            <Form.Control
+              as="textarea"
+              rows={1}
+              ref={inputRef}
+              className="chat-composer__input"
+              placeholder="Escribe tu consulta en lenguaje natural..."
+              value={userInput}
+              onChange={(event) => setUserInput(event.target.value)}
+              disabled={!activeConnection || isCurrentChatProcessing}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && !event.shiftKey) {
+                  event.preventDefault();
+                  handleSubmit(event);
+                }
+              }}
+            />
+
+            <div className="chat-composer__actions">
+              {showCancelButton && (
+                <Button
+                  variant="outline-danger"
+                  type="button"
+                  size="sm"
+                  className="me-2"
+                  onClick={handleCancelRequest}
+                >
+                  <XCircleFill size={16} className="me-1" />
+                  Cancelar
+                </Button>
+              )}
+
+              <Button
+                variant="primary"
+                type="submit"
+                disabled={!userInput.trim() || isCurrentChatProcessing}
+                className="d-inline-flex align-items-center"
+              >
+                {isCurrentChatProcessing ? (
+                  <Spinner animation="border" size="sm" className="me-2" />
+                ) : (
+                  <SendFill size={16} className="me-2" />
+                )}
+                Enviar
+              </Button>
+            </div>
+          </Form>
+        </div>
+      </div>
+
+      {sidebarVisible && (
+        <div
+          className="chat-app__overlay d-md-none"
+          role="presentation"
+          onClick={() => setSidebarVisible(false)}
+        />
+      )}
+    </div>
   );
 };
 
