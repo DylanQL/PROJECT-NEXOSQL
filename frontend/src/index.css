@@ -1807,6 +1807,7 @@ footer {
 }
 
 .profile-summary-card__title {
+    color: #e2e8f0;
     font-size: 1.9rem;
     font-weight: 600;
     margin-bottom: 0.25rem;
