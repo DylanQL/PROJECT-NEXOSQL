@@ -19,14 +19,54 @@ const isCancellationMessage = (message) => {
   return CANCELLATION_SUBSTRINGS.some((snippet) => content.includes(snippet));
 };
 
+const getMessageTimestamp = (message) => {
+  if (!message) return Number.MAX_SAFE_INTEGER;
+
+  const candidate =
+    message.timestamp || message.createdAt || message.updatedAt || null;
+
+  if (candidate instanceof Date) {
+    return candidate.getTime();
+  }
+
+  if (typeof candidate === "number" && Number.isFinite(candidate)) {
+    return candidate;
+  }
+
+  if (typeof candidate === "string") {
+    const parsed = Date.parse(candidate);
+    if (!Number.isNaN(parsed)) {
+      return parsed;
+    }
+  }
+
+  return Number.MAX_SAFE_INTEGER;
+};
+
+const sortMessagesChronologically = (messages = []) =>
+  [...messages]
+    .map((message, index) => ({ message, index }))
+    .sort((a, b) => {
+      const timeDiff = getMessageTimestamp(a.message) - getMessageTimestamp(b.message);
+      if (timeDiff !== 0) {
+        return timeDiff;
+      }
+      return a.index - b.index;
+    })
+    .map(({ message }) => message);
+
 const withFilteredMessages = (chat) => {
   if (!chat || !Array.isArray(chat.messages)) {
     return chat;
   }
 
+  const filteredMessages = chat.messages.filter(
+    (message) => !isCancellationMessage(message),
+  );
+
   return {
     ...chat,
-    messages: chat.messages.filter((message) => !isCancellationMessage(message))
+    messages: sortMessagesChronologically(filteredMessages),
   };
 };
 

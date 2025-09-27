@@ -40,6 +40,42 @@ const removeTempMessages = (messages = []) =>
       ),
   );
 
+const getMessageTimestamp = (message) => {
+  if (!message) return Number.MAX_SAFE_INTEGER;
+
+  const candidate =
+    message.timestamp || message.createdAt || message.updatedAt || null;
+
+  if (candidate instanceof Date) {
+    return candidate.getTime();
+  }
+
+  if (typeof candidate === "number" && Number.isFinite(candidate)) {
+    return candidate;
+  }
+
+  if (typeof candidate === "string") {
+    const parsed = Date.parse(candidate);
+    if (!Number.isNaN(parsed)) {
+      return parsed;
+    }
+  }
+
+  return Number.MAX_SAFE_INTEGER;
+};
+
+const sortMessagesChronologically = (messages = []) =>
+  [...messages]
+    .map((message, index) => ({ message, index }))
+    .sort((a, b) => {
+      const timeDiff = getMessageTimestamp(a.message) - getMessageTimestamp(b.message);
+      if (timeDiff !== 0) {
+        return timeDiff;
+      }
+      return a.index - b.index;
+    })
+    .map(({ message }) => message);
+
 const shouldHideMessage = (message) => {
   if (!message) return false;
   if (message.cancelado) return true;
@@ -80,7 +116,12 @@ const ChatInterface = () => {
 
   const messagesToRender = useMemo(() => {
     if (!selectedChat?.messages) return [];
-    return selectedChat.messages.filter((message) => !shouldHideMessage(message));
+
+    const visibleMessages = selectedChat.messages.filter(
+      (message) => !shouldHideMessage(message),
+    );
+
+    return sortMessagesChronologically(visibleMessages);
   }, [selectedChat]);
 
   const setChatProcessing = useCallback((chatId, isProcessing) => {
@@ -294,11 +335,11 @@ const ChatInterface = () => {
           chat.id === targetChatId
             ? {
                 ...chat,
-                messages: [
+                messages: sortMessagesChronologically([
                   ...removeTempMessages(chat.messages),
                   tempUserMessage,
                   tempAssistantMessage,
-                ],
+                ]),
               }
             : chat,
         ),
@@ -324,7 +365,12 @@ const ChatInterface = () => {
         setChats((prev) =>
           prev.map((chat) =>
             chat.id === targetChatId
-              ? { ...chat, messages: removeTempMessages(chat.messages) }
+              ? {
+                  ...chat,
+                  messages: sortMessagesChronologically(
+                    removeTempMessages(chat.messages),
+                  ),
+                }
               : chat,
           ),
         );
@@ -339,7 +385,7 @@ const ChatInterface = () => {
 
           return {
             ...chat,
-            messages: [
+            messages: sortMessagesChronologically([
               ...cleanedMessages,
               {
                 id: `error-user-${Date.now()}`,
@@ -356,7 +402,7 @@ const ChatInterface = () => {
                 error: true,
                 timestamp: new Date().toISOString(),
               },
-            ],
+            ]),
           };
         }),
       );
@@ -393,13 +439,18 @@ const ChatInterface = () => {
 
     if (activeRequest?.chatId) {
       setChatProcessing(activeRequest.chatId, false);
-      setChats((prev) =>
-        prev.map((chat) =>
-          chat.id === activeRequest.chatId
-            ? { ...chat, messages: removeTempMessages(chat.messages) }
-            : chat,
-        ),
-      );
+        setChats((prev) =>
+          prev.map((chat) =>
+            chat.id === activeRequest.chatId
+              ? {
+                  ...chat,
+                  messages: sortMessagesChronologically(
+                    removeTempMessages(chat.messages),
+                  ),
+                }
+              : chat,
+          ),
+        );
     }
 
     setActiveRequest(null);
