@@ -22,6 +22,11 @@ const CANCELLATION_CONTENT_SNIPPETS = [
   "consulta cancelada por el usuario"
 ];
 
+const removeTempMessages = (messages = []) =>
+  messages.filter((msg) =>
+    !(msg?.id?.startsWith('temp-user-') || msg?.id?.startsWith('temp-assistant-'))
+  );
+
 const shouldHideMessage = (message) => {
   if (!message) return false;
   if (message.cancelado) return true;
@@ -375,7 +380,7 @@ const ChatInterface = () => {
             };
             return {
               ...chat,
-              messages: [...chat.messages, tempUserMessage, tempAssistantMessage]
+              messages: [...removeTempMessages(chat.messages), tempUserMessage, tempAssistantMessage]
             };
           }
           return chat;
@@ -415,26 +420,11 @@ const ChatInterface = () => {
       if (error.name === 'AbortError') {
         console.log('Request was cancelled');
         // Remove temporary messages and show cancellation message
-        setChats(prevChats => {
-          return prevChats.map(chat => {
-            if (chat.id === chatId) {
-              const filteredMessages = chat.messages.filter(msg => 
-                !msg.id.startsWith('temp-user-') && !msg.id.startsWith('temp-assistant-')
-              );
-              const userMsg = {
-                id: `cancelled-user-${Date.now()}`,
-                type: 'user',
-                content: userMessage,
-                timestamp: new Date().toISOString()
-              };
-              return {
-                ...chat,
-                messages: [...filteredMessages, userMsg]
-              };
-            }
-            return chat;
-          });
-        });
+        setChats(prevChats => prevChats.map(chat => (
+          chat.id === chatId
+            ? { ...chat, messages: removeTempMessages(chat.messages) }
+            : chat
+        )));
         return;
       }
       
@@ -502,7 +492,14 @@ const ChatInterface = () => {
 
     setChatProcessing(selectedChatId, false);
     setCurrentThreadId(null);
-    setError("Consulta cancelada por el usuario");
+
+    if (selectedChatId) {
+      setChats(prevChats => prevChats.map(chat => (
+        chat.id === selectedChatId
+          ? { ...chat, messages: removeTempMessages(chat.messages) }
+          : chat
+      )));
+    }
   };
 
   const selectedChat = selectedChatId
