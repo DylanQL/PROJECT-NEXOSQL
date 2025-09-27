@@ -1774,6 +1774,10 @@ footer {
 .profile-layout {
     min-height: calc(100vh - var(--navbar-height));
     background: #f5f6fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
 }
 
 .profile-panel {
@@ -1854,5 +1858,10 @@ footer {
 @media (max-width: 991.98px) {
     .profile-form-grid {
         grid-template-columns: 1fr;
+    }
+
+    .profile-layout {
+        padding: 1.5rem 1rem;
+        align-items: stretch;
     }
 }
