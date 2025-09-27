@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Container,
   Row,
@@ -10,7 +10,9 @@ import {
   Spinner,
   Badge,
   Modal,
+  FloatingLabel,
 } from "react-bootstrap";
+import { PencilSquare, CheckCircleFill, ShieldLock } from "react-bootstrap-icons";
 import { useAuth } from "../contexts/AuthContext";
 import { useSubscription } from "../contexts/SubscriptionContext";
 import { useNavigate } from "react-router-dom";
@@ -28,7 +30,8 @@ const Profile = () => {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [profileNotice, setProfileNotice] = useState("");
+  const [subscriptionNotice, setSubscriptionNotice] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [subscription, setSubscription] = useState(null);
   const [subscriptionLoading, setSubscriptionLoading] = useState(true);
@@ -40,7 +43,6 @@ const Profile = () => {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
-  // Load user profile data
   useEffect(() => {
     if (userProfile) {
       setFormData({
@@ -52,7 +54,6 @@ const Profile = () => {
     }
   }, [userProfile]);
 
-  // Load subscription data
   useEffect(() => {
     if (currentUser) {
       loadSubscription();
@@ -91,18 +92,17 @@ const Profile = () => {
     }
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  const handleChange = (event) => {
+    const { name, value } = event.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
 
-    // Basic validation
     if (!formData.nombres || !formData.apellidos) {
       return setError("Nombres y apellidos son campos requeridos");
     }
@@ -117,24 +117,30 @@ const Profile = () => {
         throw new Error(result.error);
       }
 
-      setSuccess(true);
+      setProfileNotice("¡Perfil actualizado correctamente!");
       setIsEditing(false);
-
-      // Clear success message after delay
-      setTimeout(() => {
-        setSuccess(false);
-      }, 3000);
-    } catch (error) {
-      setError("Error al actualizar perfil: " + error.message);
+      setTimeout(() => setProfileNotice(""), 3000);
+    } catch (err) {
+      setError("Error al actualizar perfil: " + err.message);
     } finally {
       setLoading(false);
     }
   };
 
   const toggleEdit = () => {
-    setIsEditing(!isEditing);
     setError("");
-    setSuccess(false);
+    setProfileNotice("");
+
+    if (isEditing && userProfile) {
+      setFormData({
+        nombres: userProfile.nombres || "",
+        apellidos: userProfile.apellidos || "",
+        telefono: userProfile.telefono || "",
+        pais: userProfile.pais || "",
+      });
+    }
+
+    setIsEditing((prev) => !prev);
   };
 
   const handleSyncSubscription = async () => {
@@ -144,6 +150,7 @@ const Profile = () => {
       setSyncLoading(true);
       setError("");
       setSyncSuccess("");
+      setSubscriptionNotice("");
 
       const subscriptionService = (
         await import("../services/subscriptionService")
@@ -155,10 +162,7 @@ const Profile = () => {
 
       if (result.success) {
         setSyncSuccess("Suscripción sincronizada correctamente");
-        // Reload subscription data
         await loadSubscription();
-
-        // Clear success message after 3 seconds
         setTimeout(() => setSyncSuccess(""), 3000);
       }
     } catch (err) {
@@ -172,7 +176,7 @@ const Profile = () => {
     try {
       setActionLoading(true);
       setError("");
-      setSuccess(false);
+      setSubscriptionNotice("");
 
       const subscriptionService = (
         await import("../services/subscriptionService")
@@ -182,9 +186,10 @@ const Profile = () => {
       );
 
       if (data.success) {
-        setSuccess(true);
+        setSubscriptionNotice("Suscripción cancelada correctamente.");
         setShowCancelModal(false);
         await loadSubscription();
+        setTimeout(() => setSubscriptionNotice(""), 4000);
       } else {
         setError(data.error || "Error al cancelar la suscripción");
       }
@@ -211,374 +216,339 @@ const Profile = () => {
     return <Badge bg={config.variant}>{config.text}</Badge>;
   };
 
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat("es-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(price);
+  const formatPrice = (price) =>
+    new Intl.NumberFormat("es-US", { style: "currency", currency: "USD" }).format(price);
+
+  const formatDate = (date, includeTime = false) => {
+    if (!date) return "N/A";
+    const options = { day: "2-digit", month: "short", year: "numeric" };
+    if (includeTime) {
+      options.hour = "2-digit";
+      options.minute = "2-digit";
+    }
+    return new Date(date).toLocaleDateString("es-ES", options);
   };
 
-  const formatDate = (date) => {
-    if (!date) return "N/A";
-    return new Date(date).toLocaleDateString("es-ES");
-  };
+  const fullName = useMemo(() => {
+    if (!userProfile) return "";
+    const parts = [userProfile.nombres, userProfile.apellidos].filter(Boolean);
+    return parts.join(" ").trim();
+  }, [userProfile]);
+
+  const subscriptionPriceLabel = subscription
+    ? `${formatPrice(subscription.price)}/mes`
+    : "—";
+
+  const showSyncButton =
+    subscription?.status === "pending" && !autoSyncActive && !isInGracePeriod;
 
   if (profileLoading) {
     return (
-      <Container className="py-5 text-center">
-        <Spinner animation="border" role="status" variant="primary">
-          <span className="visually-hidden">Cargando...</span>
-        </Spinner>
-        <p className="mt-3">Cargando información de perfil...</p>
-      </Container>
+      <div className="profile-layout">
+        <Container className="py-5 text-center">
+          <Spinner animation="border" role="status" variant="primary">
+            <span className="visually-hidden">Cargando...</span>
+          </Spinner>
+          <p className="mt-3">Cargando información de perfil...</p>
+        </Container>
+      </div>
     );
   }
 
   if (!currentUser) {
     return (
-      <Container className="py-5">
-        <Alert variant="warning">
-          No has iniciado sesión. Por favor inicia sesión para ver tu perfil.
-        </Alert>
-        <div className="text-center mt-3">
-          <Button onClick={() => navigate("/login")}>Iniciar Sesión</Button>
-        </div>
-      </Container>
+      <div className="profile-layout">
+        <Container className="py-5">
+          <Alert variant="warning">
+            No has iniciado sesión. Por favor inicia sesión para ver tu perfil.
+          </Alert>
+          <div className="text-center mt-3">
+            <Button onClick={() => navigate("/login")}>Iniciar Sesión</Button>
+          </div>
+        </Container>
+      </div>
     );
   }
 
   if (!userProfile) {
     return (
-      <Container className="py-5">
-        <Alert variant="warning">
-          No se encontró información de perfil. Por favor complete su perfil
-          primero.
-        </Alert>
-        <div className="text-center mt-3">
-          <Button onClick={() => navigate("/complete-profile")}>
-            Completar Perfil
-          </Button>
-        </div>
-      </Container>
+      <div className="profile-layout">
+        <Container className="py-5">
+          <Alert variant="warning">
+            No se encontró información de perfil. Por favor completa tu perfil primero.
+          </Alert>
+          <div className="text-center mt-3">
+            <Button onClick={() => navigate("/complete-profile")}>
+              Completar Perfil
+            </Button>
+          </div>
+        </Container>
+      </div>
     );
   }
 
   return (
-    <Container className="py-5">
-      <Row className="justify-content-center">
-        <Col md={8}>
-          <Card className="shadow">
-            <Card.Body className="p-4">
-              <div className="d-flex justify-content-between align-items-center mb-4">
-                <h2 className="mb-0">Mi Perfil</h2>
-                <div>
-                  <small className="text-muted me-3">
-                    Usuario: {currentUser.email}
-                  </small>
+    <div className="profile-layout">
+      <Container className="py-4">
+        <Row className="g-4">
+          <Col lg={6} className="d-flex">
+            <Card className="profile-panel flex-fill">
+              <Card.Body>
+                <div className="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
+                  <div>
+                    <h2 className="h4 mb-1">Información personal</h2>
+                    <p className="text-muted mb-0">
+                      Actualiza tus datos básicos para mantener tu cuenta al día.
+                    </p>
+                    <small className="text-muted d-block mt-1">
+                      Nombre registrado: {fullName || currentUser.email}
+                    </small>
+                  </div>
                   <Button
-                    variant={isEditing ? "secondary" : "primary"}
+                    variant={isEditing ? "outline-secondary" : "primary"}
                     onClick={toggleEdit}
                     disabled={loading}
+                    className="d-inline-flex align-items-center gap-2"
                   >
-                    {isEditing ? "Cancelar" : "Editar Perfil"}
+                    <PencilSquare size={16} />
+                    {isEditing ? "Cancelar" : "Editar"}
                   </Button>
                 </div>
-              </div>
 
-              {error && <Alert variant="danger">{error}</Alert>}
-              {success && (
-                <Alert variant="success">
-                  ¡Perfil actualizado exitosamente!
-                </Alert>
-              )}
+                {error && <Alert variant="danger">{error}</Alert>}
+                {profileNotice && (
+                  <Alert variant="success" className="d-flex align-items-center gap-2">
+                    <CheckCircleFill size={16} /> {profileNotice}
+                  </Alert>
+                )}
 
-              <Form onSubmit={handleSubmit}>
-                <Row>
-                  <Col md={6}>
-                    <Form.Group className="mb-3" controlId="nombres">
-                      <Form.Label>Nombres</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="nombres"
-                        value={formData.nombres}
-                        onChange={handleChange}
-                        disabled={!isEditing}
-                        required
-                      />
+                <Form onSubmit={handleSubmit} className="profile-form-grid">
+                  <FloatingLabel controlId="nombres" label="Nombres">
+                    <Form.Control
+                      type="text"
+                      name="nombres"
+                      placeholder="Nombres"
+                      value={formData.nombres}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                      required
+                    />
+                  </FloatingLabel>
+                  <FloatingLabel controlId="apellidos" label="Apellidos">
+                    <Form.Control
+                      type="text"
+                      name="apellidos"
+                      placeholder="Apellidos"
+                      value={formData.apellidos}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                      required
+                    />
+                  </FloatingLabel>
+                  <FloatingLabel controlId="telefono" label="Teléfono">
+                    <Form.Control
+                      type="tel"
+                      name="telefono"
+                      placeholder="Teléfono"
+                      value={formData.telefono}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                    />
+                  </FloatingLabel>
+                  <FloatingLabel controlId="pais" label="País">
+                    <Form.Control
+                      type="text"
+                      name="pais"
+                      placeholder="País"
+                      value={formData.pais}
+                      onChange={handleChange}
+                      disabled={!isEditing}
+                    />
+                  </FloatingLabel>
+                  <div className="profile-form-grid__full">
+                    <Form.Group controlId="email">
+                      <Form.Label className="text-muted">Correo electrónico</Form.Label>
+                      <Form.Control type="email" value={userProfile.email} disabled readOnly />
+                      <Form.Text className="text-muted">
+                        Este campo no se puede modificar.
+                      </Form.Text>
                     </Form.Group>
-                  </Col>
-                  <Col md={6}>
-                    <Form.Group className="mb-3" controlId="apellidos">
-                      <Form.Label>Apellidos</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="apellidos"
-                        value={formData.apellidos}
-                        onChange={handleChange}
-                        disabled={!isEditing}
-                        required
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
+                  </div>
 
-                <Form.Group className="mb-3" controlId="email">
-                  <Form.Label>Correo Electrónico</Form.Label>
-                  <Form.Control
-                    type="email"
-                    value={userProfile.email}
-                    disabled
-                    readOnly
-                  />
-                  <Form.Text className="text-muted">
-                    Este campo no se puede modificar.
-                  </Form.Text>
-                </Form.Group>
+                  {userProfile.updatedAt && userProfile.updatedAt !== userProfile.createdAt && (
+                    <div className="profile-form-grid__full">
+                      <small className="text-muted">
+                        Última actualización: {formatDate(userProfile.updatedAt, true)}
+                      </small>
+                    </div>
+                  )}
 
-                <Row>
-                  <Col md={6}>
-                    <Form.Group className="mb-3" controlId="telefono">
-                      <Form.Label>Teléfono</Form.Label>
-                      <Form.Control
-                        type="tel"
-                        name="telefono"
-                        value={formData.telefono}
-                        onChange={handleChange}
-                        disabled={!isEditing}
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={6}>
-                    <Form.Group className="mb-3" controlId="pais">
-                      <Form.Label>País</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="pais"
-                        value={formData.pais}
-                        onChange={handleChange}
-                        disabled={!isEditing}
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
+                  {isEditing && (
+                    <div className="profile-form__actions profile-form-grid__full">
+                      <Button
+                        variant="primary"
+                        type="submit"
+                        disabled={loading}
+                        className="profile-form__submit"
+                      >
+                        {loading ? "Guardando cambios..." : "Guardar cambios"}
+                      </Button>
+                    </div>
+                  )}
+                </Form>
+              </Card.Body>
+            </Card>
+          </Col>
 
-                {isEditing && (
-                  <div className="d-grid gap-2 mt-4">
-                    <Button variant="success" type="submit" disabled={loading}>
-                      {loading ? "Guardando..." : "Guardar Cambios"}
+          <Col lg={6} className="d-flex">
+            <Card className="profile-panel flex-fill">
+              <Card.Body>
+                <div className="d-flex justify-content-between align-items-start gap-3 flex-wrap mb-3">
+                  <div>
+                    <h2 className="h4 mb-1">Suscripción</h2>
+                    <p className="text-muted mb-0">
+                      Consulta y gestiona tu plan actual.
+                    </p>
+                    <small className="text-muted d-block mt-1">
+                      Estado: {hasActiveSubscription ? subscription?.status : "Sin suscripción"}
+                    </small>
+                  </div>
+                  <Button
+                    variant="outline-primary"
+                    size="sm"
+                    onClick={() => navigate("/subscriptions")}
+                  >
+                    Ver planes
+                  </Button>
+                </div>
+
+                {subscriptionLoading ? (
+                  <div className="text-center py-4">
+                    <Spinner animation="border" size="sm" />
+                    <p className="text-muted mt-2 mb-0">
+                      Cargando información de suscripción...
+                    </p>
+                  </div>
+                ) : hasActiveSubscription && subscription ? (
+                  <div className="d-flex flex-column gap-3">
+                    <div className="d-flex flex-wrap align-items-center gap-2">
+                      <Badge bg="primary" pill>
+                        {plans[subscription.planType]?.name || subscription.planType}
+                      </Badge>
+                      {getStatusBadge(subscription.status)}
+                      <span className="text-muted">{subscriptionPriceLabel}</span>
+                    </div>
+
+                    <div className="subscription-meta">
+                      <div className="subscription-meta__row">
+                        <span>Inicio</span>
+                        <strong>{formatDate(subscription.startDate)}</strong>
+                      </div>
+                      <div className="subscription-meta__row">
+                        <span>Próximo cobro</span>
+                        <strong>{formatDate(subscription.nextBillingDate)}</strong>
+                      </div>
+                      {subscription.endDate && (
+                        <div className="subscription-meta__row">
+                          <span>Fecha de fin</span>
+                          <strong>{formatDate(subscription.endDate)}</strong>
+                        </div>
+                      )}
+                    </div>
+
+                    {isInGracePeriod && (
+                      <Alert variant="warning" className="mb-0">
+                        Mantienes acceso hasta {formatDate(subscription.endDate)}.
+                      </Alert>
+                    )}
+
+                    <div className="d-flex flex-wrap gap-2">
+                      {subscription.status === "pending" && autoSyncActive && (
+                        <Alert variant="info" className="mb-0 flex-grow-1">
+                          <div className="d-flex align-items-center gap-2">
+                            <Spinner animation="border" size="sm" />
+                            <div>
+                              <strong>Sincronizando automáticamente...</strong>
+                              <div className="small text-muted">
+                                Verificando el estado con PayPal.
+                              </div>
+                            </div>
+                          </div>
+                        </Alert>
+                      )}
+
+                      {showSyncButton && (
+                        <Button
+                          variant="outline-secondary"
+                          onClick={handleSyncSubscription}
+                          disabled={syncLoading || actionLoading}
+                        >
+                          {syncLoading ? (
+                            <>
+                              <Spinner animation="border" size="sm" className="me-2" />
+                              Sincronizando...
+                            </>
+                          ) : (
+                            "Sincronizar con PayPal"
+                          )}
+                        </Button>
+                      )}
+
+                      {!isInGracePeriod && (
+                        <Button
+                          variant="outline-danger"
+                          onClick={() => setShowCancelModal(true)}
+                          disabled={actionLoading || syncLoading || autoSyncActive}
+                        >
+                          Cancelar suscripción
+                        </Button>
+                      )}
+                    </div>
+
+                    {syncSuccess && (
+                      <Alert variant="success" className="mb-0">
+                        <CheckCircleFill size={16} className="me-1" />
+                        {syncSuccess}
+                      </Alert>
+                    )}
+                    {subscriptionNotice && (
+                      <Alert variant="success" className="mb-0">
+                        <CheckCircleFill size={16} className="me-1" />
+                        {subscriptionNotice}
+                      </Alert>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-4">
+                    <ShieldLock size={36} className="text-primary mb-3" />
+                    <h5>Sin suscripción activa</h5>
+                    <p className="text-muted">
+                      Elige un plan para aprovechar al máximo NexoSQL.
+                    </p>
+                    <Button variant="primary" onClick={() => navigate("/subscriptions")}>
+                      Ver planes de suscripción
                     </Button>
                   </div>
                 )}
-              </Form>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+      </Container>
 
-              <div className="mt-4">
-                <Card.Text>
-                  <strong>Fecha de registro:</strong>{" "}
-                  {new Date(userProfile.createdAt).toLocaleDateString()}
-                </Card.Text>
-                {userProfile.updatedAt &&
-                  userProfile.updatedAt !== userProfile.createdAt && (
-                    <Card.Text>
-                      <strong>Última actualización:</strong>{" "}
-                      {new Date(userProfile.updatedAt).toLocaleDateString()}
-                    </Card.Text>
-                  )}
-              </div>
-            </Card.Body>
-          </Card>
-
-          {/* Subscription Section */}
-          <Card className="shadow mt-4">
-            <Card.Body className="p-4">
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <h3 className="mb-0">Mi Suscripción</h3>
-                <Button
-                  variant="outline-primary"
-                  size="sm"
-                  onClick={() => navigate("/subscriptions")}
-                >
-                  Ver Todos los Planes
-                </Button>
-              </div>
-
-              {subscriptionLoading ? (
-                <div className="text-center py-3">
-                  <Spinner animation="border" size="sm" />
-                  <p className="text-muted mt-2">
-                    Cargando información de suscripción...
-                  </p>
-                </div>
-              ) : hasActiveSubscription && subscription ? (
-                <div>
-                  <Card className="border-success mb-3">
-                    <Card.Header className="bg-success text-white">
-                      <h5 className="mb-0">Plan Actual</h5>
-                    </Card.Header>
-                    <Card.Body>
-                      <Row className="mb-3">
-                        <Col md={6}>
-                          <h6>
-                            Plan:{" "}
-                            <Badge bg="primary">
-                              {plans[subscription.planType]?.name ||
-                                subscription.planType.charAt(0).toUpperCase() +
-                                  subscription.planType.slice(1)}
-                            </Badge>
-                          </h6>
-                          <p>
-                            <strong>Estado:</strong>{" "}
-                            {getStatusBadge(subscription.status)}
-                          </p>
-                          <p>
-                            <strong>Precio:</strong>{" "}
-                            {formatPrice(subscription.price)}/mes
-                          </p>
-                        </Col>
-                        <Col md={6}>
-                          <p>
-                            <strong>Fecha de inicio:</strong>{" "}
-                            {formatDate(subscription.startDate)}
-                          </p>
-                          <p>
-                            <strong>Próximo cobro:</strong>{" "}
-                            {formatDate(subscription.nextBillingDate)}
-                          </p>
-                          {subscription.endDate && (
-                            <p>
-                              <strong>Fecha de fin:</strong>{" "}
-                              {formatDate(subscription.endDate)}
-                            </p>
-                          )}
-                          {isInGracePeriod && (
-                            <Alert variant="warning" className="mt-2">
-                              <i className="bi bi-exclamation-triangle me-2"></i>
-                              <strong>Suscripción cancelada:</strong> Mantienes
-                              acceso hasta la fecha de fin.
-                            </Alert>
-                          )}
-                        </Col>
-                      </Row>
-
-                      {/* Action Buttons */}
-                      <Row className="mt-3">
-                        <Col>
-                          <div className="d-flex gap-2 flex-wrap">
-                            {subscription.status === "pending" && (
-                              <>
-                                {autoSyncActive ? (
-                                  <Alert variant="info" className="mb-2 w-100">
-                                    <div className="d-flex align-items-center">
-                                      <Spinner
-                                        animation="border"
-                                        size="sm"
-                                        className="me-2"
-                                      />
-                                      <span>
-                                        <strong>
-                                          Sincronizando automáticamente con
-                                          PayPal...
-                                        </strong>
-                                      </span>
-                                    </div>
-                                    <small className="text-muted mt-1 d-block">
-                                      Estamos verificando el estado de tu
-                                      suscripción automáticamente.
-                                    </small>
-                                  </Alert>
-                                ) : (
-                                  <Button
-                                    variant="outline-warning"
-                                    onClick={handleSyncSubscription}
-                                    disabled={syncLoading || actionLoading}
-                                    size="sm"
-                                  >
-                                    {syncLoading ? (
-                                      <>
-                                        <Spinner
-                                          animation="border"
-                                          size="sm"
-                                          className="me-1"
-                                        />
-                                        Sincronizando...
-                                      </>
-                                    ) : (
-                                      <>
-                                        <i className="bi bi-arrow-clockwise me-1"></i>
-                                        Sincronizar con PayPal
-                                      </>
-                                    )}
-                                  </Button>
-                                )}
-                              </>
-                            )}
-                            {!isInGracePeriod && (
-                              <Button
-                                variant="outline-danger"
-                                onClick={() => setShowCancelModal(true)}
-                                disabled={
-                                  actionLoading || syncLoading || autoSyncActive
-                                }
-                                size="sm"
-                              >
-                                Cancelar Suscripción
-                              </Button>
-                            )}
-                          </div>
-                        </Col>
-                      </Row>
-
-                      {syncSuccess && (
-                        <Alert variant="success" className="mb-0 mt-2">
-                          <i className="bi bi-check-circle me-2"></i>
-                          {syncSuccess}
-                        </Alert>
-                      )}
-                    </Card.Body>
-                  </Card>
-                </div>
-              ) : (
-                <div>
-                  <Alert variant="info">
-                    <h6>
-                      <i className="bi bi-info-circle me-2"></i>Sin Suscripción
-                      Activa
-                    </h6>
-                    <p className="mb-3">
-                      Actualmente no tienes una suscripción activa. Para acceder
-                      a todas las funciones premium de NexoSQL, elige uno de
-                      nuestros planes.
-                    </p>
-                    <div className="d-grid gap-2 d-md-flex">
-                      <Button
-                        variant="primary"
-                        onClick={() => navigate("/subscriptions")}
-                      >
-                        Ver Planes de Suscripción
-                      </Button>
-                    </div>
-                  </Alert>
-                </div>
-              )}
-            </Card.Body>
-          </Card>
-        </Col>
-      </Row>
-
-      {/* Cancel Subscription Modal */}
       <Modal show={showCancelModal} onHide={() => setShowCancelModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>Cancelar Suscripción</Modal.Title>
+          <Modal.Title>Cancelar suscripción</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <p>¿Estás seguro de que quieres cancelar tu suscripción?</p>
-          <Alert variant="warning">
-            <strong>Importante:</strong> Una vez cancelada, perderás el acceso a
-            las funciones premium al final del período de facturación actual.
+          <Alert variant="warning" className="mb-0">
+            <strong>Importante:</strong> Perderás acceso al finalizar el período actual.
           </Alert>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowCancelModal(false)}>
-            No, Mantener Suscripción
+            Mantener suscripción
           </Button>
           <Button
             variant="danger"
@@ -588,12 +558,12 @@ const Profile = () => {
             {actionLoading ? (
               <Spinner animation="border" size="sm" />
             ) : (
-              "Sí, Cancelar"
+              "Confirmar cancelación"
             )}
           </Button>
         </Modal.Footer>
       </Modal>
-    </Container>
+    </div>
   );
 };
 

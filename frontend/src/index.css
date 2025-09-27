@@ -1769,3 +1769,90 @@ footer {
 .chat-sidebar__list::-webkit-scrollbar-track {
     background: transparent;
 }
+
+/* Profile layout */
+.profile-layout {
+    min-height: calc(100vh - var(--navbar-height));
+    background: #f5f6fa;
+}
+
+.profile-panel {
+    border: 0;
+    border-radius: 18px;
+    box-shadow: 0 16px 30px rgba(15, 23, 42, 0.08);
+}
+
+.profile-panel .card-body {
+    padding: 1.75rem;
+}
+
+.profile-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.profile-form-grid .form-control {
+    border-radius: 12px;
+    border-color: rgba(148, 163, 184, 0.35);
+}
+
+.profile-form-grid .form-control:focus {
+    border-color: rgba(59, 130, 246, 0.75);
+    box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.15);
+}
+
+.profile-form-grid .form-control:disabled {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.profile-form-grid__full {
+    grid-column: 1 / -1;
+}
+
+.profile-form__actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.profile-form__submit {
+    border-radius: 999px;
+    padding: 0.75rem 2rem;
+    font-weight: 600;
+}
+
+.subscription-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.subscription-meta__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    background: #fff;
+    color: #475569;
+}
+
+.subscription-meta__row span {
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.subscription-meta__row strong {
+    font-size: 0.95rem;
+    color: #0f172a;
+}
+
+@media (max-width: 991.98px) {
+    .profile-form-grid {
+        grid-template-columns: 1fr;
+    }
+}
