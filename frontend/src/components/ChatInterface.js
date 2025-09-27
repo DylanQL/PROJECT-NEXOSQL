@@ -16,7 +16,7 @@ import {
 import {
   List,
   SendFill,
-  XCircleFill,
+  StopFill,
   Database,
   LightningCharge,
   ClockHistory,
@@ -746,11 +746,11 @@ const ChatInterface = () => {
                   variant="outline-danger"
                   type="button"
                   size="sm"
-                  className="me-2"
+                  className="chat-composer__cancel"
                   onClick={handleCancelRequest}
+                  aria-label="Cancelar consulta en curso"
                 >
-                  <XCircleFill size={16} className="me-1" />
-                  Cancelar
+                  <StopFill size={18} />
                 </Button>
               )}
 
