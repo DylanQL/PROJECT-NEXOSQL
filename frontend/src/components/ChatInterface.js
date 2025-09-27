@@ -17,6 +17,22 @@ import { useConnection } from "../contexts/ConnectionContext";
 import chatService from "../services/chatService";
 import ChatSidebar from "./ChatSidebar";
 
+const CANCELLATION_CONTENT_SNIPPETS = [
+  "la consulta fue cancelada por el usuario",
+  "consulta cancelada por el usuario"
+];
+
+const shouldHideMessage = (message) => {
+  if (!message) return false;
+  if (message.cancelado) return true;
+  if (message.metadata?.cancelled) return true;
+
+  const content = message.content?.toLowerCase();
+  if (!content) return false;
+
+  return CANCELLATION_CONTENT_SNIPPETS.some((snippet) => content.includes(snippet));
+};
+
 const ChatInterface = () => {
   const {
     connections,
@@ -323,12 +339,11 @@ const ChatInterface = () => {
     abortControllerRef.current = new AbortController();
 
     const userMessage = userInput.trim();
-    
+    let chatId = selectedChatId;
+
     try {
       setChatProcessing(selectedChatId, true);
       setError(null);
-
-      let chatId = selectedChatId;
 
       // If no chat is selected, create a new one
       if (!chatId) {
@@ -402,8 +417,7 @@ const ChatInterface = () => {
         // Remove temporary messages and show cancellation message
         setChats(prevChats => {
           return prevChats.map(chat => {
-            if (chat.id === selectedChatId) {
-              // Remove temporary messages and add cancellation message
+            if (chat.id === chatId) {
               const filteredMessages = chat.messages.filter(msg => 
                 !msg.id.startsWith('temp-user-') && !msg.id.startsWith('temp-assistant-')
               );
@@ -413,16 +427,9 @@ const ChatInterface = () => {
                 content: userMessage,
                 timestamp: new Date().toISOString()
               };
-              const cancellationMessage = {
-                id: `cancelled-${Date.now()}`,
-                type: 'assistant',
-                content: 'Consulta cancelada por el usuario',
-                error: true,
-                timestamp: new Date().toISOString()
-              };
               return {
                 ...chat,
-                messages: [...filteredMessages, userMsg, cancellationMessage]
+                messages: [...filteredMessages, userMsg]
               };
             }
             return chat;
@@ -815,6 +822,7 @@ const ChatInterface = () => {
                   <div className="chat-messages">
                     {(() => {
                       const sortedMessages = selectedChat.messages
+                        .filter((msg) => !shouldHideMessage(msg))
                         .filter((msg, index, arr) => 
                           // Remove duplicates while preserving order
                           arr.findIndex(m => m.id === msg.id) === index

@@ -3,6 +3,33 @@ import api, { aiApi, chatApi } from "./api";
 const CHATS_STORAGE_KEY = "nexosql_chats";
 const MIGRATION_FLAG_KEY = "nexosql_chats_migrated";
 
+const CANCELLATION_SUBSTRINGS = [
+  "consulta fue cancelada por el usuario",
+  "consulta cancelada por el usuario"
+];
+
+const isCancellationMessage = (message) => {
+  if (!message) return false;
+  if (message.cancelado) return true;
+  if (message.metadata?.cancelled) return true;
+
+  const content = message.content?.toLowerCase();
+  if (!content) return false;
+
+  return CANCELLATION_SUBSTRINGS.some((snippet) => content.includes(snippet));
+};
+
+const withFilteredMessages = (chat) => {
+  if (!chat || !Array.isArray(chat.messages)) {
+    return chat;
+  }
+
+  return {
+    ...chat,
+    messages: chat.messages.filter((message) => !isCancellationMessage(message))
+  };
+};
+
 class ChatService {
   constructor() {
     this.activeConnectionId = null;
@@ -56,7 +83,9 @@ class ChatService {
         console.error("Error getting chats:", error);
         return [];
       }
-      return data.chats || [];
+
+      const chats = data.chats || [];
+      return chats.map(withFilteredMessages);
     } catch (error) {
       console.error("Error getting chats:", error);
       return [];
@@ -71,7 +100,13 @@ class ChatService {
         console.error("Error getting chat by ID:", error);
         return null;
       }
-      return data.chat || null;
+
+      const chat = data.chat || null;
+      if (!chat) {
+        return null;
+      }
+
+      return withFilteredMessages(chat);
     } catch (error) {
       console.error("Error getting chat by ID:", error);
       return null;
@@ -145,7 +180,12 @@ class ChatService {
         console.error("Error adding message:", error);
         throw new Error(error);
       }
-      return data.message;
+      const createdMessage = data.message;
+      if (!createdMessage) {
+        return null;
+      }
+
+      return isCancellationMessage(createdMessage) ? null : createdMessage;
     } catch (error) {
       console.error("Error adding message:", error);
       throw new Error("No se pudo añadir el mensaje");
