@@ -101,13 +101,13 @@ const ChatInterface = () => {
   const [selectedChatId, setSelectedChatId] = useState(null);
   const [userInput, setUserInput] = useState("");
   const [processingChats, setProcessingChats] = useState({});
-  const [activeRequest, setActiveRequest] = useState(null);
+  const [pendingThreads, setPendingThreads] = useState({});
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [error, setError] = useState(null);
 
   const messageEndRef = useRef(null);
   const inputRef = useRef(null);
-  const abortControllerRef = useRef(null);
+  const abortControllersRef = useRef({});
 
   const selectedChat = useMemo(
     () => chats.find((chat) => chat.id === selectedChatId) || null,
@@ -300,7 +300,7 @@ const ChatInterface = () => {
 
     if (isChatProcessing(targetChatId)) return;
 
-    abortControllerRef.current = new AbortController();
+    const controller = new AbortController();
 
     try {
       setError(null);
@@ -347,7 +347,14 @@ const ChatInterface = () => {
 
       setChatProcessing(targetChatId, true);
       const threadId = crypto.randomUUID();
-      setActiveRequest({ chatId: targetChatId, threadId });
+      setPendingThreads((prev) => ({
+        ...prev,
+        [targetChatId]: threadId,
+      }));
+      abortControllersRef.current = {
+        ...abortControllersRef.current,
+        [targetChatId]: controller,
+      };
       setUserInput("");
 
       await chatService.sendQuestion(
@@ -355,7 +362,7 @@ const ChatInterface = () => {
         targetChatId,
         userMessage,
         threadId,
-        abortControllerRef.current.signal,
+        controller.signal,
       );
 
       const updatedChats = await chatService.getChats(activeConnection.id);
@@ -417,43 +424,65 @@ const ChatInterface = () => {
       if (targetChatId) {
         setChatProcessing(targetChatId, false);
       }
-      setActiveRequest(null);
-      abortControllerRef.current = null;
+      setPendingThreads((prev) => {
+        if (!prev[targetChatId]) return prev;
+        const updated = { ...prev };
+        delete updated[targetChatId];
+        return updated;
+      });
+      if (abortControllersRef.current[targetChatId]) {
+        const controllers = { ...abortControllersRef.current };
+        delete controllers[targetChatId];
+        abortControllersRef.current = controllers;
+      }
     }
   };
 
   const handleCancelRequest = async () => {
-    if (!activeRequest && !abortControllerRef.current) return;
+    if (!selectedChatId) return;
+
+    const threadId = pendingThreads[selectedChatId];
+    const controller = abortControllersRef.current[selectedChatId];
+
+    if (!threadId && !controller) return;
 
     try {
-      if (activeRequest?.threadId) {
-        await chatService.cancelMessage(activeRequest.threadId);
+      if (threadId) {
+        await chatService.cancelMessage(threadId);
       }
     } catch (err) {
       console.error("Error cancelling request", err);
     }
 
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
+    if (controller) {
+      controller.abort();
     }
 
-    if (activeRequest?.chatId) {
-      setChatProcessing(activeRequest.chatId, false);
-        setChats((prev) =>
-          prev.map((chat) =>
-            chat.id === activeRequest.chatId
-              ? {
-                  ...chat,
-                  messages: sortMessagesChronologically(
-                    removeTempMessages(chat.messages),
-                  ),
-                }
-              : chat,
-          ),
-        );
+    setChatProcessing(selectedChatId, false);
+    setPendingThreads((prev) => {
+      if (!prev[selectedChatId]) return prev;
+      const updated = { ...prev };
+      delete updated[selectedChatId];
+      return updated;
+    });
+    if (abortControllersRef.current[selectedChatId]) {
+      const controllers = { ...abortControllersRef.current };
+      delete controllers[selectedChatId];
+      abortControllersRef.current = controllers;
     }
 
-    setActiveRequest(null);
+    setChats((prev) =>
+      prev.map((chat) =>
+        chat.id === selectedChatId
+            ? {
+                ...chat,
+                messages: sortMessagesChronologically(
+                  removeTempMessages(chat.messages),
+                ),
+              }
+            : chat,
+      ),
+    );
   };
 
   const handleToggleSidebar = () => {
@@ -571,8 +600,9 @@ const ChatInterface = () => {
     );
   }
 
-  const showCancelButton =
-    Boolean(activeRequest?.chatId) && activeRequest.chatId === selectedChatId;
+  const showCancelButton = Boolean(
+    selectedChatId && pendingThreads[selectedChatId],
+  );
 
   return (
     <div className="chat-app">
