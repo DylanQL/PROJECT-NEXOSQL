@@ -235,6 +235,10 @@ const Profile = () => {
     return parts.join(" ").trim();
   }, [userProfile]);
 
+  const memberSince = userProfile?.createdAt
+    ? formatDate(userProfile.createdAt)
+    : "—";
+
   const subscriptionPriceLabel = subscription
     ? `${formatPrice(subscription.price)}/mes`
     : "—";
@@ -291,6 +295,49 @@ const Profile = () => {
     <div className="profile-layout">
       <Container className="py-4">
         <Row className="g-4">
+          <Col xs={12}>
+            <Card className="profile-summary-card">
+              <Card.Body className="profile-summary-card__body">
+                <div className="profile-summary-card__section">
+                  <h1 className="profile-summary-card__title">
+                    {fullName || "Usuario sin nombre"}
+                  </h1>
+                  <p className="profile-summary-card__subtitle mb-0">
+                    ID de usuario: {currentUser.uid || currentUser.email}
+                  </p>
+                </div>
+                <div className="profile-summary-card__stats">
+                  <div className="profile-summary-card__item">
+                    <span className="profile-summary-card__label">Correo</span>
+                    <strong className="profile-summary-card__value text-truncate">
+                      {currentUser.email}
+                    </strong>
+                  </div>
+                  <div className="profile-summary-card__item">
+                    <span className="profile-summary-card__label">Miembro desde</span>
+                    <strong className="profile-summary-card__value">{memberSince}</strong>
+                  </div>
+                  <div className="profile-summary-card__item">
+                    <span className="profile-summary-card__label">Plan</span>
+                    <strong className="profile-summary-card__value">
+                      {hasActiveSubscription
+                        ? plans[subscription?.planType]?.name || subscription?.planType
+                        : "Sin suscripción"}
+                    </strong>
+                  </div>
+                  <div className="profile-summary-card__item">
+                    <span className="profile-summary-card__label">Estado</span>
+                    <strong className="profile-summary-card__value">
+                      {hasActiveSubscription
+                        ? subscription?.status?.toUpperCase()
+                        : "SIN PLAN"}
+                    </strong>
+                  </div>
+                </div>
+              </Card.Body>
+            </Card>
+          </Col>
+
           <Col lg={6} className="d-flex">
             <Card className="profile-panel flex-fill">
               <Card.Body>

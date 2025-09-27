@@ -1786,6 +1786,67 @@ footer {
     box-shadow: 0 16px 30px rgba(15, 23, 42, 0.08);
 }
 
+.profile-summary-card {
+    border: 0;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #4338ca 0%, #6366f1 100%);
+    color: #f8fafc;
+    box-shadow: 0 24px 45px rgba(79, 70, 229, 0.25);
+}
+
+.profile-summary-card__body {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+}
+
+.profile-summary-card__section {
+    max-width: 340px;
+}
+
+.profile-summary-card__title {
+    font-size: 1.9rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.profile-summary-card__subtitle {
+    font-size: 0.95rem;
+    color: rgba(226, 232, 240, 0.85);
+}
+
+.profile-summary-card__stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+    flex: 1;
+}
+
+.profile-summary-card__item {
+    background: rgba(15, 23, 42, 0.2);
+    border-radius: 16px;
+    padding: 0.9rem 1rem;
+    backdrop-filter: blur(8px);
+}
+
+.profile-summary-card__label {
+    display: block;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: rgba(226, 232, 240, 0.8);
+}
+
+.profile-summary-card__value {
+    display: block;
+    margin-top: 0.3rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #f8fafc;
+}
+
 .profile-panel .card-body {
     padding: 1.75rem;
 }
@@ -1863,5 +1924,10 @@ footer {
     .profile-layout {
         padding: 1.5rem 1rem;
         align-items: stretch;
+    }
+
+    .profile-summary-card__body {
+        flex-direction: column;
+        align-items: flex-start;
     }
 }
