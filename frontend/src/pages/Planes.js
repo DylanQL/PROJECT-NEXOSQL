@@ -69,6 +69,47 @@ const Planes = () => {
     },
   };
 
+  const planThemes = {
+    bronce: {
+      gradient: "linear-gradient(135deg, #475569 0%, #1f2937 100%)",
+      textColor: "#f8fafc",
+      badgeBg: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
+    },
+    plata: {
+      gradient: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
+      textColor: "#f8fafc",
+      badgeBg: "linear-gradient(135deg, #f472b6 0%, #ec4899 100%)",
+    },
+    oro: {
+      gradient: "linear-gradient(135deg, #facc15 0%, #f59e0b 100%)",
+      textColor: "#1f2937",
+      badgeBg: "linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)",
+    },
+  };
+
+  const sectionStyle = {
+    background: "linear-gradient(145deg, #f8fbff 0%, #eef4ff 45%, #f4f6ff 100%)",
+    borderRadius: "32px",
+    boxShadow: "0 26px 55px rgba(15, 23, 42, 0.12)",
+  };
+
+  const cardBaseStyle = {
+    borderRadius: "22px",
+    background: "rgba(255, 255, 255, 0.93)",
+    border: "1px solid rgba(148, 163, 184, 0.18)",
+    boxShadow: "0 18px 36px rgba(15, 23, 42, 0.12)",
+    transition: "transform 0.25s ease, box-shadow 0.25s ease",
+  };
+
+  const badgeBaseStyle = {
+    borderRadius: "999px",
+    boxShadow: "0 16px 40px rgba(37, 99, 235, 0.35)",
+  };
+
+  const statsValueStyle = {
+    letterSpacing: "-0.02em",
+  };
+
   const formatPrice = (price) => {
     return new Intl.NumberFormat("es-US", {
       style: "currency",
@@ -91,26 +132,43 @@ const Planes = () => {
   };
 
   return (
-    <Container className="my-5">
+    <Container
+      className="my-5 py-5 px-3 px-md-5"
+      style={sectionStyle}
+    >
       <Row className="text-center mb-5">
         <Col>
-          <h1 className="display-4 mb-4">Planes de Suscripción</h1>
-          <p className="lead text-muted">
+          <h1 className="fw-bold fs-1 mb-3">Planes de Suscripción</h1>
+          <p className="text-muted fs-5 mb-0">
             Elige el plan que mejor se adapte a tus necesidades de desarrollo
           </p>
         </Col>
       </Row>
 
       {/* Planes detallados */}
-      <Row className="justify-content-center">
+      <Row className="justify-content-center g-4">
         {Object.entries(plans).map(([planType, plan]) => (
           <Col key={planType} lg={4} md={6} className="mb-4">
             <Card
-              className={`h-100 position-relative ${plan.popular ? "border-primary shadow-lg" : "border-0 shadow"}`}
+              className="h-100 position-relative border-0 shadow-sm"
+              style={{
+                ...cardBaseStyle,
+                boxShadow: plan.popular
+                  ? "0 26px 52px rgba(37, 99, 235, 0.22)"
+                  : cardBaseStyle.boxShadow,
+                transform: plan.popular ? "translateY(-6px)" : "none",
+              }}
             >
               {plan.popular && (
                 <div className="position-absolute top-0 start-50 translate-middle">
-                  <Badge bg="primary" className="px-3 py-2 fs-6">
+                  <Badge
+                    bg="primary"
+                    className="px-3 py-2 text-uppercase fw-semibold small"
+                    style={{
+                      ...badgeBaseStyle,
+                      background: planThemes[planType].badgeBg,
+                    }}
+                  >
                     <i className="bi bi-star-fill me-1"></i>
                     Más Popular
                   </Badge>
@@ -118,39 +176,57 @@ const Planes = () => {
               )}
 
               <Card.Header
-                className={`text-center bg-${plan.color} ${plan.color === "warning" ? "text-dark" : "text-white"}`}
+                className="text-center border-0 py-4 px-3"
+                style={{
+                  background: planThemes[planType].gradient,
+                  color: planThemes[planType].textColor,
+                  borderTopLeftRadius: cardBaseStyle.borderRadius,
+                  borderTopRightRadius: cardBaseStyle.borderRadius,
+                }}
               >
-                <h3 className="mb-1">{plan.name}</h3>
-                <div className="display-4 fw-bold">
+                <h3 className="mb-1 fw-semibold fs-3">{plan.name}</h3>
+                <div className="fw-bold fs-1">
                   {formatPrice(plan.price)}
-                  <small className="fs-6 opacity-75">/mes</small>
+                  <small className="fs-6 opacity-75 ms-1">/mes</small>
                 </div>
               </Card.Header>
 
-              <Card.Body className="d-flex flex-column">
-                <p className="text-muted mb-4 text-center">
+              <Card.Body className="d-flex flex-column gap-3 px-3 px-lg-4 py-4">
+                <p className="text-muted mb-3 text-center small">
                   {plan.description}
                 </p>
 
-                <div className="text-center mb-4">
-                  <div className="row text-center">
+                <div className="text-center">
+                  <div className="row gx-2">
                     <div className="col-6">
-                      <div className={`text-${plan.color} fw-bold fs-2`}>
+                      <div
+                        className={`text-${plan.color} fw-semibold fs-3`}
+                        style={statsValueStyle}
+                      >
                         {plan.connections}
                       </div>
-                      <small className="text-muted">Conexiones</small>
+                      <small className="text-muted text-uppercase">
+                        Conexiones
+                      </small>
                     </div>
                     <div className="col-6">
-                      <div className={`text-${plan.color} fw-bold fs-2`}>
+                      <div
+                        className={`text-${plan.color} fw-semibold fs-3`}
+                        style={statsValueStyle}
+                      >
                         {plan.queries.toLocaleString()}
                       </div>
-                      <small className="text-muted">Consultas/mes</small>
+                      <small className="text-muted text-uppercase">
+                        Consultas/mes
+                      </small>
                     </div>
                   </div>
                 </div>
 
-                <h6 className="mb-3">Características incluidas:</h6>
-                <ul className="list-unstyled flex-grow-1">
+                <h6 className="mb-2 text-uppercase text-muted small">
+                  Características incluidas
+                </h6>
+                <ul className="list-unstyled flex-grow-1 small mb-0">
                   {plan.features.map((feature, index) => (
                     <li key={index} className="mb-2 d-flex align-items-start">
                       <i
@@ -161,13 +237,13 @@ const Planes = () => {
                   ))}
                 </ul>
 
-                <div className="mt-4">
+                <div className="mt-3">
                   <Button
                     variant={
                       plan.popular ? plan.color : `outline-${plan.color}`
                     }
-                    size="lg"
-                    className="w-100"
+                    size="md"
+                    className="w-100 fw-semibold py-2"
                     onClick={() => handleSelectPlan(planType)}
                   >
                     {!currentUser
@@ -237,19 +313,31 @@ const Planes = () => {
       {/* Call to action final */}
       <Row className="mt-5 text-center">
         <Col>
-          <Card className="border-0 bg-light">
-            <Card.Body className="py-5">
-              <h3 className="mb-3">¿Necesitas ayuda para elegir?</h3>
-              <p className="text-muted mb-4">
+          <Card className="border-0 bg-white shadow-sm rounded-4">
+            <Card.Body className="py-5 px-4 px-md-5">
+              <h3 className="mb-2 fw-semibold">¿Necesitas ayuda para elegir?</h3>
+              <p className="text-muted mb-4 small">
                 Nuestro equipo está aquí para ayudarte a encontrar el plan
                 perfecto para tu proyecto
               </p>
               <div className="d-flex gap-3 justify-content-center flex-wrap">
-                <Button as={Link} to="/como-funciona" variant="outline-primary">
+                <Button
+                  as={Link}
+                  to="/como-funciona"
+                  variant="outline-primary"
+                  className="px-4"
+                  size="md"
+                >
                   <i className="bi bi-question-circle me-2"></i>
                   Cómo funciona
                 </Button>
-                <Button as={Link} to="/register" variant="primary">
+                <Button
+                  as={Link}
+                  to="/register"
+                  variant="primary"
+                  className="px-4"
+                  size="md"
+                >
                   <i className="bi bi-person-plus me-2"></i>
                   Empezar ahora
                 </Button>
