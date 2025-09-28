@@ -563,7 +563,9 @@ const CrearConexion = () => {
                 </div>
               </div>
               <h5 className="text-success mb-2">¡Éxito!</h5>
-              <p className="mb-0">Conexión creada exitosamente</p>
+              <p className="mb-0">
+                {isEditMode ? "Conexión actualizada exitosamente" : "Conexión creada exitosamente"}
+              </p>
               <small className="text-muted">Redirigiendo...</small>
             </Card.Body>
           </Card>

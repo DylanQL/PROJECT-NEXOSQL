@@ -40,6 +40,7 @@ const EditarConexion = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [testResult, setTestResult] = useState(null);
+  const [showSuccessCard, setShowSuccessCard] = useState(false);
 
   // Fetch database engines and connection details on component mount
   useEffect(() => {
@@ -242,12 +243,12 @@ const EditarConexion = () => {
         throw new Error(error);
       }
 
-      // Mostrar mensaje y navegar después de un breve retraso
-      setSuccess("Conexión actualizada exitosamente");
+      // Mostrar cardview flotante y navegar después de un breve retraso
+      setShowSuccessCard(true);
       setTimeout(() => {
         // Usar window.location.href para forzar una recarga completa de la página
         window.location.href = "/conexiones";
-      }, 1500);
+      }, 2500);
     } catch (err) {
       console.error("Error updating connection:", err);
       setError(err.message || "Error al actualizar la conexión");
@@ -573,7 +574,29 @@ const EditarConexion = () => {
       </div>
 
       {error && <Alert variant="danger">{error}</Alert>}
-      {success && <Alert variant="success">{success}</Alert>}
+
+      {/* Success Card flotante */}
+      {showSuccessCard && (
+        <div className="position-fixed top-50 start-50 translate-middle" style={{ zIndex: 1050 }}>
+          <Card className="shadow-lg" style={{ minWidth: '300px', border: '2px solid #22c55e' }}>
+            <Card.Body className="text-center p-4">
+              <div className="mb-3">
+                <div className="d-inline-flex align-items-center justify-content-center bg-success rounded-circle" style={{ width: '60px', height: '60px' }}>
+                  <i className="bi bi-check-lg text-white" style={{ fontSize: '2rem' }}></i>
+                </div>
+              </div>
+              <h5 className="text-success mb-2">¡Éxito!</h5>
+              <p className="mb-0">Conexión actualizada exitosamente</p>
+              <small className="text-muted">Redirigiendo...</small>
+            </Card.Body>
+          </Card>
+        </div>
+      )}
+
+      {/* Overlay para el cardview flotante */}
+      {showSuccessCard && (
+        <div className="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-25" style={{ zIndex: 1040 }}></div>
+      )}
 
       <Card className="shadow-sm">
         <Card.Body className="p-4">
