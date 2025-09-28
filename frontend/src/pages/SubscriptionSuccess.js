@@ -9,10 +9,13 @@ import {
   Button,
 } from "react-bootstrap";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
+import "../styles/SubscriptionSuccess.css";
 
 const SubscriptionSuccess = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { currentUser, userProfile } = useAuth();
   const [loading, setLoading] = useState(true);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
@@ -95,20 +98,65 @@ const SubscriptionSuccess = () => {
     navigate("/profile");
   };
 
+  // Add confetti effect on component mount
+  useEffect(() => {
+    if (success && subscriptionData) {
+      // Create confetti particles
+      const createConfetti = () => {
+        for (let i = 0; i < 50; i++) {
+          const confetti = document.createElement('div');
+          confetti.className = `confetti-particle confetti-${(i % 5) + 1}`;
+          confetti.style.left = Math.random() * 100 + 'vw';
+          confetti.style.animationDelay = Math.random() * 3 + 's';
+          confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
+          document.body.appendChild(confetti);
+
+          // Remove confetti after animation
+          setTimeout(() => {
+            if (confetti.parentNode) {
+              confetti.parentNode.removeChild(confetti);
+            }
+          }, 5000);
+        }
+      };
+
+      // Trigger confetti after a slight delay
+      const confettiTimer = setTimeout(createConfetti, 500);
+      
+      return () => {
+        clearTimeout(confettiTimer);
+      };
+    }
+  }, [success, subscriptionData]);
+
   if (loading) {
     return (
       <Container
         className="d-flex justify-content-center align-items-center"
-        style={{ minHeight: "60vh" }}
+        style={{ minHeight: "70vh" }}
       >
         <div className="text-center">
-          <Spinner animation="border" role="status" size="lg" className="mb-3">
-            <span className="visually-hidden">Confirmando suscripción...</span>
-          </Spinner>
-          <h4>Confirmando tu suscripción...</h4>
+          <div className="mb-4">
+            <Spinner 
+              animation="border" 
+              role="status" 
+              size="lg" 
+              className="text-primary" 
+              style={{ width: "4rem", height: "4rem" }}
+            >
+              <span className="visually-hidden">Confirmando suscripción...</span>
+            </Spinner>
+          </div>
+          <h4 className="mb-3">Confirmando tu suscripción...</h4>
           <p className="text-muted">
-            Por favor, espera mientras procesamos tu pago.
+            Por favor, espera mientras procesamos tu pago y activamos tu cuenta premium.
           </p>
+          <div className="progress mt-3" style={{ height: "4px", width: "300px", margin: "0 auto" }}>
+            <div 
+              className="progress-bar progress-bar-striped progress-bar-animated bg-primary" 
+              style={{ width: "75%" }}
+            ></div>
+          </div>
         </div>
       </Container>
     );
@@ -119,32 +167,52 @@ const SubscriptionSuccess = () => {
       <Container className="py-5">
         <Row className="justify-content-center">
           <Col md={8} lg={6}>
-            <Card className="border-danger">
-              <Card.Header className="bg-danger text-white text-center">
-                <h4 className="mb-0">
-                  <i className="bi bi-x-circle me-2"></i>
-                  Error en la Suscripción
-                </h4>
+            <Card className="border-0 shadow-lg">
+              <Card.Header className="text-center py-4" style={{ background: "linear-gradient(135deg, #dc3545 0%, #c82333 100%)", color: "white" }}>
+                <h3 className="mb-0">
+                  <i className="bi bi-exclamation-triangle me-3" style={{ fontSize: "2.5rem" }}></i>
+                  <div>Error en la Suscripción</div>
+                </h3>
               </Card.Header>
-              <Card.Body className="text-center">
-                <Alert variant="danger">{error}</Alert>
-                <p className="text-muted mb-4">
+              <Card.Body className="text-center p-5">
+                <Alert variant="danger" className="border-0 mb-4">
+                  <h5 className="alert-heading mb-2">
+                    <i className="bi bi-x-circle me-2"></i>
+                    Oops, algo salió mal
+                  </h5>
+                  <p className="mb-0">{error}</p>
+                </Alert>
+                <p className="text-muted mb-4 fs-6">
                   Ha ocurrido un problema al procesar tu suscripción. No te
-                  preocupes, no se ha realizado ningún cargo.
+                  preocupes, <strong>no se ha realizado ningún cargo</strong> a tu tarjeta.
                 </p>
-                <div className="d-grid gap-2 d-md-flex justify-content-md-center">
+                <div className="d-grid gap-3 d-md-flex justify-content-md-center">
                   <Button
                     variant="primary"
+                    size="lg"
                     onClick={() => navigate("/subscriptions")}
+                    className="px-4"
                   >
+                    <i className="bi bi-arrow-clockwise me-2"></i>
                     Intentar de Nuevo
                   </Button>
                   <Button
                     variant="outline-secondary"
+                    size="lg"
                     onClick={() => navigate("/profile")}
+                    className="px-4"
                   >
-                    Ir al Perfil
+                    <i className="bi bi-house me-2"></i>
+                    Ir al Inicio
                   </Button>
+                </div>
+                <div className="mt-4 pt-3 border-top">
+                  <small className="text-muted">
+                    ¿Necesitas ayuda? Contáctanos en{" "}
+                    <a href="mailto:soporte@nexosql.com" className="text-decoration-none">
+                      soporte@nexosql.com
+                    </a>
+                  </small>
                 </div>
               </Card.Body>
             </Card>
@@ -159,117 +227,115 @@ const SubscriptionSuccess = () => {
       <Container className="py-5">
         <Row className="justify-content-center">
           <Col md={10} lg={8}>
-            <Card className="border-success shadow">
-              <Card.Header className="bg-success text-white text-center">
-                <h2 className="mb-0">
-                  <i className="bi bi-check-circle me-2"></i>
-                  ¡Suscripción Exitosa!
+            <Card className="success-card">
+              <Card.Header className="success-card-header text-center success-header">
+                <h2 className="mb-0 text-white">
+                  <i className="bi bi-check-circle me-3 success-icon" style={{ fontSize: "3rem" }}></i>
+                  <div>¡Suscripción Exitosa!</div>
                 </h2>
               </Card.Header>
-              <Card.Body>
-                <div className="text-center mb-4">
-                  <h4 className="text-success">
-                    ¡Bienvenido a NexoSQL Premium!
-                  </h4>
-                  <p className="lead text-muted">
+              <Card.Body className="p-4">
+                <div className="text-center mb-5 success-content">
+                  <h3 className="text-success mb-3">
+                    {userProfile?.name 
+                      ? `¡Bienvenido ${userProfile.name} a NexoSQL Premium!`
+                      : "¡Bienvenido a NexoSQL Premium!"
+                    }
+                  </h3>
+                  <p className="lead text-muted fs-5">
                     Tu suscripción ha sido activada correctamente. Ahora puedes
-                    disfrutar de todas las funciones premium.
+                    disfrutar de todas las funciones premium de nuestra plataforma.
                   </p>
                 </div>
 
-                <Row className="mb-4">
-                  <Col md={6}>
-                    <Card className="h-100 border-0 bg-light">
-                      <Card.Body>
-                        <h6 className="text-primary">
+                <Row className="mb-5 success-details">
+                  <Col md={6} className="mb-4">
+                    <Card className="details-card h-100 bg-light border-0">
+                      <Card.Body className="p-4">
+                        <h5 className="text-primary mb-3">
                           <i className="bi bi-credit-card me-2"></i>
                           Detalles de la Suscripción
-                        </h6>
-                        <hr />
-                        <p>
-                          <strong>Plan:</strong>{" "}
-                          {getPlanName(subscriptionData.planType)}
-                        </p>
-                        <p>
-                          <strong>Precio:</strong>{" "}
-                          {formatPrice(subscriptionData.price)}/mes
-                        </p>
-                        <p>
-                          <strong>Estado:</strong>
-                          <span className="badge bg-success ms-2">
+                        </h5>
+                        <hr className="my-3" />
+                        <div className="mb-3">
+                          <strong className="text-dark">Plan:</strong>
+                          <span className="ms-2 badge bg-primary-subtle text-primary fs-6">
+                            {getPlanName(subscriptionData.planType)}
+                          </span>
+                        </div>
+                        <div className="mb-3">
+                          <strong className="text-dark">Precio:</strong>
+                          <span className="ms-2 text-success fw-bold fs-5">
+                            {formatPrice(subscriptionData.price)}/mes
+                          </span>
+                        </div>
+                        <div className="mb-3">
+                          <strong className="text-dark">Estado:</strong>
+                          <span className="badge bg-success ms-2 px-3 py-2">
+                            <i className="bi bi-check-circle me-1"></i>
                             {subscriptionData.status === "active"
                               ? "Activa"
                               : subscriptionData.status}
                           </span>
-                        </p>
-                        <p>
-                          <strong>ID de Suscripción:</strong>
-                          <small className="text-muted d-block">
+                        </div>
+                        <div className="mb-0">
+                          <strong className="text-dark">ID:</strong>
+                          <small className="text-muted d-block mt-1 font-monospace">
                             {subscriptionData.subscriptionId}
                           </small>
-                        </p>
+                        </div>
                       </Card.Body>
                     </Card>
                   </Col>
-                  <Col md={6}>
-                    <Card className="h-100 border-0 bg-light">
-                      <Card.Body>
-                        <h6 className="text-primary">
-                          <i className="bi bi-calendar me-2"></i>
+                  <Col md={6} className="mb-4">
+                    <Card className="details-card h-100 bg-light border-0">
+                      <Card.Body className="p-4">
+                        <h5 className="text-primary mb-3">
+                          <i className="bi bi-calendar-check me-2"></i>
                           Fechas Importantes
-                        </h6>
-                        <hr />
-                        <p>
-                          <strong>Fecha de Inicio:</strong>{" "}
-                          {formatDate(subscriptionData.startDate)}
-                        </p>
+                        </h5>
+                        <hr className="my-3" />
+                        <div className="mb-3">
+                          <strong className="text-dark">Fecha de Inicio:</strong>
+                          <div className="text-muted mt-1">
+                            {formatDate(subscriptionData.startDate)}
+                          </div>
+                        </div>
                         {subscriptionData.nextBillingDate && (
-                          <p>
-                            <strong>Próximo Cobro:</strong>{" "}
-                            {formatDate(subscriptionData.nextBillingDate)}
-                          </p>
+                          <div className="mb-3">
+                            <strong className="text-dark">Próximo Cobro:</strong>
+                            <div className="text-muted mt-1">
+                              {formatDate(subscriptionData.nextBillingDate)}
+                            </div>
+                          </div>
                         )}
-                        <p>
-                          <strong>Creado el:</strong>{" "}
-                          {formatDate(subscriptionData.createdAt)}
-                        </p>
+                        <div className="mb-0">
+                          <strong className="text-dark">Creado el:</strong>
+                          <div className="text-muted mt-1">
+                            {formatDate(subscriptionData.createdAt)}
+                          </div>
+                        </div>
                       </Card.Body>
                     </Card>
                   </Col>
                 </Row>
 
-                <Alert variant="info">
-                  <h6>
-                    <i className="bi bi-info-circle me-2"></i>¿Qué sigue?
-                  </h6>
-                  <ul className="mb-0">
-                    <li>
-                      Ya puedes crear y gestionar conexiones de base de datos
-                    </li>
-                    <li>Accede a todas las funciones de IA avanzada</li>
-                    <li>Disfruta de soporte prioritario</li>
-                    <li>
-                      Recibirás un email de confirmación con todos los detalles
-                    </li>
-                  </ul>
-                </Alert>
-
-                <div className="text-center mt-4">
-                  <div className="d-grid gap-2 d-md-flex justify-content-md-center">
+                <div className="text-center success-actions">
+                  <div className="d-grid gap-3 d-md-flex justify-content-md-center">
                     <Button
-                      variant="success"
+                      className="primary-button celebration-button px-4 py-3"
                       size="lg"
                       onClick={handleContinue}
-                      className="px-4"
                     >
                       <i className="bi bi-arrow-right me-2"></i>
                       Comenzar a Usar NexoSQL
                     </Button>
                     <Button
-                      variant="outline-primary"
+                      className="secondary-button px-4 py-3"
                       size="lg"
                       onClick={handleViewProfile}
                     >
+                      <i className="bi bi-person me-2"></i>
                       Ver Mi Perfil
                     </Button>
                   </div>
