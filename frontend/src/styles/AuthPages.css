@@ -29,7 +29,7 @@
   pointer-events: none;
 }
 
-/* Logo Section */
+/* Logo Section with Animations */
 .auth-logo-section {
   margin-bottom: 1rem;
 }
@@ -38,11 +38,17 @@
   height: 60px;
   margin-right: 15px;
   filter: drop-shadow(2px 2px 8px rgba(79, 172, 254, 0.3));
-  transition: transform 0.3s ease;
+  transition: all 0.3s ease;
 }
 
-.auth-logo:hover {
-  transform: scale(1.05);
+.auth-logo-animated {
+  animation: logoFloat 3s ease-in-out infinite, logoGlow 2s ease-in-out infinite alternate;
+  transform-origin: center;
+}
+
+.auth-logo-animated:hover {
+  animation: logoSpin 0.8s ease-in-out, logoFloat 3s ease-in-out infinite, logoGlow 2s ease-in-out infinite alternate;
+  transform: scale(1.1);
 }
 
 .auth-title-dark {
@@ -54,6 +60,17 @@
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
+  transition: all 0.3s ease;
+}
+
+.auth-title-animated {
+  animation: textFloat 4s ease-in-out infinite, textShimmer 3s ease-in-out infinite;
+  cursor: default;
+}
+
+.auth-title-animated:hover {
+  animation: textBounce 0.6s ease-in-out, textFloat 4s ease-in-out infinite, textShimmer 3s ease-in-out infinite;
+  transform: scale(1.05);
 }
 
 /* Welcome Section */
@@ -292,6 +309,83 @@
 
 .fa-spin {
   animation: spin 1s linear infinite;
+}
+
+/* Logo and Title Animations */
+@keyframes logoFloat {
+  0%, 100% { 
+    transform: translateY(0px) rotate(0deg); 
+  }
+  25% { 
+    transform: translateY(-8px) rotate(2deg); 
+  }
+  50% { 
+    transform: translateY(-5px) rotate(0deg); 
+  }
+  75% { 
+    transform: translateY(-8px) rotate(-2deg); 
+  }
+}
+
+@keyframes logoGlow {
+  0% { 
+    filter: drop-shadow(2px 2px 8px rgba(79, 172, 254, 0.3)); 
+  }
+  100% { 
+    filter: drop-shadow(2px 2px 15px rgba(79, 172, 254, 0.6)) drop-shadow(0px 0px 25px rgba(79, 172, 254, 0.4)); 
+  }
+}
+
+@keyframes logoSpin {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.1); }
+  100% { transform: rotate(360deg) scale(1); }
+}
+
+@keyframes textFloat {
+  0%, 100% { 
+    transform: translateY(0px); 
+  }
+  25% { 
+    transform: translateY(-3px); 
+  }
+  50% { 
+    transform: translateY(-6px); 
+  }
+  75% { 
+    transform: translateY(-3px); 
+  }
+}
+
+@keyframes textShimmer {
+  0% { 
+    background: linear-gradient(135deg, #58a6ff, #79c0ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+  33% { 
+    background: linear-gradient(135deg, #79c0ff, #a5f3fc);
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+  66% { 
+    background: linear-gradient(135deg, #a5f3fc, #58a6ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+  100% { 
+    background: linear-gradient(135deg, #58a6ff, #79c0ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+  }
+}
+
+@keyframes textBounce {
+  0% { transform: scale(1) translateY(0); }
+  25% { transform: scale(1.05) translateY(-5px); }
+  50% { transform: scale(1.1) translateY(-8px); }
+  75% { transform: scale(1.05) translateY(-5px); }
+  100% { transform: scale(1) translateY(0); }
 }
 
 /* Focus and interaction improvements */

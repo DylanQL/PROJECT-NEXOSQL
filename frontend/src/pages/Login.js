@@ -90,9 +90,9 @@ const Login = () => {
               <img
                 src={logoNexoSQL}
                 alt="NexoSQL Logo"
-                className="auth-logo"
+                className="auth-logo auth-logo-animated"
               />
-              <h1 className="mb-0 auth-title-dark">NexoSQL</h1>
+              <h1 className="mb-0 auth-title-dark auth-title-animated">NexoSQL</h1>
             </div>
           </div>
           <div className="auth-welcome-section">
