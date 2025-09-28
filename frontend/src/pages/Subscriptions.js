@@ -24,6 +24,21 @@ import { useSubscription } from "../contexts/SubscriptionContext";
 
 const PLAN_ORDER = { bronce: 1, plata: 2, oro: 3 };
 
+const planThemes = {
+  bronce: {
+    gradient: "linear-gradient(135deg, #475569 0%, #1f2937 100%)",
+    textColor: "#f8fafc",
+  },
+  plata: {
+    gradient: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
+    textColor: "#f8fafc",
+  },
+  oro: {
+    gradient: "linear-gradient(135deg, #facc15 0%, #f59e0b 100%)",
+    textColor: "#1f2937",
+  },
+};
+
 const Subscriptions = () => {
   const { autoSyncActive } = useSubscription();
   const [plans, setPlans] = useState({});
@@ -302,23 +317,31 @@ const Subscriptions = () => {
                     isCurrentPlan ? "subscription-card--active" : ""
                   }`}
                 >
-                  <Card.Body className="d-flex flex-column h-100">
+                  <Card.Header
+                    className="text-center border-0 py-4 px-3"
+                    style={{
+                      background: planThemes[planType].gradient,
+                      color: planThemes[planType].textColor,
+                      borderTopLeftRadius: "24px",
+                      borderTopRightRadius: "24px",
+                    }}
+                  >
                     <div className="subscription-card__heading">
-                      <span className="subscription-card__icon">
-                        {planIcons[planType] || <Gem size={18} />}
-                      </span>
                       <div>
                         <h3 className="subscription-card__title mb-1">{plan.name}</h3>
-                        <p className="subscription-card__description mb-0 text-muted">
+                        <p className="subscription-card__description mb-0" style={{color: planThemes[planType].textColor, opacity: 0.8}}>
                           {plan.description}
                         </p>
                       </div>
                     </div>
 
-                    <div className="subscription-card__price mb-3">
+                    <div className="subscription-card__price mb-0">
                       <span>{formatPrice(plan.price)}</span>
-                      <small className="text-muted">/mes</small>
+                      <small style={{opacity: 0.8}}>/mes</small>
                     </div>
+                  </Card.Header>
+
+                  <Card.Body className="d-flex flex-column h-100">
 
                     <ul className="subscription-card__features">
                       {plan.features?.map((feature, index) => (
