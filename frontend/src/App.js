@@ -7,6 +7,7 @@ import {
 } from "react-router-dom";
 import { Container, Toast, ToastContainer } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
+import logo from "./assets/logo_nexosql.svg";
 
 // Components
 import Navigation from "./components/Navigation";
@@ -95,7 +96,10 @@ function MainLayout({ children }) {
             <div className="row g-4">
               {/* Logo y descripción */}
               <div className="col-lg-4 col-md-6">
-                <h5 className="fw-bold mb-3 text-primary">NexoSQL</h5>
+                <div className="d-flex align-items-center mb-3">
+                  <img src={logo} alt="NexoSQL Logo" height="32" className="me-2" />
+                  <h5 className="fw-bold mb-0 text-primary">NexoSQL</h5>
+                </div>
                 <p className="text-light opacity-75 mb-3">
                   La plataforma de gestión de bases de datos más intuitiva y potente.
                   Conecta, administra y consulta tus bases de datos desde cualquier lugar.
