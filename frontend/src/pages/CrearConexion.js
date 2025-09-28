@@ -242,18 +242,33 @@ const CrearConexion = () => {
 
   const renderStepIndicator = () => {
     return (
-      <div className="mb-4">
-        <ProgressBar now={(step / 3) * 100} className="mb-3" />
+      <div className="mb-4 step-indicator-wrapper">
+        <ProgressBar
+          now={(step / 3) * 100}
+          className="mb-3 step-progress"
+        />
         <div className="d-flex justify-content-between">
-          <div className={`step-item ${step >= 1 ? "active" : ""}`}>
+          <div
+            className={`step-item ${step >= 1 ? "active" : ""} ${
+              step === 1 ? "current" : ""
+            }`}
+          >
             <div className="step-number">1</div>
             <div className="step-text">Seleccionar Motor</div>
           </div>
-          <div className={`step-item ${step >= 2 ? "active" : ""}`}>
+          <div
+            className={`step-item ${step >= 2 ? "active" : ""} ${
+              step === 2 ? "current" : ""
+            }`}
+          >
             <div className="step-number">2</div>
             <div className="step-text">Ingresar Credenciales</div>
           </div>
-          <div className={`step-item ${step >= 3 ? "active" : ""}`}>
+          <div
+            className={`step-item ${step >= 3 ? "active" : ""} ${
+              step === 3 ? "current" : ""
+            }`}
+          >
             <div className="step-number">3</div>
             <div className="step-text">Verificación</div>
           </div>
@@ -289,12 +304,14 @@ const CrearConexion = () => {
 
     return (
       <>
-        <h5 className="mb-4">Seleccione el motor de base de datos</h5>
-        <Row>
-          {motores.map((motor) => (
-            <Col md={4} key={motor.id} className="mb-3">
+        <h5 className="mb-4 section-title">Seleccione el motor de base de datos</h5>
+        <Row className="g-3 g-lg-4 motor-card-grid">
+          {motores.map((motor, index) => (
+            <Col md={4} key={motor.id} className="motor-card-col">
               <Card
-                className={`h-100 ${selectedMotor === motor.id ? "border-primary" : ""}`}
+                className={`h-100 motor-card ${
+                  selectedMotor === motor.id ? "active" : ""
+                }`}
                 onClick={() => {
                   setSelectedMotor(motor.id);
                   setFormData((prev) => ({
@@ -302,29 +319,29 @@ const CrearConexion = () => {
                     motores_db_id: motor.id,
                   }));
                 }}
-                style={{ cursor: "pointer" }}
               >
-                <Card.Body className="text-center">
-                  <div className="mb-3">
+                <Card.Body className="text-center motor-card-body">
+                  <div className="motor-card-header">
+                    {selectedMotor === "" && index === 0 && (
+                      <span className="motor-card-badge badge-muted">
+                        Recomendado
+                      </span>
+                    )}
+                  </div>
+                  <div className="motor-card-media">
                     {dbLogos[motor.nombre.toLowerCase()] ? (
                       <img
                         src={dbLogos[motor.nombre.toLowerCase()]}
                         alt={`${motor.nombre} logo`}
-                        style={{ height: "60px", width: "auto" }}
+                        className="motor-card-logo"
                       />
                     ) : (
-                      <i className={`bi bi-database fs-1`}></i>
+                      <i className="bi bi-database motor-card-icon"></i>
                     )}
                   </div>
-                  <Card.Title>{motor.nombre}</Card.Title>
-                  <Form.Check
-                    type="radio"
-                    name="motorRadio"
-                    id={`motor-${motor.id}`}
-                    checked={selectedMotor === motor.id}
-                    onChange={() => {}}
-                    className="mt-3"
-                  />
+                  <Card.Title className="motor-card-title">
+                    {motor.nombre}
+                  </Card.Title>
                 </Card.Body>
               </Card>
             </Col>
@@ -341,7 +358,7 @@ const CrearConexion = () => {
 
     return (
       <>
-        <h5 className="mb-4">
+        <h5 className="mb-4 section-title">
           Ingrese las credenciales para{" "}
           {selectedMotorDetails
             ? selectedMotorDetails.nombre
@@ -469,11 +486,11 @@ const CrearConexion = () => {
   const renderVerification = () => {
     return (
       <>
-        <h5 className="mb-4">Verificación de la conexión</h5>
+        <h5 className="mb-4 section-title">Verificación de la conexión</h5>
 
-        <Card className="mb-4">
+        <Card className="mb-4 verification-card">
           <Card.Body>
-            <h6>Resumen de la conexión</h6>
+            <h6 className="verification-title">Resumen de la conexión</h6>
             <Row>
               <Col md={6}>
                 <p>
@@ -506,7 +523,7 @@ const CrearConexion = () => {
             </Row>
 
             {testingConnection && (
-              <div className="mt-3 text-center">
+              <div className="mt-3 text-center verification-loading">
                 <Spinner
                   as="span"
                   animation="border"
@@ -532,16 +549,18 @@ const CrearConexion = () => {
   };
 
   return (
-    <Container className="py-5">
-      <div className="mb-4">
-        <h1>{isEditMode ? "Editar Conexión" : "Crear Nueva Conexión"}</h1>
+    <Container className="py-5 crear-conexion-page">
+      <div className="mb-4 page-header">
+        <h1 className="page-title">
+          {isEditMode ? "Editar Conexión" : "Crear Nueva Conexión"}
+        </h1>
       </div>
 
       {error && <Alert variant="danger">{error}</Alert>}
       {success && <Alert variant="success">{success}</Alert>}
 
-      <Card className="shadow-sm">
-        <Card.Body className="p-4">
+      <Card className="shadow-sm create-connection-card">
+        <Card.Body className="p-4 create-connection-card-body">
           {renderStepIndicator()}
 
           <div className="step-content py-3">{renderStepContent()}</div>
@@ -552,6 +571,7 @@ const CrearConexion = () => {
                 variant="outline-secondary"
                 onClick={handlePrevStep}
                 size="md"
+                className="btn-ghost"
               >
                 Anterior
               </Button>
@@ -562,7 +582,7 @@ const CrearConexion = () => {
                 variant="primary"
                 onClick={handleNextStep}
                 size="md"
-                className={step > 1 ? "" : "ms-auto"}
+                className={`cta-button ${step > 1 ? "" : "ms-auto"}`}
               >
                 Siguiente
               </Button>
@@ -572,6 +592,7 @@ const CrearConexion = () => {
                 onClick={handleSaveConnection}
                 disabled={loading || !hasActiveSubscription}
                 size="md"
+                className="cta-button cta-success"
               >
                 {loading ? "Guardando..." : "Guardar Conexión"}
               </Button>
