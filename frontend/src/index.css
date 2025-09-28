@@ -2218,7 +2218,7 @@ footer {
     .chat-app__header {
         padding: 0.85rem 1rem;
         position: sticky;
-        top: var(--navbar-height);
+        top: 0;
         z-index: 1030;
         background: #ffffff;
     }
