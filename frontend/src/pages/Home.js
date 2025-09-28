@@ -15,6 +15,11 @@ import {
   Speedometer2,
   Globe,
   ArrowRight,
+  Robot,
+  HddStack,
+  ShieldFillCheck,
+  Cpu,
+  Magic,
 } from "react-bootstrap-icons";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -87,7 +92,7 @@ const Home = () => {
             </Col>
             <Col lg={6} className="text-center">
               <div className="hero-demo-card">
-                <ChatDots size={80} className="text-primary mb-3 hero-demo-icon" />
+                <Robot size={80} className="text-primary mb-3 hero-demo-icon" />
                 <h5 className="mb-3 hero-demo-question">
                   ¿Cuántos usuarios se registraron este mes?
                 </h5>
@@ -117,7 +122,7 @@ const Home = () => {
             <Col md={4} className="mb-4">
               <Card className="h-100 border-0 shadow-sm feature-card">
                 <Card.Body className="text-center p-4">
-                  <ChatDots size={48} className="text-primary mb-3 feature-icon" />
+                  <Magic size={48} className="text-primary mb-3 feature-icon" />
                   <h5 className="fw-bold feature-title">Lenguaje Natural</h5>
                   <p className="text-muted feature-description">
                     Haz preguntas en español y obtén consultas SQL precisas
@@ -129,7 +134,7 @@ const Home = () => {
             <Col md={4} className="mb-4">
               <Card className="h-100 border-0 shadow-sm feature-card">
                 <Card.Body className="text-center p-4">
-                  <Database size={48} className="text-success mb-3 feature-icon" />
+                  <HddStack size={48} className="text-success mb-3 feature-icon" />
                   <h5 className="fw-bold feature-title">Múltiples Conexiones</h5>
                   <p className="text-muted feature-description">
                     Conecta y consulta múltiples bases de datos desde una sola
@@ -141,7 +146,7 @@ const Home = () => {
             <Col md={4} className="mb-4">
               <Card className="h-100 border-0 shadow-sm feature-card">
                 <Card.Body className="text-center p-4">
-                  <Shield size={48} className="text-warning mb-3 feature-icon" />
+                  <ShieldFillCheck size={48} className="text-warning mb-3 feature-icon" />
                   <h5 className="fw-bold feature-title">Seguro y Confiable</h5>
                   <p className="text-muted feature-description">
                     Tus conexiones están protegidas con autenticación segura y
@@ -242,7 +247,7 @@ const Home = () => {
       <Container className="py-5">
         <Card className="text-center p-5">
           <Card.Body>
-            <Database size={64} className="mb-4 text-primary" />
+            <HddStack size={64} className="mb-4 text-primary" />
             <Card.Title>No tienes conexiones configuradas</Card.Title>
             <Card.Text>
               Para empezar a usar el asistente SQL, necesitas configurar al
