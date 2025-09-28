@@ -1838,6 +1838,13 @@ footer .social-icons a:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(148, 163, 184, 0.3);
 }
+/* Estilos específicos para el botón Cerrar del modal de opciones de conexión */
+.modal .modal-footer .btn-ghost {
+    background: rgb(65, 66, 67) !important;
+    border-color: rgba(79, 70, 229, 0.3) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 8px rgba(148, 163, 184, 0.3) !important;
+}
 
 .cta-button {
     background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
