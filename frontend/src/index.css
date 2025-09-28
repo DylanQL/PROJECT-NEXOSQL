@@ -992,6 +992,101 @@ footer {
     border: 1px solid rgba(79, 70, 229, 0.1);
 }
 
+/* Connection cards styles */
+.connection-card {
+    border: 2px solid rgba(148, 163, 184, 0.15);
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    overflow: hidden;
+    position: relative;
+}
+
+.connection-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.05) 0%, rgba(124, 58, 237, 0.05) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.connection-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.15);
+    border-color: rgba(79, 70, 229, 0.3);
+}
+
+.connection-card:hover::before {
+    opacity: 1;
+}
+
+.connection-card-body {
+    position: relative;
+    z-index: 2;
+    padding: 1.5rem;
+}
+
+.connection-card-header {
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.connection-card-media {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.1) 0%, rgba(124, 58, 237, 0.1) 100%);
+}
+
+.connection-card-logo {
+    height: 40px;
+    width: auto;
+    object-fit: contain;
+}
+
+.connection-card-icon {
+    font-size: 1.5rem;
+    color: #4f46e5;
+}
+
+.connection-card-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 0.25rem;
+}
+
+.connection-card-subtitle {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.connection-details .list-group-item {
+    border: none;
+    padding: 0.5rem 0;
+    background: transparent;
+    font-size: 0.875rem;
+    color: #475569;
+}
+
+.connection-card-meta {
+    margin-bottom: 0;
+    font-size: 0.75rem;
+    color: #94a3b8;
+    text-align: center;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(148, 163, 184, 0.15);
+}
+
 /* Button styles */
 .btn-ghost {
     background: rgba(255, 255, 255, 0.8);

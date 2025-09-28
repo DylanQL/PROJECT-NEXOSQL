@@ -102,30 +102,41 @@ const Conexiones = () => {
 
   if (loading && conexiones.length === 0) {
     return (
-      <Container className="py-5 text-center">
-        <Spinner animation="border" role="status" variant="primary">
-          <span className="visually-hidden">Cargando...</span>
-        </Spinner>
-        <p className="mt-3">Cargando conexiones...</p>
-      </Container>
+      <>
+        <div className="py-5 text-center">
+          <Spinner animation="border" role="status" variant="primary">
+            <span className="visually-hidden">Cargando...</span>
+          </Spinner>
+          <p className="mt-3">Cargando conexiones...</p>
+        </div>
+      </>
     );
   }
 
   return (
-    <Container className="py-5">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h1>Mis Conexiones a Bases de Datos</h1>
-        <Button variant="primary" onClick={() => navigate("/crear-conexion")}>
-          Nueva Conexión
-        </Button>
-      </div>
+    <>
+      <Container className="py-3">
+        <div className="mb-4 mt-4 page-header">
+          <div className="d-flex justify-content-between align-items-center">
+            <div>
+              <h1 className="page-title">Mis Conexiones a Bases de Datos</h1>
+            </div>
+            <Button 
+              variant="primary" 
+              onClick={() => navigate("/crear-conexion")}
+              className="cta-button"
+            >
+              Nueva Conexión
+            </Button>
+          </div>
+        </div>
 
-      <ConnectionLimitInfo currentConnectionCount={conexiones.length} />
+        <ConnectionLimitInfo currentConnectionCount={conexiones.length} />
 
-      {error && <Alert variant="danger">{error}</Alert>}
+        {error && <Alert variant="danger">{error}</Alert>}
 
       {conexiones.length === 0 ? (
-        <Card className="text-center p-5">
+        <Card className="text-center p-5 create-connection-card mx-auto" style={{ width: '90%' }}>
           <Card.Body>
             <Card.Title>No tienes conexiones configuradas</Card.Title>
             <Card.Text>
@@ -135,48 +146,44 @@ const Conexiones = () => {
             <Button
               variant="primary"
               onClick={() => navigate("/crear-conexion")}
+              className="cta-button"
             >
               Crear Primera Conexión
             </Button>
           </Card.Body>
         </Card>
       ) : (
-        <Row>
+        <Row className="g-3 g-lg-4">
           {conexiones.map((conexion) => (
             <Col md={4} key={conexion.id} className="mb-4">
               <Card
-                className="h-100 shadow-sm"
+                className="h-100 shadow-sm connection-card"
                 onClick={() => handleConnectionClick(conexion)}
                 style={{ cursor: "pointer" }}
               >
-                <Card.Body>
-                  <div className="d-flex align-items-center mb-3">
-                    {getMotorLogo(conexion.motor) ? (
-                      <img
-                        src={getMotorLogo(conexion.motor)}
-                        alt={`${getMotorIcon(conexion.motor)} logo`}
-                        style={{
-                          height: "40px",
-                          width: "auto",
-                          marginRight: "10px",
-                        }}
-                      />
-                    ) : (
-                      <i
-                        className="bi bi-database me-2"
-                        style={{ fontSize: "1.5rem" }}
-                      ></i>
-                    )}
+                <Card.Body className="connection-card-body">
+                  <div className="d-flex align-items-center mb-3 connection-card-header">
+                    <div className="connection-card-media me-3">
+                      {getMotorLogo(conexion.motor) ? (
+                        <img
+                          src={getMotorLogo(conexion.motor)}
+                          alt={`${getMotorIcon(conexion.motor)} logo`}
+                          className="connection-card-logo"
+                        />
+                      ) : (
+                        <i className="bi bi-database connection-card-icon"></i>
+                      )}
+                    </div>
                     <div>
-                      <Card.Title className="mb-0">
+                      <Card.Title className="mb-0 connection-card-title">
                         {conexion.nombre}
                       </Card.Title>
-                      <Card.Subtitle className="text-muted">
+                      <Card.Subtitle className="text-muted connection-card-subtitle">
                         {getMotorIcon(conexion.motor)}
                       </Card.Subtitle>
                     </div>
                   </div>
-                  <ListGroup variant="flush" className="mb-3">
+                  <ListGroup variant="flush" className="mb-3 connection-details">
                     <ListGroup.Item>
                       <strong>Host:</strong> {conexion.host}
                     </ListGroup.Item>
@@ -187,7 +194,7 @@ const Conexiones = () => {
                       <strong>Base de datos:</strong> {conexion.database_name}
                     </ListGroup.Item>
                   </ListGroup>
-                  <Card.Text className="text-muted">
+                  <Card.Text className="text-muted connection-card-meta">
                     <small>
                       Creada:{" "}
                       {new Date(conexion.createdAt).toLocaleDateString()}
@@ -199,6 +206,8 @@ const Conexiones = () => {
           ))}
         </Row>
       )}
+
+      </Container>
 
       {/* Modal for connection options */}
       <Modal show={showModal} onHide={() => setShowModal(false)}>
@@ -229,18 +238,30 @@ const Conexiones = () => {
           )}
         </Modal.Body>
         <Modal.Footer className="d-flex justify-content-center">
-          <Button variant="secondary" onClick={() => setShowModal(false)}>
+          <Button 
+            variant="secondary" 
+            onClick={() => setShowModal(false)}
+            className="btn-ghost"
+          >
             Cerrar
           </Button>
-          <Button variant="primary" onClick={handleEditConnection}>
+          <Button 
+            variant="primary" 
+            onClick={handleEditConnection}
+            className="cta-button"
+          >
             Editar
           </Button>
-          <Button variant="danger" onClick={handleDeleteConnection}>
+          <Button 
+            variant="danger" 
+            onClick={handleDeleteConnection}
+            className="cta-button"
+          >
             Eliminar
           </Button>
         </Modal.Footer>
       </Modal>
-    </Container>
+    </>
   );
 };
 
