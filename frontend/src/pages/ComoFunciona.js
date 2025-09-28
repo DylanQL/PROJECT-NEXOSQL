@@ -112,9 +112,6 @@ const ComoFunciona = () => {
                   Configura la conexión a tu base de datos MySQL, PostgreSQL o SQL
                   Server de forma segura.
                 </Card.Text>
-                <Badge bg="secondary" className="mt-auto">
-                  Próximamente
-                </Badge>
               </Card.Body>
             </Card>
           </Col>
@@ -140,9 +137,6 @@ const ComoFunciona = () => {
                   Haz preguntas en lenguaje natural y obtén consultas SQL,
                   análisis y estadísticas.
                 </Card.Text>
-                <Badge bg="info" className="mt-auto">
-                  Disponible pronto
-                </Badge>
               </Card.Body>
             </Card>
           </Col>
