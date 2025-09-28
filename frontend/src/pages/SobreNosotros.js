@@ -30,7 +30,7 @@ const SobreNosotros = () => {
                   <div className="bg-primary bg-gradient rounded-circle d-inline-flex align-items-center justify-content-center shadow-sm"
                        style={{ width: "80px", height: "80px" }}>
                     <i
-                      className="bi bi-crosshair text-white"
+                      className="bi bi-bullseye text-white"
                       style={{ fontSize: "2.5rem" }}
                     ></i>
                   </div>
@@ -53,7 +53,7 @@ const SobreNosotros = () => {
                   <div className="bg-success bg-gradient rounded-circle d-inline-flex align-items-center justify-content-center shadow-sm"
                        style={{ width: "80px", height: "80px" }}>
                     <i
-                      className="bi bi-telescope text-white"
+                      className="bi bi-binoculars text-white"
                       style={{ fontSize: "2.5rem" }}
                     ></i>
                   </div>
@@ -89,7 +89,7 @@ const SobreNosotros = () => {
                   <div className="bg-primary bg-gradient rounded-circle d-inline-flex align-items-center justify-content-center shadow-sm"
                        style={{ width: "70px", height: "70px" }}>
                     <i
-                      className="bi bi-shield-lock text-white"
+                      className="bi bi-shield-fill-check text-white"
                       style={{ fontSize: "2rem" }}
                     ></i>
                   </div>
@@ -111,7 +111,7 @@ const SobreNosotros = () => {
                   <div className="bg-warning bg-gradient rounded-circle d-inline-flex align-items-center justify-content-center shadow-sm"
                        style={{ width: "70px", height: "70px" }}>
                     <i
-                      className="bi bi-cpu text-white"
+                      className="bi bi-lightbulb-fill text-white"
                       style={{ fontSize: "2rem" }}
                     ></i>
                   </div>
@@ -133,7 +133,7 @@ const SobreNosotros = () => {
                   <div className="bg-info bg-gradient rounded-circle d-inline-flex align-items-center justify-content-center shadow-sm"
                        style={{ width: "70px", height: "70px" }}>
                     <i
-                      className="bi bi-diagram-3 text-white"
+                      className="bi bi-people-fill text-white"
                       style={{ fontSize: "2rem" }}
                     ></i>
                   </div>
@@ -155,7 +155,7 @@ const SobreNosotros = () => {
                   <div className="bg-success bg-gradient rounded-circle d-inline-flex align-items-center justify-content-center shadow-sm"
                        style={{ width: "70px", height: "70px" }}>
                     <i
-                      className="bi bi-award text-white"
+                      className="bi bi-trophy-fill text-white"
                       style={{ fontSize: "2rem" }}
                     ></i>
                   </div>
@@ -188,7 +188,7 @@ const SobreNosotros = () => {
                         <div className="flex-shrink-0 me-4">
                           <div className="bg-primary bg-gradient rounded-circle d-flex align-items-center justify-content-center shadow-sm"
                                style={{ width: "50px", height: "50px" }}>
-                            <i className="bi bi-stars text-white"></i>
+                            <i className="bi bi-star-fill text-white"></i>
                           </div>
                         </div>
                         <div>
@@ -207,7 +207,7 @@ const SobreNosotros = () => {
                         <div className="flex-shrink-0 me-4">
                           <div className="bg-success bg-gradient rounded-circle d-flex align-items-center justify-content-center shadow-sm"
                                style={{ width: "50px", height: "50px" }}>
-                            <i className="bi bi-gear text-white"></i>
+                            <i className="bi bi-gear-fill text-white"></i>
                           </div>
                         </div>
                         <div>
@@ -228,7 +228,7 @@ const SobreNosotros = () => {
                         <div className="flex-shrink-0 me-4">
                           <div className="bg-warning bg-gradient rounded-circle d-flex align-items-center justify-content-center shadow-sm"
                                style={{ width: "50px", height: "50px" }}>
-                            <i className="bi bi-activity text-white"></i>
+                            <i className="bi bi-clock-fill text-white"></i>
                           </div>
                         </div>
                         <div>
@@ -246,7 +246,7 @@ const SobreNosotros = () => {
                         <div className="flex-shrink-0 me-4">
                           <div className="bg-info bg-gradient rounded-circle d-flex align-items-center justify-content-center shadow-sm"
                                style={{ width: "50px", height: "50px" }}>
-                            <i className="bi bi-arrow-up-right-circle text-white"></i>
+                            <i className="bi bi-arrow-up-circle-fill text-white"></i>
                           </div>
                         </div>
                         <div>
@@ -274,7 +274,7 @@ const SobreNosotros = () => {
                 <div className="mb-4">
                   <div className="bg-success bg-gradient rounded-circle d-inline-flex align-items-center justify-content-center shadow-sm"
                        style={{ width: "80px", height: "80px" }}>
-                    <i className="bi bi-heart text-white" style={{ fontSize: "2.5rem" }}></i>
+                    <i className="bi bi-heart-fill text-white" style={{ fontSize: "2.5rem" }}></i>
                   </div>
                 </div>
                 <h2 className="mb-4 fw-bold text-dark">Nuestro Compromiso</h2>
