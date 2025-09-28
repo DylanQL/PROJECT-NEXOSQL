@@ -70,7 +70,7 @@ const ComoFunciona = () => {
                     style={{ width: "70px", height: "70px" }}
                   >
                     <i
-                      className="bi bi-credit-card-fill"
+                      className="bi bi-star-fill"
                       style={{ fontSize: "28px" }}
                     ></i>
                   </div>
@@ -104,7 +104,7 @@ const ComoFunciona = () => {
                     className="bg-warning bg-gradient text-white rounded-circle d-inline-flex align-items-center justify-content-center shadow-sm"
                     style={{ width: "70px", height: "70px" }}
                   >
-                    <i className="bi bi-server" style={{ fontSize: "28px" }}></i>
+                    <i className="bi bi-hdd-stack-fill" style={{ fontSize: "28px" }}></i>
                   </div>
                 </div>
                 <Card.Title className="h4 fw-bold text-dark">3. Conecta tu DB</Card.Title>
@@ -159,7 +159,7 @@ const ComoFunciona = () => {
                     <div className="flex-shrink-0 me-4">
                       <div className="bg-primary bg-gradient text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" 
                            style={{ width: "50px", height: "50px" }}>
-                        <i className="bi bi-1-circle-fill" style={{ fontSize: "24px" }}></i>
+                        <i className="bi bi-check-circle-fill" style={{ fontSize: "24px" }}></i>
                       </div>
                     </div>
                     <div className="flex-grow-1">
@@ -177,7 +177,7 @@ const ComoFunciona = () => {
                     <div className="flex-shrink-0 me-4">
                       <div className="bg-success bg-gradient text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" 
                            style={{ width: "50px", height: "50px" }}>
-                        <i className="bi bi-2-circle-fill" style={{ fontSize: "24px" }}></i>
+                        <i className="bi bi-credit-card-fill" style={{ fontSize: "24px" }}></i>
                       </div>
                     </div>
                     <div className="flex-grow-1">
@@ -224,7 +224,7 @@ const ComoFunciona = () => {
                     <div className="flex-shrink-0 me-4">
                       <div className="bg-warning bg-gradient text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" 
                            style={{ width: "50px", height: "50px" }}>
-                        <i className="bi bi-3-circle-fill" style={{ fontSize: "24px" }}></i>
+                        <i className="bi bi-link-45deg" style={{ fontSize: "24px" }}></i>
                       </div>
                     </div>
                     <div className="flex-grow-1">
@@ -259,7 +259,7 @@ const ComoFunciona = () => {
                     <div className="flex-shrink-0 me-4">
                       <div className="bg-info bg-gradient text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" 
                            style={{ width: "50px", height: "50px" }}>
-                        <i className="bi bi-4-circle-fill" style={{ fontSize: "24px" }}></i>
+                        <i className="bi bi-robot" style={{ fontSize: "24px" }}></i>
                       </div>
                     </div>
                     <div className="flex-grow-1">
