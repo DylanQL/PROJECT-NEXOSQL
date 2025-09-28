@@ -1939,7 +1939,7 @@ footer {
 .subscriptions-simple {
     min-height: calc(100vh - var(--navbar-height));
     background: #f7f9fd;
-    padding: 3rem 0;
+
 }
 
 .subscriptions-simple--loading {
