@@ -549,8 +549,8 @@ const CrearConexion = () => {
   };
 
   return (
-    <Container className="py-5 crear-conexion-page">
-      <div className="mb-4 page-header">
+    <>
+      <div className="mb-4 mt-4 page-header">
         <h1 className="page-title">
           {isEditMode ? "Editar Conexión" : "Crear Nueva Conexión"}
         </h1>
@@ -559,7 +559,7 @@ const CrearConexion = () => {
       {error && <Alert variant="danger">{error}</Alert>}
       {success && <Alert variant="success">{success}</Alert>}
 
-      <Card className="shadow-sm create-connection-card">
+      <Card className="shadow-sm create-connection-card mx-auto" style={{ width: '90%' }}>
         <Card.Body className="p-4 create-connection-card-body">
           {renderStepIndicator()}
 
@@ -602,7 +602,7 @@ const CrearConexion = () => {
           </div>
         </Card.Body>
       </Card>
-    </Container>
+    </>
   );
 };
 
