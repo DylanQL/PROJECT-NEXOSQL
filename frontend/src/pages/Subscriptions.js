@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Container,
   Row,
@@ -10,8 +10,19 @@ import {
   Spinner,
   Modal,
 } from "react-bootstrap";
+import {
+  Gem,
+  LightningCharge,
+  ShieldLock,
+  Trophy,
+  GraphUp,
+  ArrowRepeat,
+  CheckCircleFill,
+} from "react-bootstrap-icons";
 
 import { useSubscription } from "../contexts/SubscriptionContext";
+
+const PLAN_ORDER = { bronce: 1, plata: 2, oro: 3 };
 
 const Subscriptions = () => {
   const { autoSyncActive } = useSubscription();
@@ -40,7 +51,7 @@ const Subscriptions = () => {
         loadCurrentSubscription(),
         loadSubscriptionStats(),
       ]);
-    } catch (err) {
+    } catch {
       setError("Error al cargar la información");
     } finally {
       setLoading(false);
@@ -52,7 +63,7 @@ const Subscriptions = () => {
       const response = await fetch("/api/subscriptions/plans");
       const data = await response.json();
       if (data.success) {
-        setPlans(data.data);
+        setPlans(data.data || {});
       }
     } catch (err) {
       console.error("Error loading plans:", err);
@@ -101,36 +112,34 @@ const Subscriptions = () => {
       const data = await subscriptionService.createSubscription(planType);
 
       if (data.success && data.data.data.approvalUrl) {
-        // Redirect to PayPal for approval
         window.location.href = data.data.data.approvalUrl;
       } else {
         setError(data.error || "Error al crear la suscripción");
       }
-    } catch (err) {
+    } catch {
       setError("Error al crear la suscripción");
     } finally {
       setLoadingPlanType(null);
     }
   };
 
-  const handleUpdateSubscription = async (newPlanType) => {
+  const handleUpdateSubscription = async (planType) => {
     try {
-      setLoadingPlanType(newPlanType);
+      setLoadingPlanType(planType);
       setError("");
       setSuccess("");
 
       const subscriptionService = (
         await import("../services/subscriptionService")
       ).default;
-      const data = await subscriptionService.updateSubscription(newPlanType);
+      const data = await subscriptionService.updateSubscription(planType);
 
       if (data.success && data.data.data.approvalUrl) {
-        // Redirect to PayPal for approval
         window.location.href = data.data.data.approvalUrl;
       } else {
         setError(data.error || "Error al actualizar la suscripción");
       }
-    } catch (err) {
+    } catch {
       setError("Error al actualizar la suscripción");
     } finally {
       setLoadingPlanType(null);
@@ -157,7 +166,7 @@ const Subscriptions = () => {
       } else {
         setError(data.error || "Error al cancelar la suscripción");
       }
-    } catch (err) {
+    } catch {
       setError("Error al cancelar la suscripción");
     } finally {
       setLoadingPlanType(null);
@@ -175,18 +184,14 @@ const Subscriptions = () => {
       const subscriptionService = (
         await import("../services/subscriptionService")
       ).default;
-
       const result = await subscriptionService.syncSubscription(
         currentSubscription.subscriptionId,
       );
 
       if (result.success) {
         setSyncSuccess("Suscripción sincronizada correctamente");
-        // Reload all data
         await loadData();
-
-        // Clear success message after 3 seconds
-        setTimeout(() => setSyncSuccess(""), 3000);
+        setTimeout(() => setSyncSuccess("") , 3000);
       }
     } catch (err) {
       setError("Error al sincronizar suscripción: " + err.message);
@@ -211,175 +216,186 @@ const Subscriptions = () => {
     return <Badge bg={config.variant}>{config.text}</Badge>;
   };
 
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat("es-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(price);
-  };
+  const formatPrice = (price) =>
+    new Intl.NumberFormat("es-US", { style: "currency", currency: "USD" }).format(price);
 
   const formatDate = (date) => {
     if (!date) return "N/A";
     return new Date(date).toLocaleDateString("es-ES");
   };
 
+  const sortedPlans = useMemo(() => {
+    return Object.entries(plans).sort(
+      ([planTypeA], [planTypeB]) =>
+        (PLAN_ORDER[planTypeA] || 0) - (PLAN_ORDER[planTypeB] || 0),
+    );
+  }, [plans]);
+
+  const planIcons = {
+    oro: <Trophy size={18} />,
+    plata: <LightningCharge size={18} />,
+    bronce: <ShieldLock size={18} />,
+  };
+
   if (loading) {
     return (
-      <Container
-        className="d-flex justify-content-center align-items-center"
-        style={{ minHeight: "50vh" }}
-      >
+      <div className="subscriptions-simple subscriptions-simple--loading">
         <Spinner animation="border" role="status">
           <span className="visually-hidden">Cargando...</span>
         </Spinner>
-      </Container>
+        <p className="mt-3 text-muted">Preparando tus planes...</p>
+      </div>
     );
   }
 
   return (
-    <Container className="py-4">
-      {error && (
-        <Alert variant="danger" dismissible onClose={() => setError("")}>
-          {error}
-        </Alert>
-      )}
+    <div className="subscriptions-simple">
+      <Container className="py-5">
+        <div className="subscriptions-simple__header text-center mb-5">
+          <h1 className="mb-3">Gestiona tu suscripción</h1>
+          <p className="text-muted mb-4">
+            Elige el plan que mejor se ajuste a tus necesidades y cambia en cualquier
+            momento. No hay cargos ocultos ni permanencias obligatorias.
+          </p>
+        </div>
 
-      {success && (
-        <Alert variant="success" dismissible onClose={() => setSuccess("")}>
-          {success}
-        </Alert>
-      )}
+        {(error || success || syncSuccess) && (
+          <div className="subscriptions-simple__alerts mb-4">
+            {error && (
+              <Alert variant="danger" dismissible onClose={() => setError("")}>
+                {error}
+              </Alert>
+            )}
+            {success && (
+              <Alert variant="success" dismissible onClose={() => setSuccess("")}>
+                {success}
+              </Alert>
+            )}
+            {syncSuccess && (
+              <Alert variant="info" dismissible onClose={() => setSyncSuccess("")}>
+                <CheckCircleFill size={16} className="me-2" />
+                {syncSuccess}
+              </Alert>
+            )}
+          </div>
+        )}
 
-      {syncSuccess && (
-        <Alert variant="info" dismissible onClose={() => setSyncSuccess("")}>
-          <i className="bi bi-check-circle me-2"></i>
-          {syncSuccess}
-        </Alert>
-      )}
+        {isInGracePeriod && (
+          <Alert variant="warning" className="text-center mb-4">
+            Tu suscripción se cancelará en {formatDate(currentSubscription?.endDate)}.
+          </Alert>
+        )}
 
-      {/* Plans */}
-      <Row className="mb-5">
-        <Col>
-          <h2 className="text-center mb-4">Planes Disponibles</h2>
-        </Col>
-      </Row>
+        <Row className="g-4 justify-content-center">
+          {sortedPlans.map(([planType, plan]) => {
+            const currentHierarchy = PLAN_ORDER[currentSubscription?.planType] || 0;
+            const thisHierarchy = PLAN_ORDER[planType] || 0;
+            const isCurrentPlan =
+              currentSubscription?.planType === planType && hasActiveSubscription;
+            const canUpgrade = hasActiveSubscription && thisHierarchy > currentHierarchy;
+            const canDowngrade = hasActiveSubscription && thisHierarchy < currentHierarchy;
 
-      <Row className="justify-content-center">
-        {Object.entries(plans).map(([planType, plan]) => {
-          const isCurrentPlan =
-            currentSubscription?.planType === planType && hasActiveSubscription;
-          const planHierarchy = { bronce: 1, plata: 2, oro: 3 };
-          const canUpgrade =
-            hasActiveSubscription &&
-            planHierarchy[planType] >
-              planHierarchy[currentSubscription?.planType];
-          const canDowngrade =
-            hasActiveSubscription &&
-            planHierarchy[planType] <
-              planHierarchy[currentSubscription?.planType];
-
-          return (
-            <Col key={planType} md={4} className="mb-4">
-              <Card
-                className={`h-100 ${isCurrentPlan ? "border-success shadow" : ""} ${planType === "plata" ? "border-primary" : ""}`}
-              >
-                {planType === "plata" && (
-                  <div className="position-absolute top-0 start-50 translate-middle">
-                    <Badge bg="primary" className="px-3 py-2">
-                      Más Popular
-                    </Badge>
-                  </div>
-                )}
-                <Card.Header
-                  className={`text-center ${planType === "oro" ? "bg-warning" : planType === "plata" ? "bg-primary text-white" : "bg-light"}`}
+            return (
+              <Col key={planType} lg={4} md={6} className="d-flex">
+                <Card
+                  className={`subscription-card flex-fill ${
+                    isCurrentPlan ? "subscription-card--active" : ""
+                  }`}
                 >
-                  <h4>{plan.name}</h4>
-                  <h2 className="mb-0">
-                    {formatPrice(plan.price)}
-                    <small>/mes</small>
-                  </h2>
-                </Card.Header>
-                <Card.Body className="d-flex flex-column">
-                  <p className="text-muted">{plan.description}</p>
-                  <ul className="list-unstyled mb-4">
-                    {plan.features?.map((feature, index) => (
-                      <li key={index} className="mb-2">
-                        <i className="bi bi-check-circle text-success me-2"></i>
-                        {feature}
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="mt-auto">
-                    {isCurrentPlan ? (
-                      <Button variant="success" disabled className="w-100">
-                        Plan Actual
-                      </Button>
-                    ) : hasActiveSubscription ? (
-                      canUpgrade ? (
-                        <Button
-                          variant="primary"
-                          className="w-100"
-                          onClick={() => handleUpdateSubscription(planType)}
-                          disabled={loadingPlanType === planType}
-                        >
-                          {loadingPlanType === planType ? (
-                            <Spinner animation="border" size="sm" />
-                          ) : (
-                            "Actualizar Plan"
-                          )}
-                        </Button>
-                      ) : canDowngrade ? (
-                        <Button
-                          variant="outline-secondary"
-                          className="w-100"
-                          onClick={() => handleUpdateSubscription(planType)}
-                          disabled={loadingPlanType === planType}
-                        >
-                          {loadingPlanType === planType ? (
-                            <Spinner animation="border" size="sm" />
-                          ) : (
-                            "Cambiar Plan"
-                          )}
-                        </Button>
-                      ) : null
-                    ) : (
-                      <Button
-                        variant={
-                          planType === "plata" ? "primary" : "outline-primary"
-                        }
-                        className="w-100"
-                        onClick={() => handleSubscribe(planType)}
-                        disabled={loadingPlanType === planType}
-                      >
-                        {loadingPlanType === planType ? (
-                          <Spinner animation="border" size="sm" />
-                        ) : (
-                          "Suscribirse"
-                        )}
-                      </Button>
-                    )}
-                  </div>
-                </Card.Body>
-              </Card>
-            </Col>
-          );
-        })}
-      </Row>
+                  <Card.Body className="d-flex flex-column h-100">
+                    <div className="subscription-card__heading">
+                      <span className="subscription-card__icon">
+                        {planIcons[planType] || <Gem size={18} />}
+                      </span>
+                      <div>
+                        <h3 className="subscription-card__title mb-1">{plan.name}</h3>
+                        <p className="subscription-card__description mb-0 text-muted">
+                          {plan.description}
+                        </p>
+                      </div>
+                    </div>
 
-      {/* Subscription History */}
-      {subscriptionStats?.subscriptionHistory?.length > 0 && (
-        <Row className="mt-5">
-          <Col>
-            <h3>Historial de Suscripciones</h3>
-            <div className="table-responsive">
-              <table className="table table-striped">
+                    <div className="subscription-card__price mb-3">
+                      <span>{formatPrice(plan.price)}</span>
+                      <small className="text-muted">/mes</small>
+                    </div>
+
+                    <ul className="subscription-card__features">
+                      {plan.features?.map((feature, index) => (
+                        <li key={index}>
+                          <GraphUp size={16} className="text-primary me-2" />
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
+
+                    <div className="mt-auto">
+                      {isCurrentPlan ? (
+                        <Button variant="success" disabled className="w-100">
+                          Plan actual
+                        </Button>
+                      ) : hasActiveSubscription ? (
+                        canUpgrade ? (
+                          <Button
+                            variant="primary"
+                            className="w-100"
+                            onClick={() => handleUpdateSubscription(planType)}
+                            disabled={loadingPlanType === planType}
+                          >
+                            {loadingPlanType === planType ? (
+                              <Spinner animation="border" size="sm" />
+                            ) : (
+                              "Actualizar plan"
+                            )}
+                          </Button>
+                        ) : canDowngrade ? (
+                          <Button
+                            variant="outline-secondary"
+                            className="w-100"
+                            onClick={() => handleUpdateSubscription(planType)}
+                            disabled={loadingPlanType === planType}
+                          >
+                            {loadingPlanType === planType ? (
+                              <Spinner animation="border" size="sm" />
+                            ) : (
+                              "Cambiar plan"
+                            )}
+                          </Button>
+                        ) : null
+                      ) : (
+                        <Button
+                          variant={planType === "oro" ? "primary" : "outline-primary"}
+                          className="w-100"
+                          onClick={() => handleSubscribe(planType)}
+                          disabled={loadingPlanType === planType}
+                        >
+                          {loadingPlanType === planType ? (
+                            <Spinner animation="border" size="sm" />
+                          ) : (
+                            "Suscribirme"
+                          )}
+                        </Button>
+                      )}
+                    </div>
+                  </Card.Body>
+                </Card>
+              </Col>
+            );
+          })}
+        </Row>
+
+        {subscriptionStats?.subscriptionHistory?.length > 0 && (
+          <div className="subscription-history mt-5">
+            <h3>Historial de suscripciones</h3>
+            <div className="subscription-history__table">
+              <table>
                 <thead>
                   <tr>
                     <th>Plan</th>
                     <th>Estado</th>
                     <th>Precio</th>
-                    <th>Fecha de Inicio</th>
-                    <th>Fecha de Fin</th>
+                    <th>Inicio</th>
+                    <th>Fin</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -387,8 +403,7 @@ const Subscriptions = () => {
                     <tr key={sub.id}>
                       <td>
                         <Badge bg="secondary">
-                          {sub.planType.charAt(0).toUpperCase() +
-                            sub.planType.slice(1)}
+                          {sub.planType.charAt(0).toUpperCase() + sub.planType.slice(1)}
                         </Badge>
                       </td>
                       <td>{getStatusBadge(sub.status)}</td>
@@ -400,25 +415,24 @@ const Subscriptions = () => {
                 </tbody>
               </table>
             </div>
-          </Col>
-        </Row>
-      )}
+          </div>
+        )}
+      </Container>
 
-      {/* Cancel Subscription Modal */}
       <Modal show={showCancelModal} onHide={() => setShowCancelModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>Cancelar Suscripción</Modal.Title>
+          <Modal.Title>Cancelar suscripción</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <p>¿Estás seguro de que quieres cancelar tu suscripción?</p>
-          <Alert variant="warning">
-            <strong>Importante:</strong> Una vez cancelada, perderás el acceso a
-            las funciones premium al final del período de facturación actual.
+          <Alert variant="warning" className="mb-0">
+            <strong>Importante:</strong> Una vez cancelada, perderás el acceso a las
+            funciones premium al final del período actual.
           </Alert>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowCancelModal(false)}>
-            No, Mantener Suscripción
+            Mantener suscripción
           </Button>
           <Button
             variant="danger"
@@ -428,12 +442,12 @@ const Subscriptions = () => {
             {loadingPlanType === "cancel" ? (
               <Spinner animation="border" size="sm" />
             ) : (
-              "Sí, Cancelar"
+              "Confirmar cancelación"
             )}
           </Button>
         </Modal.Footer>
       </Modal>
-    </Container>
+    </div>
   );
 };
 
