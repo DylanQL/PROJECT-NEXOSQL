@@ -1328,6 +1328,86 @@ details > summary {
 /* Footer styling */
 footer {
     margin-top: 3rem;
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+footer .transition-opacity {
+    transition: opacity 0.3s ease;
+}
+
+footer .hover-opacity-100:hover {
+    opacity: 1 !important;
+    transform: translateY(-2px);
+    transition: all 0.3s ease;
+}
+
+footer .text-primary {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-size: 1.5rem;
+}
+
+footer .input-group input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+footer .input-group input:focus {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    border-color: #007bff !important;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
+    color: white !important;
+}
+
+footer .btn-primary {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+footer .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.4);
+}
+
+footer a {
+    position: relative;
+    overflow: hidden;
+}
+
+footer a::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 1px;
+    background: linear-gradient(90deg, #007bff, #0056b3);
+    transition: width 0.3s ease;
+}
+
+footer a:hover::before {
+    width: 100%;
+}
+
+footer .social-icons a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+footer .social-icons a:hover {
+    background: rgba(0, 123, 255, 0.2);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0, 123, 255, 0.3);
 }
 
 /* Profile page */

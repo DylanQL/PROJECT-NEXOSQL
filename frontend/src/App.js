@@ -90,12 +90,162 @@ function MainLayout({ children }) {
         {children}
       </Container>
       {!isAuthenticated && (
-        <footer className="bg-dark text-center text-white py-3 mt-auto">
-          <Container>
-            <p className="mb-0">
-              &copy; {new Date().getFullYear()} NexoSQL. Todos los
-              derechos reservados.
-            </p>
+        <footer className="bg-dark text-white mt-auto">
+          <Container className="py-5">
+            <div className="row g-4">
+              {/* Logo y descripción */}
+              <div className="col-lg-4 col-md-6">
+                <h5 className="fw-bold mb-3 text-primary">NexoSQL</h5>
+                <p className="text-light opacity-75 mb-3">
+                  La plataforma de gestión de bases de datos más intuitiva y potente.
+                  Conecta, administra y consulta tus bases de datos desde cualquier lugar.
+                </p>
+                <div className="d-flex gap-3 social-icons">
+                  <a href="#" className="text-light opacity-75 hover-opacity-100 transition-opacity">
+                    <i className="bi bi-facebook"></i>
+                  </a>
+                  <a href="#" className="text-light opacity-75 hover-opacity-100 transition-opacity">
+                    <i className="bi bi-twitter"></i>
+                  </a>
+                  <a href="#" className="text-light opacity-75 hover-opacity-100 transition-opacity">
+                    <i className="bi bi-linkedin"></i>
+                  </a>
+                  <a href="#" className="text-light opacity-75 hover-opacity-100 transition-opacity">
+                    <i className="bi bi-github"></i>
+                  </a>
+                </div>
+              </div>
+
+              {/* Enlaces de producto */}
+              <div className="col-lg-2 col-md-6">
+                <h6 className="fw-bold mb-3">Producto</h6>
+                <ul className="list-unstyled">
+                  <li className="mb-2">
+                    <a href="/como-funciona" className="text-light opacity-75 text-decoration-none hover-opacity-100 transition-opacity">
+                      Cómo Funciona
+                    </a>
+                  </li>
+                  <li className="mb-2">
+                    <a href="/planes" className="text-light opacity-75 text-decoration-none hover-opacity-100 transition-opacity">
+                      Planes
+                    </a>
+                  </li>
+                  <li className="mb-2">
+                    <a href="#" className="text-light opacity-75 text-decoration-none hover-opacity-100 transition-opacity">
+                      Características
+                    </a>
+                  </li>
+                  <li className="mb-2">
+                    <a href="#" className="text-light opacity-75 text-decoration-none hover-opacity-100 transition-opacity">
+                      Seguridad
+                    </a>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Enlaces de empresa */}
+              <div className="col-lg-2 col-md-6">
+                <h6 className="fw-bold mb-3">Empresa</h6>
+                <ul className="list-unstyled">
+                  <li className="mb-2">
+                    <a href="/sobre-nosotros" className="text-light opacity-75 text-decoration-none hover-opacity-100 transition-opacity">
+                      Sobre Nosotros
+                    </a>
+                  </li>
+                  <li className="mb-2">
+                    <a href="#" className="text-light opacity-75 text-decoration-none hover-opacity-100 transition-opacity">
+                      Blog
+                    </a>
+                  </li>
+                  <li className="mb-2">
+                    <a href="#" className="text-light opacity-75 text-decoration-none hover-opacity-100 transition-opacity">
+                      Carreras
+                    </a>
+                  </li>
+                  <li className="mb-2">
+                    <a href="#" className="text-light opacity-75 text-decoration-none hover-opacity-100 transition-opacity">
+                      Contacto
+                    </a>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Enlaces de soporte */}
+              <div className="col-lg-2 col-md-6">
+                <h6 className="fw-bold mb-3">Soporte</h6>
+                <ul className="list-unstyled">
+                  <li className="mb-2">
+                    <a href="#" className="text-light opacity-75 text-decoration-none hover-opacity-100 transition-opacity">
+                      Centro de Ayuda
+                    </a>
+                  </li>
+                  <li className="mb-2">
+                    <a href="#" className="text-light opacity-75 text-decoration-none hover-opacity-100 transition-opacity">
+                      Documentación
+                    </a>
+                  </li>
+                  <li className="mb-2">
+                    <a href="#" className="text-light opacity-75 text-decoration-none hover-opacity-100 transition-opacity">
+                      Estado del Sistema
+                    </a>
+                  </li>
+                  <li className="mb-2">
+                    <a href="#" className="text-light opacity-75 text-decoration-none hover-opacity-100 transition-opacity">
+                      API
+                    </a>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Newsletter */}
+              <div className="col-lg-2 col-md-12">
+                <h6 className="fw-bold mb-3">Newsletter</h6>
+                <p className="text-light opacity-75 small mb-3">
+                  Mantente al día con las últimas noticias y actualizaciones.
+                </p>
+                <div className="input-group mb-3">
+                  <input
+                    type="email"
+                    className="form-control form-control-sm"
+                    placeholder="tu@email.com"
+                    style={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      color: 'white'
+                    }}
+                  />
+                  <button
+                    className="btn btn-primary btn-sm"
+                    type="button"
+                  >
+                    <i className="bi bi-arrow-right"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Línea divisoria y copyright */}
+            <hr className="my-4 opacity-25" />
+            <div className="row align-items-center">
+              <div className="col-md-6">
+                <p className="mb-0 text-light opacity-75 small">
+                  &copy; {new Date().getFullYear()} NexoSQL. Todos los derechos reservados.
+                </p>
+              </div>
+              <div className="col-md-6 text-md-end">
+                <div className="d-flex justify-content-md-end gap-4 mt-2 mt-md-0">
+                  <a href="#" className="text-light opacity-75 text-decoration-none small hover-opacity-100 transition-opacity">
+                    Política de Privacidad
+                  </a>
+                  <a href="#" className="text-light opacity-75 text-decoration-none small hover-opacity-100 transition-opacity">
+                    Términos de Servicio
+                  </a>
+                  <a href="#" className="text-light opacity-75 text-decoration-none small hover-opacity-100 transition-opacity">
+                    Cookies
+                  </a>
+                </div>
+              </div>
+            </div>
           </Container>
         </footer>
       )}
