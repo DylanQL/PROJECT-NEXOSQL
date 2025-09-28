@@ -13,7 +13,6 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 
 import { conexionDBApi, motorDBApi } from "../services/api";
-import ConnectionLimitInfo from "../components/ConnectionLimitInfo";
 import { useSubscription } from "../contexts/SubscriptionContext";
 import { dbLogos } from "../assets/db-logos";
 
@@ -537,8 +536,6 @@ const CrearConexion = () => {
       <div className="mb-4">
         <h1>{isEditMode ? "Editar Conexión" : "Crear Nueva Conexión"}</h1>
       </div>
-
-      <ConnectionLimitInfo />
 
       {error && <Alert variant="danger">{error}</Alert>}
       {success && <Alert variant="success">{success}</Alert>}
