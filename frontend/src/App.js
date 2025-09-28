@@ -64,6 +64,45 @@ function AppNotifications() {
   );
 }
 
+// Layout component for auth pages (login/register) without navbar and footer
+function AuthLayout({ children }) {
+  return (
+    <div style={{ minHeight: "100vh" }}>
+      <AppNotifications />
+      {children}
+    </div>
+  );
+}
+
+// Layout component for regular pages with navbar and footer
+function MainLayout({ children }) {
+  const { isAuthenticated } = useAuth();
+  
+  return (
+    <div className="d-flex flex-column" style={{ minHeight: "100vh" }}>
+      <Navigation />
+      <AppNotifications />
+      <Container
+        fluid
+        className="flex-grow-1 p-0"
+        style={{ maxWidth: "100%" }}
+      >
+        {children}
+      </Container>
+      {!isAuthenticated && (
+        <footer className="bg-dark text-center text-white py-3 mt-auto">
+          <Container>
+            <p className="mb-0">
+              &copy; {new Date().getFullYear()} NexoSQL. Todos los
+              derechos reservados.
+            </p>
+          </Container>
+        </footer>
+      )}
+    </div>
+  );
+}
+
 function App() {
   const { loading, isAuthenticated } = useAuth();
 
@@ -93,73 +132,79 @@ function App() {
     <SubscriptionProvider>
       <ConnectionProvider>
         <Router>
-          <div className="d-flex flex-column" style={{ minHeight: "100vh" }}>
-            <Navigation />
-            <AppNotifications />
-            <Container
-              fluid
-              className="flex-grow-1 p-0"
-              style={{ maxWidth: "100%" }}
-            >
-              <Routes>
-                {/* Public Routes */}
-                <Route
-                  path="/"
-                  element={
-                    <div className="w-100 p-0 h-100">
-                      <Home />
-                    </div>
-                  }
-                />
-                <Route path="/como-funciona" element={<ComoFunciona />} />
-                <Route path="/planes" element={<Planes />} />
-                <Route path="/sobre-nosotros" element={<SobreNosotros />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
+          <Routes>
+            {/* Auth Routes - Without navbar and footer */}
+            <Route 
+              path="/login" 
+              element={
+                <AuthLayout>
+                  <Login />
+                </AuthLayout>
+              } 
+            />
+            <Route 
+              path="/register" 
+              element={
+                <AuthLayout>
+                  <Register />
+                </AuthLayout>
+              } 
+            />
 
-                {/* Routes that require authentication */}
-                <Route element={<PrivateRoute />}>
-                  <Route
-                    path="/complete-profile"
-                    element={<CompleteProfile />}
-                  />
-                </Route>
+            {/* All other routes - With navbar and footer */}
+            <Route
+              path="/*"
+              element={
+                <MainLayout>
+                  <Routes>
+                    {/* Public Routes */}
+                    <Route
+                      path="/"
+                      element={
+                        <div className="w-100 p-0 h-100">
+                          <Home />
+                        </div>
+                      }
+                    />
+                    <Route path="/como-funciona" element={<ComoFunciona />} />
+                    <Route path="/planes" element={<Planes />} />
+                    <Route path="/sobre-nosotros" element={<SobreNosotros />} />
 
-                {/* Routes that require authentication and completed profile */}
-                <Route element={<PrivateRoute requireProfile={true} />}>
-                  <Route path="/profile" element={<Profile />} />
-                  <Route path="/subscriptions" element={<Subscriptions />} />
-                  <Route
-                    path="/subscription/success"
-                    element={<SubscriptionSuccess />}
-                  />
-                  <Route
-                    path="/subscription/cancel"
-                    element={<SubscriptionCancel />}
-                  />
-                  <Route path="/conexiones" element={<Conexiones />} />
-                  <Route path="/crear-conexion" element={<CrearConexion />} />
-                  <Route
-                    path="/editar-conexion/:id"
-                    element={<EditarConexion />}
-                  />
-                </Route>
+                    {/* Routes that require authentication */}
+                    <Route element={<PrivateRoute />}>
+                      <Route
+                        path="/complete-profile"
+                        element={<CompleteProfile />}
+                      />
+                    </Route>
 
-                {/* Redirect for any unknown routes */}
-                <Route path="*" element={<Navigate to="/" />} />
-              </Routes>
-            </Container>
-            {!isAuthenticated && (
-              <footer className="bg-dark text-center text-white py-3 mt-auto">
-                <Container>
-                  <p className="mb-0">
-                    &copy; {new Date().getFullYear()} NexoSQL. Todos los
-                    derechos reservados.
-                  </p>
-                </Container>
-              </footer>
-            )}
-          </div>
+                    {/* Routes that require authentication and completed profile */}
+                    <Route element={<PrivateRoute requireProfile={true} />}>
+                      <Route path="/profile" element={<Profile />} />
+                      <Route path="/subscriptions" element={<Subscriptions />} />
+                      <Route
+                        path="/subscription/success"
+                        element={<SubscriptionSuccess />}
+                      />
+                      <Route
+                        path="/subscription/cancel"
+                        element={<SubscriptionCancel />}
+                      />
+                      <Route path="/conexiones" element={<Conexiones />} />
+                      <Route path="/crear-conexion" element={<CrearConexion />} />
+                      <Route
+                        path="/editar-conexion/:id"
+                        element={<EditarConexion />}
+                      />
+                    </Route>
+
+                    {/* Redirect for any unknown routes */}
+                    <Route path="*" element={<Navigate to="/" />} />
+                  </Routes>
+                </MainLayout>
+              }
+            />
+          </Routes>
         </Router>
       </ConnectionProvider>
     </SubscriptionProvider>
