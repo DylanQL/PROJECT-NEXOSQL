@@ -323,7 +323,7 @@ const EditarConexion = () => {
       <>
         <h5 className="mb-4 section-title">Seleccione el motor de base de datos</h5>
         <Row className="g-3 g-lg-4 motor-card-grid">
-          {motores.map((motor, index) => (
+          {motores.map((motor) => (
             <Col md={4} key={motor.id} className="motor-card-col">
               <Card
                 className={`h-100 motor-card ${
@@ -613,6 +613,7 @@ const EditarConexion = () => {
                 onClick={handlePrevStep}
                 size="md"
                 className="btn-ghost"
+                style={{ color: 'white', backgroundColor: '#6c757d', borderColor: '#6c757d' }}
               >
                 Anterior
               </Button>
@@ -624,6 +625,7 @@ const EditarConexion = () => {
                 onClick={handleNextStep}
                 size="md"
                 className={`cta-button ${step > 1 ? "" : "ms-auto"}`}
+                style={{ color: 'white', backgroundColor: '#0d6efd', borderColor: '#0d6efd' }}
               >
                 Siguiente
               </Button>
@@ -634,6 +636,7 @@ const EditarConexion = () => {
                 disabled={loading}
                 size="md"
                 className="cta-button cta-success"
+                style={{ color: 'white', backgroundColor: '#198754', borderColor: '#198754' }}
               >
                 {loading ? "Guardando..." : "Guardar Conexión"}
               </Button>

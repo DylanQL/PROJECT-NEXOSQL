@@ -585,6 +585,7 @@ const CrearConexion = () => {
                 onClick={handlePrevStep}
                 size="md"
                 className="btn-ghost"
+                style={{ color: 'white', backgroundColor: '#6c757d', borderColor: '#6c757d' }}
               >
                 Anterior
               </Button>
@@ -597,6 +598,7 @@ const CrearConexion = () => {
                 size="md"
                 className={`cta-button ${step > 1 ? "" : "ms-auto"}`}
                 disabled={step === 1 && !selectedMotor}
+                style={{ color: 'white', backgroundColor: '#0d6efd', borderColor: '#0d6efd' }}
               >
                 Siguiente
               </Button>
@@ -607,6 +609,7 @@ const CrearConexion = () => {
                 disabled={loading || !hasActiveSubscription}
                 size="md"
                 className="cta-button cta-success"
+                style={{ color: 'white', backgroundColor: '#198754', borderColor: '#198754' }}
               >
                 {loading ? "Guardando..." : "Guardar Conexión"}
               </Button>

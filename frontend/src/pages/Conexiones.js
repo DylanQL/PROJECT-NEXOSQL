@@ -121,10 +121,11 @@ const Conexiones = () => {
             <div>
               <h1 className="page-title">Mis Conexiones a Bases de Datos</h1>
             </div>
-            <Button 
-              variant="primary" 
+            <Button
+              variant="primary"
               onClick={() => navigate("/crear-conexion")}
               className="cta-button"
+              style={{ color: 'white', backgroundColor: '#0d6efd', borderColor: '#0d6efd' }}
             >
               Nueva Conexión
             </Button>
@@ -147,6 +148,7 @@ const Conexiones = () => {
               variant="primary"
               onClick={() => navigate("/crear-conexion")}
               className="cta-button"
+              style={{ color: 'white', backgroundColor: '#0d6efd', borderColor: '#0d6efd' }}
             >
               Crear Primera Conexión
             </Button>
@@ -238,24 +240,27 @@ const Conexiones = () => {
           )}
         </Modal.Body>
         <Modal.Footer className="d-flex justify-content-center">
-          <Button 
-            variant="secondary" 
+          <Button
+            variant="secondary"
             onClick={() => setShowModal(false)}
             className="btn-ghost"
+            style={{ color: 'white', backgroundColor: '#6c757d', borderColor: '#6c757d' }}
           >
             Cerrar
           </Button>
-          <Button 
-            variant="primary" 
+          <Button
+            variant="primary"
             onClick={handleEditConnection}
             className="cta-button"
+            style={{ color: 'white', backgroundColor: '#0d6efd', borderColor: '#0d6efd' }}
           >
             Editar
           </Button>
-          <Button 
-            variant="danger" 
+          <Button
+            variant="danger"
             onClick={handleDeleteConnection}
             className="cta-button"
+            style={{ color: 'white', backgroundColor: '#dc3545', borderColor: '#dc3545' }}
           >
             Eliminar
           </Button>
