@@ -316,6 +316,10 @@ const Subscriptions = () => {
                   className={`subscription-card flex-fill ${
                     isCurrentPlan ? "subscription-card--active" : ""
                   }`}
+                    style={{
+                      borderTopLeftRadius: "25px",
+                      borderTopRightRadius: "25px",
+                    }}
                 >
                   <Card.Header
                     className="text-center border-0 py-4 px-3"
