@@ -308,15 +308,6 @@ const EditarConexion = () => {
       <>
         <h5 className="mb-4">Seleccione el motor de base de datos</h5>
 
-        {originalData && (
-          <Alert variant="info">
-            Motor actual:{" "}
-            {motores.find(
-              (m) => m.id.toString() === originalData.motores_db_id.toString(),
-            )?.nombre || "Desconocido"}
-          </Alert>
-        )}
-
         <Row>
           {motores.map((motor) => (
             <Col md={4} key={motor.id} className="mb-3">
@@ -566,8 +557,8 @@ const EditarConexion = () => {
 
   return (
     <Container className="py-5">
-      <div className="mb-4">
-        <h1>Editar Conexión</h1>
+      <div className="mb-4 mt-4 page-header">
+        <h1 className="page-title">Editar Conexión</h1>
         {originalData && (
           <p className="text-muted">Editando: {originalData.nombre}</p>
         )}
@@ -598,8 +589,8 @@ const EditarConexion = () => {
         <div className="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-25" style={{ zIndex: 1040 }}></div>
       )}
 
-      <Card className="shadow-sm">
-        <Card.Body className="p-4">
+      <Card className="shadow-sm create-connection-card mx-auto" style={{ width: '90%' }}>
+        <Card.Body className="p-4 create-connection-card-body">
           {renderStepIndicator()}
 
           <div className="step-content py-3">{renderStepContent()}</div>
