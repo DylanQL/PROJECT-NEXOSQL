@@ -228,7 +228,7 @@ const Conexiones = () => {
             </>
           )}
         </Modal.Body>
-        <Modal.Footer>
+        <Modal.Footer className="d-flex justify-content-center">
           <Button variant="secondary" onClick={() => setShowModal(false)}>
             Cerrar
           </Button>
