@@ -121,11 +121,6 @@ const CrearConexion = () => {
   };
 
   const handleNextStep = () => {
-    if (step === 1 && !selectedMotor) {
-      setError("Por favor, seleccione un motor de base de datos");
-      return;
-    }
-
     if (step === 2) {
       // Validate form before proceeding
       const form = document.getElementById("conexion-form");
@@ -307,7 +302,7 @@ const CrearConexion = () => {
       <>
         <h5 className="mb-4 section-title">Seleccione el motor de base de datos</h5>
         <Row className="g-3 g-lg-4 motor-card-grid">
-          {motores.map((motor, index) => (
+          {motores.map((motor) => (
             <Col md={4} key={motor.id} className="motor-card-col">
               <Card
                 className={`h-100 motor-card ${
@@ -601,6 +596,7 @@ const CrearConexion = () => {
                 onClick={handleNextStep}
                 size="md"
                 className={`cta-button ${step > 1 ? "" : "ms-auto"}`}
+                disabled={step === 1 && !selectedMotor}
               >
                 Siguiente
               </Button>
