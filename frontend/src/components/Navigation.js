@@ -81,18 +81,18 @@ const Navigation = () => {
   }, []);
 
   return (
-    <Navbar bg="dark" variant="dark" expand="lg" className="px-0">
+    <Navbar bg="light" variant="light" expand="lg" className="px-0 navbar-modern">
       <Container fluid className="px-3">
-        <Navbar.Brand as={Link} to="/" className="d-flex align-items-center">
-          <img src={logo} alt="NexoSQL Logo" height="30" className="me-2" />
-          NexoSQL
+        <Navbar.Brand as={Link} to="/" className="d-flex align-items-center brand-modern">
+          <img src={logo} alt="NexoSQL Logo" height="32" className="me-2 brand-logo" />
+          <span className="brand-text">NexoSQL</span>
         </Navbar.Brand>
-        {!isAuthenticated && <Navbar.Toggle aria-controls="basic-navbar-nav" />}
+        {!isAuthenticated && <Navbar.Toggle aria-controls="basic-navbar-nav" className="navbar-toggler-modern" />}
         {isAuthenticated ? (
           <div className="d-flex align-items-center">
             <div className="profile-dropdown" ref={dropdownRef}>
               <div
-                className="profile-avatar"
+                className="profile-avatar profile-avatar-modern"
                 onClick={toggleProfileDropdown}
                 title="Menú de perfil"
               >
@@ -100,9 +100,9 @@ const Navigation = () => {
               </div>
 
               {showProfileDropdown && (
-                <div className="profile-dropdown-menu">
-                  <div className="profile-dropdown-header">
-                    <div className="profile-dropdown-name">
+                <div className="profile-dropdown-menu profile-dropdown-menu-modern">
+                  <div className="profile-dropdown-header profile-dropdown-header-modern">
+                    <div className="profile-dropdown-name profile-dropdown-name-modern">
                       {getUserDisplayName()}
                     </div>
                     <div className="profile-dropdown-badges">
@@ -128,7 +128,7 @@ const Navigation = () => {
 
                   <Link
                     to="/profile"
-                    className="profile-dropdown-item"
+                    className="profile-dropdown-item profile-dropdown-item-modern"
                     onClick={handleProfileMenuClick}
                   >
                     <i className="bi bi-person"></i>
@@ -137,7 +137,7 @@ const Navigation = () => {
 
                   <Link
                     to="/subscriptions"
-                    className="profile-dropdown-item"
+                    className="profile-dropdown-item profile-dropdown-item-modern"
                     onClick={handleProfileMenuClick}
                   >
                     <i className="bi bi-credit-card"></i>
@@ -146,7 +146,7 @@ const Navigation = () => {
 
                   <Link
                     to="/conexiones"
-                    className="profile-dropdown-item"
+                    className="profile-dropdown-item profile-dropdown-item-modern"
                     onClick={handleProfileMenuClick}
                   >
                     <i className="bi bi-server"></i>
@@ -155,7 +155,7 @@ const Navigation = () => {
 
                   <div className="profile-dropdown-logout">
                     <button
-                      className="profile-dropdown-item"
+                      className="profile-dropdown-item profile-dropdown-item-modern"
                       onClick={handleLogout}
                     >
                       <i className="bi bi-box-arrow-right"></i>
@@ -168,36 +168,36 @@ const Navigation = () => {
           </div>
         ) : (
           <Navbar.Collapse id="basic-navbar-nav">
-            <Nav className="me-auto">
+            <Nav className="me-auto nav-links-modern">
               <Nav.Link
                 as={Link}
                 to="/"
-                className={location.pathname === "/" ? "active" : ""}
+                className={`nav-link-modern ${location.pathname === "/" ? "active" : ""}`}
               >
                 Inicio
               </Nav.Link>
               <Nav.Link
                 as={Link}
                 to="/como-funciona"
-                className={
+                className={`nav-link-modern ${
                   location.pathname === "/como-funciona" ? "active" : ""
-                }
+                }`}
               >
                 Cómo funciona
               </Nav.Link>
               <Nav.Link
                 as={Link}
                 to="/planes"
-                className={location.pathname === "/planes" ? "active" : ""}
+                className={`nav-link-modern ${location.pathname === "/planes" ? "active" : ""}`}
               >
                 Planes
               </Nav.Link>
               <Nav.Link
                 as={Link}
                 to="/sobre-nosotros"
-                className={
+                className={`nav-link-modern ${
                   location.pathname === "/sobre-nosotros" ? "active" : ""
-                }
+                }`}
               >
                 Sobre nosotros
               </Nav.Link>
@@ -206,7 +206,7 @@ const Navigation = () => {
               <Nav.Link
                 as={Link}
                 to="/login"
-                className={location.pathname === "/login" ? "active" : ""}
+                className={`nav-link-login ${location.pathname === "/login" ? "active" : ""}`}
               >
                 Iniciar Sesión
               </Nav.Link>

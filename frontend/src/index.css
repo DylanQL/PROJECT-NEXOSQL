@@ -89,6 +89,255 @@ html {
     z-index: 1070;
 }
 
+/* ========================================
+   Modern Navbar Styles
+   ======================================== */
+.navbar-modern {
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(228, 231, 236, 0.5);
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+    padding: 0.75rem 0;
+}
+
+.navbar-modern:hover {
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.08);
+}
+
+/* Brand Styles */
+.brand-modern {
+    transition: all 0.3s ease;
+    text-decoration: none !important;
+}
+
+.brand-modern:hover {
+    transform: translateY(-1px);
+}
+
+.brand-logo {
+    transition: all 0.3s ease;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.brand-modern:hover .brand-logo {
+    transform: scale(1.05);
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
+}
+
+.brand-text {
+    font-weight: 700;
+    font-size: 1.4rem;
+    background: linear-gradient(135deg, #2563eb, #3b82f6, #1d4ed8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.02em;
+    transition: all 0.3s ease;
+}
+
+/* Navigation Links */
+.nav-links-modern .nav-link-modern {
+    color: #64748b !important;
+    font-weight: 500;
+    padding: 0.6rem 1.2rem !important;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    position: relative;
+    margin: 0 0.25rem;
+    text-decoration: none !important;
+}
+
+.nav-links-modern .nav-link-modern:hover {
+    color: #2563eb !important;
+    background-color: rgba(37, 99, 235, 0.08);
+    transform: translateY(-1px);
+}
+
+.nav-links-modern .nav-link-modern.active {
+    color: #2563eb !important;
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(59, 130, 246, 0.1));
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
+}
+
+.nav-links-modern .nav-link-modern.active::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 1.2rem;
+    right: 1.2rem;
+    height: 2px;
+    background: linear-gradient(90deg, #2563eb, #3b82f6);
+    border-radius: 1px;
+}
+
+/* Login Button */
+.nav-link-login {
+    color: #ffffff !important;
+    background: linear-gradient(135deg, #2563eb, #3b82f6) !important;
+    border-radius: 25px !important;
+    padding: 0.6rem 1.5rem !important;
+    font-weight: 600 !important;
+    transition: all 0.3s ease !important;
+    text-decoration: none !important;
+    border: none !important;
+    margin-left: 0.5rem;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.nav-link-login:hover {
+    background: linear-gradient(135deg, #1d4ed8, #2563eb) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4) !important;
+    color: #ffffff !important;
+}
+
+.nav-link-login.active {
+    background: linear-gradient(135deg, #1e40af, #1d4ed8) !important;
+    box-shadow: 0 6px 20px rgba(29, 78, 216, 0.5) !important;
+}
+
+/* Modern Navbar Toggle */
+.navbar-toggler-modern {
+    border: 2px solid #e5e7eb !important;
+    background: rgba(255, 255, 255, 0.9) !important;
+    border-radius: 8px !important;
+    padding: 0.5rem !important;
+    transition: all 0.3s ease !important;
+}
+
+.navbar-toggler-modern:hover {
+    border-color: #2563eb !important;
+    background: rgba(37, 99, 235, 0.05) !important;
+    transform: scale(1.05);
+}
+
+.navbar-toggler-modern:focus {
+    box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25) !important;
+}
+
+/* Profile Avatar Modern */
+.profile-avatar-modern {
+    width: 42px;
+    height: 42px;
+    background: linear-gradient(135deg, #2563eb, #3b82f6) !important;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    transition: all 0.3s ease;
+}
+
+.profile-avatar-modern:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35);
+    border-color: rgba(255, 255, 255, 1);
+}
+
+/* Profile Dropdown Modern */
+.profile-dropdown-menu-modern {
+    border: none !important;
+    border-radius: 16px !important;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.8) inset !important;
+    background: rgba(255, 255, 255, 0.98) !important;
+    backdrop-filter: blur(12px) !important;
+    overflow: hidden !important;
+    min-width: 300px !important;
+}
+
+.profile-dropdown-menu-modern::before {
+    border-bottom-color: rgba(255, 255, 255, 0.98) !important;
+    filter: drop-shadow(0 -4px 8px rgba(0, 0, 0, 0.1)) !important;
+}
+
+.profile-dropdown-header-modern {
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9) !important;
+    border-bottom: 2px solid rgba(226, 232, 240, 0.5) !important;
+    padding: 1.25rem 1.5rem !important;
+}
+
+.profile-dropdown-name-modern {
+    font-weight: 700 !important;
+    font-size: 1.1rem !important;
+    color: #1e293b !important;
+    background: linear-gradient(135deg, #1e293b, #475569);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.profile-dropdown-item-modern {
+    padding: 0.875rem 1.5rem !important;
+    transition: all 0.25s ease !important;
+    border-radius: 0 !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.profile-dropdown-item-modern::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 0;
+    background: linear-gradient(135deg, #2563eb, #3b82f6);
+    transition: width 0.3s ease;
+}
+
+.profile-dropdown-item-modern:hover {
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(59, 130, 246, 0.08)) !important;
+    color: #2563eb !important;
+    transform: translateX(4px);
+}
+
+.profile-dropdown-item-modern:hover::before {
+    width: 3px;
+}
+
+.profile-dropdown-item-modern:hover i {
+    color: #2563eb !important;
+    transform: scale(1.1);
+}
+
+/* Responsive Enhancements */
+@media (max-width: 991.98px) {
+    .navbar-modern {
+        padding: 0.6rem 0;
+    }
+
+    .brand-text {
+        font-size: 1.3rem;
+    }
+
+    .nav-links-modern {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(226, 232, 240, 0.5);
+    }
+
+    .nav-links-modern .nav-link-modern {
+        margin: 0.25rem 0;
+        border-radius: 12px;
+        padding: 0.8rem 1rem !important;
+    }
+
+    .nav-link-login {
+        margin: 0.5rem 0 0 0 !important;
+        text-align: center;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .profile-dropdown-menu-modern {
+        min-width: 280px !important;
+        margin-right: 1rem;
+    }
+
+    .brand-text {
+        font-size: 1.2rem;
+    }
+}
+
 /* Bootstrap components z-index override */
 .modal,
 .modal.show,
