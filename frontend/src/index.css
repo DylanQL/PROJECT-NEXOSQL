@@ -875,7 +875,7 @@ footer {
 }
 
 .motor-card.active {
-    border-color: rgba(37, 99, 235, 0.8);
+    border: 3px solid #2563eb;
     box-shadow: 0 10px 20px rgba(37, 99, 235, 0.25);
     background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(79, 70, 229, 0.08) 100%);
     transform: translateY(-2px) scale(1.01);
@@ -883,26 +883,7 @@ footer {
 }
 
 .motor-card.active::before {
-    background: linear-gradient(90deg, #2563eb 0%, #4f46e5 100%);
-}
-
-.motor-card.active::after {
-    content: '✓';
-    position: absolute;
-    top: 0.75rem;
-    right: 0.75rem;
-    width: 24px;
-    height: 24px;
-    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-    color: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.75rem;
-    font-weight: bold;
-    box-shadow: 0 2px 4px rgba(34, 197, 94, 0.3);
-    z-index: 10;
+    display: none;
 }
 
 .motor-card.active:hover {
