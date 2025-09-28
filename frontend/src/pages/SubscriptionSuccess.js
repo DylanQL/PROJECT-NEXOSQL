@@ -224,94 +224,85 @@ const SubscriptionSuccess = () => {
 
   if (success && subscriptionData) {
     return (
-      <Container className="py-5">
-        <Row className="justify-content-center">
+      <Container className="py-4 d-flex align-items-center" style={{ minHeight: "80vh" }}>
+        <Row className="justify-content-center w-100">
           <Col md={10} lg={8}>
             <Card className="success-card">
-              <Card.Header className="success-card-header text-center success-header">
-                <h2 className="mb-0 text-white">
-                  <i className="bi bi-check-circle me-3 success-icon" style={{ fontSize: "3rem" }}></i>
-                  <div>¡Suscripción Exitosa!</div>
-                </h2>
+              <Card.Header className="success-card-header text-center success-header py-3">
+                <h3 className="mb-0 text-white">
+                  <i className="bi bi-check-circle me-2 success-icon" style={{ fontSize: "2rem" }}></i>
+                  ¡Suscripción Exitosa!
+                </h3>
               </Card.Header>
-              <Card.Body className="p-4">
-                <div className="text-center mb-5 success-content">
-                  <h3 className="text-success mb-3">
+              <Card.Body className="p-3">
+                <div className="text-center mb-3 success-content">
+                  <h4 className="text-success mb-2">
                     {userProfile?.name 
                       ? `¡Bienvenido ${userProfile.name} a NexoSQL Premium!`
                       : "¡Bienvenido a NexoSQL Premium!"
                     }
-                  </h3>
-                  <p className="lead text-muted fs-5">
-                    Tu suscripción ha sido activada correctamente. Ahora puedes
-                    disfrutar de todas las funciones premium de nuestra plataforma.
+                  </h4>
+                  <p className="text-muted mb-0">
+                    Tu suscripción ha sido activada correctamente.
                   </p>
                 </div>
 
-                <Row className="mb-5 success-details">
-                  <Col md={6} className="mb-4">
+                <Row className="mb-3 success-details">
+                  <Col md={6} className="mb-2">
                     <Card className="details-card h-100 bg-light border-0">
-                      <Card.Body className="p-4">
-                        <h5 className="text-primary mb-3">
+                      <Card.Body className="p-3">
+                        <h6 className="text-primary mb-2">
                           <i className="bi bi-credit-card me-2"></i>
-                          Detalles de la Suscripción
-                        </h5>
-                        <hr className="my-3" />
-                        <div className="mb-3">
+                          Detalles de Suscripción
+                        </h6>
+                        <div className="mb-2">
                           <strong className="text-dark">Plan:</strong>
-                          <span className="ms-2 badge bg-primary-subtle text-primary fs-6">
+                          <span className="ms-2 badge bg-primary-subtle text-primary">
                             {getPlanName(subscriptionData.planType)}
                           </span>
                         </div>
-                        <div className="mb-3">
+                        <div className="mb-2">
                           <strong className="text-dark">Precio:</strong>
-                          <span className="ms-2 text-success fw-bold fs-5">
+                          <span className="ms-2 text-success fw-bold">
                             {formatPrice(subscriptionData.price)}/mes
                           </span>
                         </div>
-                        <div className="mb-3">
+                        <div className="mb-0">
                           <strong className="text-dark">Estado:</strong>
-                          <span className="badge bg-success ms-2 px-3 py-2">
+                          <span className="badge bg-success ms-2 px-2 py-1">
                             <i className="bi bi-check-circle me-1"></i>
                             {subscriptionData.status === "active"
                               ? "Activa"
                               : subscriptionData.status}
                           </span>
                         </div>
-                        <div className="mb-0">
-                          <strong className="text-dark">ID:</strong>
-                          <small className="text-muted d-block mt-1 font-monospace">
-                            {subscriptionData.subscriptionId}
-                          </small>
-                        </div>
                       </Card.Body>
                     </Card>
                   </Col>
-                  <Col md={6} className="mb-4">
+                  <Col md={6} className="mb-2">
                     <Card className="details-card h-100 bg-light border-0">
-                      <Card.Body className="p-4">
-                        <h5 className="text-primary mb-3">
+                      <Card.Body className="p-3">
+                        <h6 className="text-primary mb-2">
                           <i className="bi bi-calendar-check me-2"></i>
-                          Fechas Importantes
-                        </h5>
-                        <hr className="my-3" />
-                        <div className="mb-3">
-                          <strong className="text-dark">Fecha de Inicio:</strong>
-                          <div className="text-muted mt-1">
+                          Fechas
+                        </h6>
+                        <div className="mb-2">
+                          <strong className="text-dark">Inicio:</strong>
+                          <div className="text-muted small">
                             {formatDate(subscriptionData.startDate)}
                           </div>
                         </div>
                         {subscriptionData.nextBillingDate && (
-                          <div className="mb-3">
+                          <div className="mb-2">
                             <strong className="text-dark">Próximo Cobro:</strong>
-                            <div className="text-muted mt-1">
+                            <div className="text-muted small">
                               {formatDate(subscriptionData.nextBillingDate)}
                             </div>
                           </div>
                         )}
                         <div className="mb-0">
-                          <strong className="text-dark">Creado el:</strong>
-                          <div className="text-muted mt-1">
+                          <strong className="text-dark">Creado:</strong>
+                          <div className="text-muted small">
                             {formatDate(subscriptionData.createdAt)}
                           </div>
                         </div>
@@ -321,18 +312,16 @@ const SubscriptionSuccess = () => {
                 </Row>
 
                 <div className="text-center success-actions">
-                  <div className="d-grid gap-3 d-md-flex justify-content-md-center">
+                  <div className="d-grid gap-2 d-md-flex justify-content-md-center">
                     <Button
-                      className="primary-button celebration-button px-4 py-3"
-                      size="lg"
+                      className="primary-button celebration-button px-3 py-2"
                       onClick={handleContinue}
                     >
                       <i className="bi bi-arrow-right me-2"></i>
                       Comenzar a Usar NexoSQL
                     </Button>
                     <Button
-                      className="secondary-button px-4 py-3"
-                      size="lg"
+                      className="secondary-button px-3 py-2"
                       onClick={handleViewProfile}
                     >
                       <i className="bi bi-person me-2"></i>
