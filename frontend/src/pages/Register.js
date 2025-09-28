@@ -14,6 +14,14 @@ import logoNexoSQL from "../assets/logo_nexosql.svg";
 import loginImage from "../assets/Imagen_Login-Register.png";
 import "../styles/AuthPages.css";
 
+// Add Font Awesome CDN for icons
+if (!document.querySelector('link[href*="font-awesome"]')) {
+  const fontAwesome = document.createElement('link');
+  fontAwesome.rel = 'stylesheet';
+  fontAwesome.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css';
+  document.head.appendChild(fontAwesome);
+}
+
 const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -91,91 +99,118 @@ const Register = () => {
     <Container fluid className="auth-container">
       <Row className="h-100 g-0">
         {/* Left Side - Form */}
-        <Col lg={6} className="auth-form-section">
+        <Col lg={6} className="auth-form-section-dark">
           <div className="text-center auth-logo-section">
-            <div className="d-flex align-items-center justify-content-center">
+            <div className="d-flex align-items-center justify-content-center mb-4">
               <img
                 src={logoNexoSQL}
                 alt="NexoSQL Logo"
                 className="auth-logo"
               />
-              <h1 className="mb-0 auth-title">NexoSQL</h1>
+              <h1 className="mb-0 auth-title-dark">NexoSQL</h1>
             </div>
           </div>
-          <h2 className="text-center auth-subtitle">Registrarse</h2>
+          <div className="auth-welcome-section">
+            <h2 className="text-center auth-subtitle-dark">🚀 Crear Cuenta</h2>
+            <p className="text-center auth-description">Únete y comienza a gestionar tus bases de datos</p>
+          </div>
 
-          {error && <Alert variant="danger" className="auth-alert">{error}</Alert>}
+          {error && <Alert variant="danger" className="auth-alert-dark">{error}</Alert>}
 
-          <Form onSubmit={handleEmailRegister}>
+          <Form onSubmit={handleEmailRegister} className="auth-form-dark">
             <Form.Group className="mb-3" controlId="email">
-              <Form.Label>Correo Electrónico</Form.Label>
+              <Form.Label className="auth-label-dark">
+                <i className="fas fa-envelope me-2"></i>
+                Correo Electrónico
+              </Form.Label>
               <Form.Control
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="Ingrese su correo electrónico"
+                placeholder="📧 Ingrese su correo electrónico"
                 required
-                className="auth-form-control"
+                className="auth-form-control-dark"
               />
             </Form.Group>
 
             <Form.Group className="mb-3" controlId="password">
-              <Form.Label>Contraseña</Form.Label>
+              <Form.Label className="auth-label-dark">
+                <i className="fas fa-lock me-2"></i>
+                Contraseña
+              </Form.Label>
               <Form.Control
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Ingrese su contraseña"
+                placeholder="🔑 Ingrese su contraseña"
                 required
-                className="auth-form-control"
+                className="auth-form-control-dark"
               />
-              <Form.Text className="text-muted">
+              <Form.Text className="auth-help-text">
+                <i className="fas fa-info-circle me-1"></i>
                 La contraseña debe tener al menos 6 caracteres.
               </Form.Text>
             </Form.Group>
 
-            <Form.Group className="mb-3" controlId="confirmPassword">
-              <Form.Label>Confirmar Contraseña</Form.Label>
+            <Form.Group className="mb-4" controlId="confirmPassword">
+              <Form.Label className="auth-label-dark">
+                <i className="fas fa-check-circle me-2"></i>
+                Confirmar Contraseña
+              </Form.Label>
               <Form.Control
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirme su contraseña"
+                placeholder="🔒 Confirme su contraseña"
                 required
-                className="auth-form-control"
+                className="auth-form-control-dark"
               />
             </Form.Group>
 
-            <div className="d-grid gap-2">
+            <div className="d-grid gap-3">
               <Button 
                 variant="primary" 
                 type="submit" 
                 disabled={loading}
                 size="lg"
-                className="auth-btn auth-btn-primary"
+                className="auth-btn-primary-dark"
               >
-                {loading ? "Cargando..." : "Registrarse"}
+                {loading ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin me-2"></i>
+                    Cargando...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-user-plus me-2"></i>
+                    Crear Cuenta
+                  </>
+                )}
               </Button>
 
-              <div className="text-center my-3 auth-divider">O</div>
+              <div className="text-center my-3 auth-divider-dark">
+                <span>O continúa con</span>
+              </div>
 
               <Button
-                variant="outline-danger"
+                variant="outline-light"
                 onClick={handleGoogleRegister}
                 disabled={loading}
                 type="button"
                 size="lg"
-                className="auth-btn auth-btn-google"
+                className="auth-btn-google-dark"
               >
-                Registrarse con Google
+                <i className="fab fa-google me-2"></i>
+                Google
               </Button>
             </div>
           </Form>
 
-          <div className="text-center auth-link-section">
-            <span>¿Ya tiene una cuenta? </span>
-            <Link to="/login" className="auth-link">
-              Inicie Sesión
+          <div className="text-center auth-link-section-dark">
+            <span>¿Ya tienes una cuenta? </span>
+            <Link to="/login" className="auth-link-dark">
+              <i className="fas fa-sign-in-alt me-1"></i>
+              Inicia sesión aquí
             </Link>
           </div>
         </Col>
