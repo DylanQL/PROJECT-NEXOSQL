@@ -321,13 +321,6 @@ const CrearConexion = () => {
                 }}
               >
                 <Card.Body className="text-center motor-card-body">
-                  <div className="motor-card-header">
-                    {selectedMotor === "" && index === 0 && (
-                      <span className="motor-card-badge badge-muted">
-                        Recomendado
-                      </span>
-                    )}
-                  </div>
                   <div className="motor-card-media">
                     {dbLogos[motor.nombre.toLowerCase()] ? (
                       <img
