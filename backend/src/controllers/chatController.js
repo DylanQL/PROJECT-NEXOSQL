@@ -1,6 +1,21 @@
 const { Chat, ChatMessage, ConexionDB } = require("../models");
 const { Op } = require("sequelize");
 
+// Helper function to safely parse metadata JSON
+const parseMetadata = (metadata) => {
+  if (!metadata) return null;
+  if (typeof metadata === 'object') return metadata;
+  if (typeof metadata === 'string') {
+    try {
+      return JSON.parse(metadata);
+    } catch (error) {
+      console.error('Error parsing metadata JSON:', error);
+      return null;
+    }
+  }
+  return null;
+};
+
 class ChatController {
   // Obtener todos los chats de un usuario para una conexión específica
   async getChatsByConnection(req, res) {
@@ -42,7 +57,7 @@ class ChatController {
           id: message.id,
           type: message.type,
           content: message.content,
-          metadata: message.metadata,
+          metadata: parseMetadata(message.metadata),
           error: message.isError,
           cancelado: message.cancelado,
           hilo_conversacion: message.hilo_conversacion,
@@ -142,7 +157,7 @@ class ChatController {
           id: message.id,
           type: message.type,
           content: message.content,
-          metadata: message.metadata,
+          metadata: parseMetadata(message.metadata),
           error: message.isError,
           cancelado: message.cancelado,
           hilo_conversacion: message.hilo_conversacion,
@@ -277,7 +292,7 @@ class ChatController {
           id: message.id,
           type: message.type,
           content: message.content,
-          metadata: message.metadata,
+          metadata: parseMetadata(message.metadata),
           error: message.isError,
           cancelado: message.cancelado,
           hilo_conversacion: message.hilo_conversacion,
