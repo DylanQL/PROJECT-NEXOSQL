@@ -609,10 +609,10 @@ const EditarConexion = () => {
           <div className="d-flex justify-content-between mt-4">
             {step > 1 && (
               <Button
-                variant="outline-secondary"
+                variant="secondary"
                 onClick={handlePrevStep}
                 size="md"
-                className="btn-ghost"
+                className="cta-button"
                 style={{ color: 'white', backgroundColor: '#6c757d', borderColor: '#6c757d' }}
               >
                 Anterior
