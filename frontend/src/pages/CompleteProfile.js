@@ -24,7 +24,7 @@ const CompleteProfile = () => {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [showSuccessCard, setShowSuccessCard] = useState(false);
   const [submitAttempted, setSubmitAttempted] = useState(false);
 
   // Redirect if the user already has a complete profile
@@ -93,12 +93,12 @@ const CompleteProfile = () => {
       }
 
       console.log("Profile created successfully:", result.data);
-      setSuccess(true);
-
-      // Redirect to profile page after a short delay
+      
+      // Mostrar cardview flotante y navegar después de un breve retraso
+      setShowSuccessCard(true);
       setTimeout(() => {
         navigate("/profile");
-      }, 1500);
+      }, 2500);
     } catch (error) {
       console.error("Exception in handleSubmit:", error);
       setError("Error al crear perfil: " + error.message);
@@ -153,6 +153,30 @@ const CompleteProfile = () => {
   }
 
   return (
+    <>
+      {/* Success Card flotante */}
+      {showSuccessCard && (
+        <div className="position-fixed top-50 start-50 translate-middle" style={{ zIndex: 1050 }}>
+          <Card className="shadow-lg" style={{ minWidth: '300px', border: '2px solid #22c55e' }}>
+            <Card.Body className="text-center p-4">
+              <div className="mb-3">
+                <div className="d-inline-flex align-items-center justify-content-center bg-success rounded-circle" style={{ width: '60px', height: '60px' }}>
+                  <i className="bi bi-check-lg text-white" style={{ fontSize: '2rem' }}></i>
+                </div>
+              </div>
+              <h5 className="text-success mb-2">¡Éxito!</h5>
+              <p className="mb-0">¡Perfil creado exitosamente!</p>
+              <small className="text-muted">Redirigiendo...</small>
+            </Card.Body>
+          </Card>
+        </div>
+      )}
+
+      {/* Overlay para el cardview flotante */}
+      {showSuccessCard && (
+        <div className="position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-25" style={{ zIndex: 1040 }}></div>
+      )}
+
     <div className="complete-profile-page">
       <Container className="py-5">
         <Row className="justify-content-center">
@@ -185,12 +209,6 @@ const CompleteProfile = () => {
                 <div className="alert-modern alert-danger">
                   <i className="bi bi-exclamation-triangle me-2"></i>
                   {error}
-                </div>
-              )}
-              {success && (
-                <div className="alert-modern alert-success">
-                  <i className="bi bi-check-circle me-2"></i>
-                  ¡Perfil creado exitosamente!
                 </div>
               )}
 
@@ -279,7 +297,7 @@ const CompleteProfile = () => {
                 <div className="form-actions">
                   <Button
                     type="submit"
-                    disabled={loading || success}
+                    disabled={loading || showSuccessCard}
                     className="btn-primary-modern"
                   >
                     {loading ? (
@@ -297,7 +315,7 @@ const CompleteProfile = () => {
                   <Button
                     variant="outline-secondary"
                     onClick={() => navigate("/")}
-                    disabled={loading || success}
+                    disabled={loading || showSuccessCard}
                     className="btn-secondary-modern"
                   >
                     <i className="bi bi-arrow-left me-2"></i>
@@ -310,6 +328,7 @@ const CompleteProfile = () => {
         </Row>
       </Container>
     </div>
+    </>
   );
 };
 
