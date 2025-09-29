@@ -10,16 +10,19 @@ import {
 } from "react-bootstrap";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useSubscription } from "../contexts/SubscriptionContext";
 import "../styles/SubscriptionSuccess.css";
 
 const SubscriptionSuccess = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { currentUser, userProfile } = useAuth();
+  const { refreshSubscription } = useSubscription();
   const [loading, setLoading] = useState(true);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState("");
   const [subscriptionData, setSubscriptionData] = useState(null);
+  const [refreshingContexts, setRefreshingContexts] = useState(false);
 
   useEffect(() => {
     confirmSubscription();
@@ -52,6 +55,20 @@ const SubscriptionSuccess = () => {
       if (data.success) {
         setSuccess(true);
         setSubscriptionData(data.data.data);
+
+        // Force refresh of subscription context to get updated data
+        setRefreshingContexts(true);
+        console.log("Subscription confirmed successfully, refreshing contexts...");
+        
+        try {
+          // Refresh subscription context
+          await refreshSubscription();
+          console.log("Subscription context refreshed successfully");
+          setRefreshingContexts(false);
+        } catch (refreshError) {
+          console.error("Error refreshing contexts:", refreshError);
+          setRefreshingContexts(false);
+        }
       } else {
         setError(data.error || "Error al confirmar la suscripción");
       }
@@ -155,6 +172,39 @@ const SubscriptionSuccess = () => {
             <div 
               className="progress-bar progress-bar-striped progress-bar-animated bg-primary" 
               style={{ width: "75%" }}
+            ></div>
+          </div>
+        </div>
+      </Container>
+    );
+  }
+
+  if (refreshingContexts) {
+    return (
+      <Container
+        className="d-flex justify-content-center align-items-center"
+        style={{ minHeight: "70vh" }}
+      >
+        <div className="text-center">
+          <div className="mb-4">
+            <Spinner 
+              animation="border" 
+              role="status" 
+              size="lg" 
+              className="text-success" 
+              style={{ width: "4rem", height: "4rem" }}
+            >
+              <span className="visually-hidden">Actualizando información...</span>
+            </Spinner>
+          </div>
+          <h4 className="mb-3 text-success">¡Suscripción confirmada!</h4>
+          <p className="text-muted">
+            Actualizando tu información de suscripción...
+          </p>
+          <div className="progress mt-3" style={{ height: "4px", width: "300px", margin: "0 auto" }}>
+            <div 
+              className="progress-bar progress-bar-striped progress-bar-animated bg-success" 
+              style={{ width: "95%" }}
             ></div>
           </div>
         </div>
