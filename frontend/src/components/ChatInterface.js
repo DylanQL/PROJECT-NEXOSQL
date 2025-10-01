@@ -698,11 +698,7 @@ const ChatInterface = () => {
           )}
         </div>
 
-        {error && (
-          <Alert variant="danger" className="mx-3 mb-3">
-            {error}
-          </Alert>
-        )}
+        {/* Error alert removed - errors are now shown only in chat messages */}
 
         <div className="chat-app__body">
           {!selectedChat ? (
