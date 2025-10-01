@@ -97,6 +97,50 @@ class AIController {
         queriesExecuted: result.metadata?.queriesExecuted
       });
 
+      // ANTES de guardar la respuesta, verificar si el mensaje fue cancelado
+      await userMessage.reload();
+      
+      if (userMessage.cancelado) {
+        console.log('⏭️  Query was cancelled - not saving assistant response or counting query');
+        
+        // Guardar respuesta indicando que fue cancelada, pero NO incrementar contador
+        const assistantMessage = await ChatMessage.create({
+          chatId: chat.id,
+          type: 'assistant',
+          content: 'Consulta cancelada por el usuario',
+          metadata: { cancelled: true },
+          isError: false,
+          cancelado: true,
+          hilo_conversacion: hiloConversacion,
+        });
+
+        return res.json({
+          success: true,
+          cancelled: true,
+          message: 'Consulta cancelada',
+          chatId: chat.id,
+          userMessage: {
+            id: userMessage.id,
+            type: 'user',
+            content: question,
+            hilo_conversacion: hiloConversacion,
+            timestamp: userMessage.timestamp,
+            cancelado: true,
+          },
+          assistantMessage: {
+            id: assistantMessage.id,
+            type: 'assistant',
+            content: 'Consulta cancelada por el usuario',
+            metadata: { cancelled: true },
+            error: false,
+            hilo_conversacion: hiloConversacion,
+            timestamp: assistantMessage.timestamp,
+            cancelado: true,
+          }
+        });
+      }
+
+      // Si NO fue cancelado, continuar normalmente
       // Guardar la respuesta del asistente
       const assistantMessage = await ChatMessage.create({
         chatId: chat.id,
@@ -110,9 +154,10 @@ class AIController {
       // Actualizar el timestamp del chat
       await chat.update({ updatedAt: new Date() });
 
-      // Increment query counter for the user (only for non-cancelled queries)
+      // Increment query counter ONLY for successful, non-cancelled queries
       if (req.userWithLimit) {
         await req.userWithLimit.incrementQueryCount();
+        console.log('✅ Query counted for user:', req.userWithLimit.id);
       }
 
       return res.json({

@@ -1,6 +1,11 @@
 # Implementación de Límites de Consultas Mensuales
 
-## Resumen
+##### 3. Controlador AI (`backend/src/controllers/aiController.js`)
+Modificado para:
+- **Verificar si fue cancelado ANTES de guardar la respuesta**
+- Si fue cancelado: guarda mensaje de cancelación pero NO incrementa contador
+- Si NO fue cancelado: guarda respuesta normal e incrementa contador
+- Solo cuenta consultas completadas exitosamente que NO fueron canceladasmen
 Este documento describe la implementación del sistema de límites de consultas mensuales para cada tipo de suscripción en NexoSQL.
 
 ## Límites por Plan
@@ -116,11 +121,30 @@ Las tarjetas de planes ahora muestran:
    - ¿Alcanzó el límite? → Si alcanzó, error 429
 
 2. Si pasa las validaciones:
-   - Se procesa la consulta en `aiController.processQuery()`
-   - Si es exitosa, se incrementa el contador con `incrementQueryCount()`
-   - **Las consultas canceladas NO se cuentan**
+   - Se guarda el mensaje del usuario en la BD
+   - Se procesa la consulta en `aiController.processQuery()` (puede tomar varios segundos)
+   - **ANTES de guardar la respuesta, se verifica si fue cancelado**
+   - Si fue cancelado:
+     - Se guarda mensaje "Consulta cancelada por el usuario"
+     - **NO se incrementa el contador** ⏭️
+     - Se retorna con `cancelled: true`
+   - Si NO fue cancelado:
+     - Se guarda la respuesta normal del asistente
+     - **Se incrementa el contador** ✅
+     - Se retorna la respuesta completa
 
 3. El contador se resetea automáticamente al inicio de cada mes
+
+### Cancelación desde el Frontend:
+1. Usuario hace clic en "Cancelar" mientras se procesa
+2. Frontend llama a `/api/ai/cancel/:hiloConversacion`
+3. Backend marca `cancelado = true` en el mensaje del usuario
+4. Cuando el procesamiento de IA termina:
+   - Backend recarga el mensaje del usuario desde la BD
+   - Detecta que `cancelado = true`
+   - **NO guarda la respuesta del asistente**
+   - **NO incrementa el contador de consultas**
+   - Retorna respuesta indicando cancelación
 
 ### En la interfaz:
 1. La página "Conexiones" muestra dos tarjetas:
