@@ -293,10 +293,28 @@ class SubscriptionController {
 
           // Clear the replacingSubscriptionId field since we've handled it
           await subscription.update({ replacingSubscriptionId: null });
+          
+          // Reset query counter when upgrading/changing plan
+          console.log(`🔄 Resetting query counter for user ${userId} after plan change`);
+          await req.user.update({
+            monthly_queries_used: 0,
+            queries_reset_date: new Date(),
+          });
+          console.log(`✅ Query counter reset to 0 for user ${userId}`);
         } catch (cancelError) {
           console.error(`Error cancelling old subscription:`, cancelError);
           // Don't fail the main operation if cancelling the old subscription fails
         }
+      }
+
+      // Also reset query counter for new subscriptions (first time subscribers)
+      if (shouldActivate && !subscription.replacingSubscriptionId) {
+        console.log(`🔄 Resetting query counter for user ${userId} on new subscription`);
+        await req.user.update({
+          monthly_queries_used: 0,
+          queries_reset_date: new Date(),
+        });
+        console.log(`✅ Query counter reset to 0 for user ${userId}`);
       }
 
       console.log(`Subscription ${subscriptionId} updated:`, {

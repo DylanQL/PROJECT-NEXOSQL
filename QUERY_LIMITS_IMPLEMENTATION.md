@@ -1,6 +1,27 @@
 # Implementación de Límites de Consultas Mensuales
 
-##### 3. Controlador AI (`backend/src/controllers/aiController.js`)
+##### 3. Cont### 4. Controlador User (`backend/src/controllers/userController.js`)
+Nuevo endpoint `getQueryStats()` que retorna:
+```javascript
+{
+  success: true,
+  data: {
+    used: 45,              // Consultas usadas
+    limit: 500,            // Límite del plan
+    remaining: 455,        // Consultas restantes
+    planType: "bronce",    // Tipo de plan
+    resetDate: "2025-10-01",
+    hasActiveSubscription: true
+  }
+}
+```
+
+### 5. Controlador Subscription (`backend/src/controllers/subscriptionController.js`)
+Modificado el método `confirmSubscription()` para:
+- Resetear el contador de consultas cuando se activa una nueva suscripción
+- Resetear el contador cuando se actualiza/cambia de plan
+- Establecer `monthly_queries_used = 0` y `queries_reset_date = fecha actual`
+- Aplicar tanto para nuevas suscripciones como para actualizaciones de planckend/src/controllers/aiController.js`)
 Modificado para:
 - **Verificar si fue cancelado ANTES de guardar la respuesta**
 - Si fue cancelado: guarda mensaje de cancelación pero NO incrementa contador
@@ -79,7 +100,7 @@ Nuevo endpoint `getQueryStats()` que retorna:
 }
 ```
 
-### 6. Rutas (`backend/src/routes/`)
+### 5. Rutas (`backend/src/routes/`)
 **aiRoutes.js**: Se añadió middleware `checkQueryLimit` a la ruta `/query`
 **userRoutes.js**: Nueva ruta `GET /api/users/query-stats`
 
@@ -134,6 +155,22 @@ Las tarjetas de planes ahora muestran:
      - Se retorna la respuesta completa
 
 3. El contador se resetea automáticamente al inicio de cada mes
+
+### Al actualizar/cambiar de plan:
+1. Usuario selecciona nuevo plan (upgrade o downgrade)
+2. Se crea nueva suscripción en PayPal
+3. Usuario completa el pago
+4. Al confirmar la suscripción:
+   - Se cancela la suscripción anterior (si existe)
+   - Se activa la nueva suscripción
+   - **Se resetea el contador de consultas a 0** 🔄
+   - Se actualiza `queries_reset_date` a la fecha actual
+5. Usuario comienza con 0 consultas usadas en su nuevo plan
+
+### Casos de reseteo del contador:
+- ✅ Al inicio de cada mes (automático)
+- ✅ Al activar una nueva suscripción (primera vez)
+- ✅ Al actualizar/cambiar de plan (upgrade/downgrade)
 
 ### Cancelación desde el Frontend:
 1. Usuario hace clic en "Cancelar" mientras se procesa
@@ -190,6 +227,7 @@ Las tarjetas de planes ahora muestran:
 3. **Thread-safe**: El incremento usa el método `.increment()` de Sequelize
 4. **Visible para el usuario**: Información clara en tiempo real del uso
 5. **Upgrade sugerido**: Botones para mejorar plan cuando se acerca al límite
+6. **Reseteo al cambiar plan**: Cuando el usuario actualiza su suscripción (upgrade/downgrade), el contador de consultas se resetea a 0
 
 ## Testing Manual
 
