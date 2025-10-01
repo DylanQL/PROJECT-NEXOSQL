@@ -13,8 +13,7 @@ import {
 import { useNavigate } from "react-router-dom";
 
 import { conexionDBApi } from "../services/api";
-import ConnectionLimitInfo from "../components/ConnectionLimitInfo";
-import QueryLimitInfo from "../components/QueryLimitInfo";
+import PlanLimitsInfo from "../components/PlanLimitsInfo";
 import { dbLogos } from "../assets/db-logos";
 
 const Conexiones = () => {
@@ -133,8 +132,7 @@ const Conexiones = () => {
           </div>
         </div>
 
-        <ConnectionLimitInfo currentConnectionCount={conexiones.length} />
-        <QueryLimitInfo />
+        <PlanLimitsInfo currentConnectionCount={conexiones.length} />
 
         {error && <Alert variant="danger">{error}</Alert>}
 

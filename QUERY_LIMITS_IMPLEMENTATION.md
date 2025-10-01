@@ -2,9 +2,19 @@
 
 ##### 3. Cont### 4. Controlador User (`backend/src/controllers/userController.js`)
 Nuevo endpoint `getQueryStats()` que retorna:
-```javascript
-{
-  success: true,
+```javascrip### En la interfaz:
+1. La página "Conexiones" muestra una tarjeta unificada **"Límites del Plan"** que incluye:
+   - **Conexiones de BD**: Muestra conexiones usadas/totales con barra de progreso
+   - **Consultas mensuales**: Muestra consultas usadas/totales con barra de progreso
+   - Ambas métricas se muestran lado a lado (responsive)
+   - Alertas unificadas cuando se acerca a cualquier límite
+
+2. La página "Subscriptions" muestra los límites en las features de cada plan
+
+3. Cuando el usuario se acerca al límite de cualquier recurso:
+   - 75%+: Alerta informativa
+   - 90%+: Alerta de advertencia con botón "Mejorar Plan"
+   - 100%: Mensaje de límite alcanzadoss: true,
   data: {
     used: 45,              // Consultas usadas
     limit: 500,            // Límite del plan
@@ -124,8 +134,16 @@ Nuevo componente que muestra:
 - Alertas cuando se usa el 75%, 90% o se alcanza el límite
 - Botón para mejorar plan cuando se acerca al límite
 
-### 4. Página Conexiones (`frontend/src/pages/Conexiones.js`)
-Se agregó el componente `<QueryLimitInfo />` para mostrar el uso de consultas
+### 4. Componente PlanLimitsInfo (`frontend/src/components/PlanLimitsInfo.js`)
+**Componente unificado que combina ConnectionLimitInfo y QueryLimitInfo** en una sola tarjeta:
+- Muestra límites de conexiones y consultas lado a lado
+- Barras de progreso para ambos recursos
+- Alertas unificadas cuando se acerca a cualquier límite
+- Diseño responsive (columnas en desktop, apilado en mobile)
+- Indicador de estado general del plan
+
+### 5. Página Conexiones (`frontend/src/pages/Conexiones.js`)
+Se agregó el componente `<PlanLimitsInfo />` que reemplaza a los componentes individuales de ConnectionLimitInfo y QueryLimitInfo
 
 ### 5. Página Subscriptions (`frontend/src/pages/Subscriptions.js`)
 Las tarjetas de planes ahora muestran:
