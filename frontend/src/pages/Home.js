@@ -255,9 +255,11 @@ const Home = () => {
             </Card.Text>
             <Button
               variant="primary"
-              onClick={() => navigate("/crear-conexion")}
+              onClick={() => navigate("/conexiones")}
+              className="cta-button"
+              style={{ color: 'white', backgroundColor: '#0d6efd', borderColor: '#0d6efd' }}
             >
-              Crear Primera Conexión
+              Ir a Conexiones
             </Button>
           </Card.Body>
         </Card>
