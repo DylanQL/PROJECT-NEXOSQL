@@ -245,7 +245,7 @@ const Home = () => {
   if (connections.length === 0) {
     return (
       <Container className="py-5">
-        <Card className="text-center p-5">
+        <Card className="text-center p-5 mx-auto" style={{ width: '90%' }}>
           <Card.Body>
             <HddStack size={64} className="mb-4 text-primary" />
             <Card.Title>No tienes conexiones configuradas</Card.Title>
