@@ -193,29 +193,24 @@ const Home = () => {
   if (!userProfile) {
     return (
       <Container className="py-5">
-        <Row className="justify-content-center">
-          <Col md={8}>
-            <Card className="shadow-sm">
-              <Card.Body className="p-4">
-                <Card.Title className="mb-4 text-center">
-                  Completa tu Perfil
-                </Card.Title>
-                <Card.Text className="text-center">
-                  ¡Gracias por registrarte! Para comenzar a usar NexoSQL, por
-                  favor completa tu perfil.
-                </Card.Text>
-                <div className="d-grid gap-2 d-md-flex justify-content-md-center mt-4">
-                  <Button
-                    variant="primary"
-                    onClick={() => navigate("/complete-profile")}
-                  >
-                    Completar Perfil
-                  </Button>
-                </div>
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
+        <Card className="text-center p-5 mx-auto" style={{ width: '90%' }}>
+          <Card.Body>
+            <Shield size={64} className="mb-4 text-primary" />
+            <Card.Title>Completa tu Perfil</Card.Title>
+            <Card.Text>
+              ¡Gracias por registrarte! Para comenzar a usar NexoSQL, por
+              favor completa tu perfil.
+            </Card.Text>
+            <Button
+              variant="primary"
+              onClick={() => navigate("/complete-profile")}
+              className="cta-button"
+              style={{ color: 'white', backgroundColor: '#0d6efd', borderColor: '#0d6efd' }}
+            >
+              Completar Perfil
+            </Button>
+          </Card.Body>
+        </Card>
       </Container>
     );
   }
