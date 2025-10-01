@@ -79,6 +79,19 @@ export const userApi = {
       };
     }
   },
+
+  // Get query usage statistics
+  getQueryStats: async () => {
+    try {
+      const response = await api.get("/users/query-stats");
+      return { data: response.data, error: null };
+    } catch (error) {
+      return {
+        data: null,
+        error: error.response?.data?.error || "Error fetching query stats",
+      };
+    }
+  },
 };
 
 // Database Engine related API calls

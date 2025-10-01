@@ -1,5 +1,6 @@
 const { admin } = require("../config/firebase");
 const User = require("../models/User");
+const Subscription = require("../models/Subscription");
 
 /**
  * Creates a new user in the database
@@ -170,9 +171,61 @@ const deleteUser = async (req, res) => {
   }
 };
 
+/**
+ * Gets the current user's query usage statistics
+ */
+const getQueryStats = async (req, res) => {
+  try {
+    const user = req.user;
+
+    // Reset counter if needed
+    await user.resetMonthlyQueriesIfNeeded();
+    await user.reload();
+
+    // Get active subscription
+    const activeSubscription = await user.getActiveSubscription();
+    
+    if (!activeSubscription) {
+      return res.json({
+        success: true,
+        data: {
+          used: 0,
+          limit: 0,
+          remaining: 0,
+          planType: null,
+          hasActiveSubscription: false
+        }
+      });
+    }
+
+    const planDetails = Subscription.getPlanDetails(activeSubscription.planType);
+    const maxQueries = planDetails?.maxQueries || 0;
+    const remaining = Math.max(0, maxQueries - user.monthly_queries_used);
+
+    return res.json({
+      success: true,
+      data: {
+        used: user.monthly_queries_used,
+        limit: maxQueries,
+        remaining: remaining,
+        planType: activeSubscription.planType,
+        resetDate: user.queries_reset_date,
+        hasActiveSubscription: true
+      }
+    });
+  } catch (error) {
+    console.error("Error getting query stats:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Error al obtener las estadísticas de consultas"
+    });
+  }
+};
+
 module.exports = {
   createUser,
   getUserProfile,
   updateUserProfile,
   deleteUser,
+  getQueryStats,
 };

@@ -145,11 +145,13 @@ class SubscriptionService {
           "Para profesionales o micro-equipos que quieren comenzar a consultar sus bases de datos sin complicaciones.",
         features: [
           "Hasta 5 conexiones de bases de datos",
+          "500 consultas mensuales con IA",
           "Consultas en lenguaje natural con IA",
           "Reportes y estadísticas en tiempo real",
           "Compatibilidad SQL/NoSQL",
         ],
         connectionLimit: 5,
+        maxQueries: 500,
         color: "secondary",
       },
       plata: {
@@ -160,11 +162,13 @@ class SubscriptionService {
           "Para profesionales o micro-equipos que quieren comenzar a consultar sus bases de datos sin complicaciones.",
         features: [
           "Hasta 10 conexiones de bases de datos",
+          "1,000 consultas mensuales con IA",
           "Consultas en lenguaje natural con IA",
           "Reportes y estadísticas en tiempo real",
           "Compatibilidad SQL/NoSQL",
         ],
         connectionLimit: 10,
+        maxQueries: 1000,
         color: "info",
       },
       oro: {
@@ -175,12 +179,14 @@ class SubscriptionService {
           "Para profesionales o micro-equipos que quieren comenzar a consultar sus bases de datos sin complicaciones.",
         features: [
           "Hasta 20 conexiones de bases de datos",
+          "2,000 consultas mensuales con IA",
           "Consultas en lenguaje natural con IA",
           "Reportes y estadísticas en tiempo real",
           "Compatibilidad SQL/NoSQL",
           "Soporte técnico prioritario para resolver dudas y consultas",
         ],
         connectionLimit: 20,
+        maxQueries: 2000,
         color: "warning",
       },
     };

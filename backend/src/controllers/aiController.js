@@ -110,6 +110,11 @@ class AIController {
       // Actualizar el timestamp del chat
       await chat.update({ updatedAt: new Date() });
 
+      // Increment query counter for the user (only for non-cancelled queries)
+      if (req.userWithLimit) {
+        await req.userWithLimit.incrementQueryCount();
+      }
+
       return res.json({
         success: true,
         answer: result.answer,

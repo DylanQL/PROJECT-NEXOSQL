@@ -2,6 +2,7 @@ const express = require('express');
 const aiController = require('../controllers/aiController');
 const authMiddleware = require('../middleware/authMiddleware');
 const profileMiddleware = require('../middleware/profileMiddleware');
+const { checkQueryLimit } = require('../middleware/queryLimit');
 
 const router = express.Router();
 
@@ -9,8 +10,8 @@ const router = express.Router();
 router.use(authMiddleware);
 router.use(profileMiddleware);
 
-// Process a natural language query
-router.post('/query', aiController.processQuery);
+// Process a natural language query (with query limit check)
+router.post('/query', checkQueryLimit, aiController.processQuery);
 
 // Cancel a message by thread ID
 router.post('/cancel/:hiloConversacion', aiController.cancelMessage);

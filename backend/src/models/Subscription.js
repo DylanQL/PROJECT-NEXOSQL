@@ -123,18 +123,21 @@ Subscription.getPlanDetails = function (planType) {
       name: "Plan Bronce",
       description: "Acceso básico a NexoSQL",
       price: 5.0,
+      maxQueries: 500,
     },
     plata: {
       planId: "P-74918607K53020936NDFFQFI",
       name: "Plan Plata",
       description: "Acceso estándar a NexoSQL",
       price: 10.0,
+      maxQueries: 1000,
     },
     oro: {
       planId: "P-54096226PF034844GNDFFQTI",
       name: "Plan Oro",
       description: "Acceso completo a NexoSQL",
       price: 20.0,
+      maxQueries: 2000,
     },
   };
   return plans[planType] || null;

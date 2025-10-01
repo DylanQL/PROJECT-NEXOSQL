@@ -19,4 +19,14 @@ router.put('/profile', verifyToken, requireUser, userController.updateUserProfil
 // Requires authentication and an existing user in our database
 router.delete('/', verifyToken, requireUser, userController.deleteUser);
 
+// GET /api/users/query-stats - Get query usage statistics
+// Requires authentication and an existing user in our database
+router.get('/query-stats', verifyToken, requireUser, userController.getQueryStats);
+
+module.exports = router;
+
+// GET /api/users/query-stats - Get current user's query usage statistics
+// Requires authentication and an existing user in our database
+router.get('/query-stats', verifyToken, requireUser, userController.getQueryStats);
+
 module.exports = router;
