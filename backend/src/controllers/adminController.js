@@ -38,6 +38,48 @@ const addToMonthly = (buckets, date, amount = 1) => {
   buckets[monthIndex].value += amount;
 };
 
+const getPaypalStatus = (subscription) => {
+  const rawData = subscription.paypalData;
+
+  if (!rawData) {
+    return null;
+  }
+
+  if (typeof rawData === "string") {
+    try {
+      const parsed = JSON.parse(rawData);
+      return parsed?.status ? String(parsed.status).toLowerCase() : null;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  return rawData?.status ? String(rawData.status).toLowerCase() : null;
+};
+
+const isCancelledSubscription = (subscription) => {
+  const directStatus = String(subscription.status || "").toLowerCase();
+  if (directStatus === "cancelled" || directStatus === "canceled") {
+    return true;
+  }
+
+  const paypalStatus = getPaypalStatus(subscription);
+  if (paypalStatus === "cancelled" || paypalStatus === "canceled") {
+    return true;
+  }
+
+  // As a fallback, consider subscriptions with an endDate in the past and not active
+  if (
+    subscription.endDate &&
+    new Date(subscription.endDate) <= new Date() &&
+    directStatus !== "active"
+  ) {
+    return true;
+  }
+
+  return false;
+};
+
 const getDashboardMetrics = async (req, res) => {
   try {
     const now = new Date();
@@ -47,14 +89,6 @@ const getDashboardMetrics = async (req, res) => {
 
     const subscriptionWhere = {
       createdAt: {
-        [Op.gte]: startOfYear,
-        [Op.lt]: startOfNextYear,
-      },
-    };
-
-    const cancellationWhere = {
-      status: "cancelled",
-      updatedAt: {
         [Op.gte]: startOfYear,
         [Op.lt]: startOfNextYear,
       },
@@ -85,22 +119,14 @@ const getDashboardMetrics = async (req, res) => {
 
     const [
       subscriptions,
-      cancellations,
       connections,
       queryMessages,
       cancelledQueryMessages,
+      cancellationCandidates,
       allActiveSubs,
       allUsers,
     ] = await Promise.all([
       Subscription.findAll({ where: subscriptionWhere }),
-      Subscription.findAll({
-        where: {
-          ...cancellationWhere,
-          status: {
-            [Op.in]: ["cancelled", "canceled"],
-          },
-        },
-      }),
       ConexionDB.findAll({
         where: connectionWhere,
         include: [{ model: MotorDB, as: "motor", attributes: ["nombre"] }],
@@ -110,9 +136,21 @@ const getDashboardMetrics = async (req, res) => {
         where: queryCancelledWhere,
         attributes: ["id", "createdAt"],
       }),
+      Subscription.findAll({
+        where: {
+          updatedAt: {
+            [Op.gte]: startOfYear,
+            [Op.lt]: startOfNextYear,
+          },
+        },
+      }),
       Subscription.findAll({ where: { status: "active" } }),
       User.findAll({ attributes: ["id", "email"] }),
     ]);
+
+    const cancellations = cancellationCandidates.filter((subscription) =>
+      isCancelledSubscription(subscription),
+    );
 
     const revenue = subscriptions
       .filter((sub) => sub.status === "active")
@@ -175,13 +213,11 @@ const getDashboardMetrics = async (req, res) => {
       ? parseFloat(((activeSubscriptions / totalUsers) * 100).toFixed(2))
       : 0;
 
-    const churnRate = subscriptions.length
+    const subscriptionEvents = subscriptions.length + cancellations.length;
+
+    const churnRate = subscriptionEvents
       ? parseFloat(
-          (
-            (cancellations.length /
-              (subscriptions.length + cancellations.length)) *
-            100
-          ).toFixed(2),
+          ((cancellations.length / subscriptionEvents) * 100).toFixed(2),
         )
       : 0;
 
