@@ -1,6 +1,6 @@
 {
   "files": {
-    "main.css": "/static/css/main.9df725ba.css",
+    "main.css": "/static/css/main.56be5d43.css",
     "main.js": "/static/js/main.e22119ad.js",
     "static/js/453.1aab9bb8.chunk.js": "/static/js/453.1aab9bb8.chunk.js",
     "static/media/Imagen_Login-Register.png": "/static/media/Imagen_Login-Register.0a49afe71659dcaf90c8.png",
@@ -12,12 +12,12 @@
     "static/media/mongodb_logo.svg": "/static/media/mongodb_logo.eb842895e80bd61dd471f2b70345feab.svg",
     "static/media/oracledb_logo.svg": "/static/media/oracledb_logo.f388d645cd2612f140069a1df41a9d74.svg",
     "index.html": "/index.html",
-    "main.9df725ba.css.map": "/static/css/main.9df725ba.css.map",
+    "main.56be5d43.css.map": "/static/css/main.56be5d43.css.map",
     "main.e22119ad.js.map": "/static/js/main.e22119ad.js.map",
     "453.1aab9bb8.chunk.js.map": "/static/js/453.1aab9bb8.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.9df725ba.css",
+    "static/css/main.56be5d43.css",
     "static/js/main.e22119ad.js"
   ]
 }
