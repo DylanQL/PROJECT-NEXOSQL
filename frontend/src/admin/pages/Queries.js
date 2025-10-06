@@ -36,6 +36,19 @@ const Queries = () => {
   const { kpis, charts } = metrics;
   const queries = (charts?.queries || []).slice();
   const queryCancellations = (charts?.queryCancellations || []).slice();
+  const planLabels = {
+    oro: "Plan Oro",
+    plata: "Plan Plata",
+    bronce: "Plan Bronce",
+    sin_plan: "Sin plan",
+  };
+  const planColors = {
+    oro: "#f5c518",
+    plata: "#b0bec5",
+    bronce: "#cd7f32",
+    sin_plan: "#495057",
+  };
+  const planKeys = Object.keys(planLabels);
   const queryCancellationRate = Number.isFinite(kpis?.queryCancellationRate)
     ? Number(kpis.queryCancellationRate)
     : 0;
@@ -84,20 +97,70 @@ const Queries = () => {
       </div>
 
       <div className="admin-card">
-        <h4>Evolución mensual</h4>
-        {queries.map((item) => (
-          <div key={`query-${item.month}`} className="mb-3">
-            <div className="d-flex justify-content-between text-muted mb-1">
-              <span>{item.label}</span>
-              <span>{item.value}</span>
+        <div className="d-flex flex-wrap gap-3 mb-3 text-muted small">
+          {planKeys.map((key) => (
+            <div key={`legend-${key}`} className="d-flex align-items-center gap-2">
+              <span
+                className="admin-plan-dot"
+                style={{ backgroundColor: planColors[key] }}
+              ></span>
+              <span>{planLabels[key]}</span>
             </div>
-            <ProgressBar
-              now={(item.value / maxQueries) * 100}
-              variant="info"
-              style={{ height: "10px" }}
-            />
-          </div>
-        ))}
+          ))}
+        </div>
+        <h4>Evolución mensual</h4>
+        {queries.map((item) => {
+          const plans = item.plans || {};
+          const hasPlanData = planKeys.some((key) => plans[key]);
+          const planTotals = planKeys.reduce(
+            (total, key) => total + (plans[key] || 0),
+            0,
+          );
+
+          return (
+            <div key={`query-${item.month}`} className="mb-3">
+              <div className="d-flex justify-content-between text-muted mb-1">
+                <span>{item.label}</span>
+                <span>{item.value}</span>
+              </div>
+              <div className="admin-plan-progress" aria-hidden={!hasPlanData}>
+                {hasPlanData ? (
+                  planKeys.map((key) => {
+                    const count = plans[key] || 0;
+                    if (!count || !planTotals) {
+                      return null;
+                    }
+                    const width = (count / planTotals) * 100;
+                    return (
+                      <div
+                        key={`${item.month}-${key}`}
+                        className="admin-plan-progress-segment"
+                        style={{
+                          width: `${width}%`,
+                          backgroundColor: planColors[key],
+                        }}
+                        title={`${planLabels[key]} · ${count} consultas`}
+                      >
+                        {width >= 18 ? count : null}
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="admin-plan-progress-placeholder"></div>
+                )}
+              </div>
+              {hasPlanData && (
+                <div className="d-flex flex-wrap gap-3 mt-2 text-muted small">
+                  {planKeys.map((key) => (
+                    <span key={`${item.month}-legend-${key}`}>
+                      {planLabels[key]}: <strong>{plans[key] || 0}</strong>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </AdminLayout>
   );

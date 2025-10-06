@@ -5,6 +5,7 @@ const {
   ChatMessage,
   MotorDB,
   User,
+  Chat,
 } = require("../models");
 
 const MONTH_LABELS = [
@@ -28,6 +29,16 @@ const buildMonthlyTemplate = () =>
     label,
     value: 0,
   }));
+
+const PLAN_KEYS = ["bronce", "plata", "oro", "sin_plan"];
+
+const createPlanBucket = () => {
+  const bucket = {};
+  PLAN_KEYS.forEach((key) => {
+    bucket[key] = 0;
+  });
+  return bucket;
+};
 
 const toMonthIndex = (date) => new Date(date).getMonth();
 
@@ -201,10 +212,15 @@ const getDashboardMetrics = async (req, res) => {
         where: connectionWhere,
         include: [{ model: MotorDB, as: "motor", attributes: ["nombre"] }],
       }),
-      ChatMessage.findAll({ where: queryWhere, attributes: ["id", "createdAt"] }),
+      ChatMessage.findAll({
+        where: queryWhere,
+        attributes: ["id", "createdAt"],
+        include: [{ model: Chat, as: "chat", attributes: ["userId"] }],
+      }),
       ChatMessage.findAll({
         where: queryCancelledWhere,
         attributes: ["id", "createdAt"],
+        include: [{ model: Chat, as: "chat", attributes: ["userId"] }],
       }),
       Subscription.findAll({
         where: {
@@ -225,6 +241,49 @@ const getDashboardMetrics = async (req, res) => {
     const relevantSubscriptions = subscriptions.filter((sub) =>
       isActiveSubscription(sub) || isCancelledSubscription(sub),
     );
+
+    const planByUser = new Map();
+
+    relevantSubscriptions.forEach((sub) => {
+      const existing = planByUser.get(sub.userId);
+      const createdAt = new Date(sub.createdAt || sub.startDate || 0);
+      if (!existing || createdAt > existing.createdAt) {
+        planByUser.set(sub.userId, {
+          planType: String(sub.planType || "").toLowerCase(),
+          createdAt,
+        });
+      }
+    });
+
+    allActiveSubs.forEach((sub) => {
+      if (!planByUser.has(sub.userId)) {
+        planByUser.set(sub.userId, {
+          planType: String(sub.planType || "").toLowerCase(),
+          createdAt: new Date(sub.createdAt || sub.startDate || 0),
+        });
+      }
+    });
+
+    cancellationCandidates.forEach((sub) => {
+      if (!planByUser.has(sub.userId)) {
+        planByUser.set(sub.userId, {
+          planType: String(sub.planType || "").toLowerCase(),
+          createdAt: new Date(sub.createdAt || sub.startDate || 0),
+        });
+      }
+    });
+
+    const resolvePlanKey = (userId) => {
+      if (!userId) {
+        return "sin_plan";
+      }
+      const entry = planByUser.get(userId);
+      const planType = entry?.planType;
+      if (!planType) {
+        return "sin_plan";
+      }
+      return PLAN_KEYS.includes(planType) ? planType : "sin_plan";
+    };
 
     const revenue = relevantSubscriptions.reduce((acc, sub) => {
       const price = parseFloat(sub.price || 0);
@@ -250,7 +309,10 @@ const getDashboardMetrics = async (req, res) => {
       ...bucket,
       engines: {},
     }));
-    const queryMonthly = buildMonthlyTemplate();
+    const queryMonthly = buildMonthlyTemplate().map((bucket) => ({
+      ...bucket,
+      plans: createPlanBucket(),
+    }));
     const queryCancelledMonthly = buildMonthlyTemplate();
 
     relevantSubscriptions.forEach((sub) => {
@@ -273,7 +335,19 @@ const getDashboardMetrics = async (req, res) => {
     });
 
     queryMessages.forEach((message) => {
+      const monthIndex = toMonthIndex(message.createdAt);
+      if (monthIndex < 0 || monthIndex > 11) {
+        return;
+      }
+
       addToMonthly(queryMonthly, message.createdAt);
+
+      const userId = message.chat?.userId;
+      const planKey = resolvePlanKey(userId);
+      const planBucket = queryMonthly[monthIndex].plans;
+      if (planBucket && planKey) {
+        planBucket[planKey] = (planBucket[planKey] || 0) + 1;
+      }
     });
 
     cancelledQueryMessages.forEach((message) => {
