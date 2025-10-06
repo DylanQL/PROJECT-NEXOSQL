@@ -83,61 +83,21 @@ const Queries = () => {
         </div>
       </div>
 
-      <div className="admin-grid cols-2 mb-4">
-        <div className="admin-card">
-          <h4>Evolución mensual</h4>
-          {queries.map((item) => (
-            <div key={`query-${item.month}`} className="mb-3">
-              <div className="d-flex justify-content-between text-muted mb-1">
-                <span>{item.label}</span>
-                <span>{item.value}</span>
-              </div>
-              <ProgressBar
-                now={(item.value / maxQueries) * 100}
-                variant="info"
-                style={{ height: "10px" }}
-              />
+      <div className="admin-card">
+        <h4>Evolución mensual</h4>
+        {queries.map((item) => (
+          <div key={`query-${item.month}`} className="mb-3">
+            <div className="d-flex justify-content-between text-muted mb-1">
+              <span>{item.label}</span>
+              <span>{item.value}</span>
             </div>
-          ))}
-        </div>
-
-        <div className="admin-card">
-          <h4>Observaciones</h4>
-          <ul className="text-muted ps-3">
-            <li>
-              Identificar correlaciones entre picos de consultas y nuevas
-              integraciones.
-            </li>
-            <li>
-              Revisar el tiempo de respuesta promedio durante los meses de mayor
-              tráfico.
-            </li>
-            <li>
-              Preparar mecanismos de rate limiting para prevenir abuso en meses con
-              alta demanda.
-            </li>
-          </ul>
-          <h5 className="mt-4">Cancelaciones por mes</h5>
-          {queryCancellations.map((item) => (
-            <div key={`cancel-${item.month}`} className="mb-2">
-              <div className="d-flex justify-content-between text-muted mb-1">
-                <span>{item.label}</span>
-                <span>{item.value}</span>
-              </div>
-              <ProgressBar
-                now={(item.value / maxCancelled) * 100}
-                variant={item.value ? "warning" : "success"}
-                style={{ height: "8px" }}
-              />
-            </div>
-          ))}
-          <h5 className="mt-4">Meses con menor uso</h5>
-          <p className="text-muted mb-0">
-            {lowUsageMonths.length > 0
-              ? lowUsageMonths.join(", ")
-              : "Todos los meses mantienen actividad consistente."}
-          </p>
-        </div>
+            <ProgressBar
+              now={(item.value / maxQueries) * 100}
+              variant="info"
+              style={{ height: "10px" }}
+            />
+          </div>
+        ))}
       </div>
     </AdminLayout>
   );
