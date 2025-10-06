@@ -14,6 +14,26 @@ import {
 } from "../services/firebase";
 import { userApi } from "../services/api";
 
+const ADMIN_EMAIL =
+  (process.env.REACT_APP_ADMIN_EMAIL || "angelo.quispe.l@tecsup.edu.pe").toLowerCase();
+
+const getStoredAuthEmail = () => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  try {
+    const storedUser = localStorage.getItem("authUser");
+    if (!storedUser) {
+      return null;
+    }
+    const parsed = JSON.parse(storedUser);
+    return parsed?.email || null;
+  } catch (error) {
+    console.warn("Failed to parse stored auth user", error);
+    return null;
+  }
+};
+
 // Create the AuthContext
 const AuthContext = createContext();
 
@@ -234,6 +254,8 @@ export function AuthProvider({ children }) {
     return false;
   };
 
+  const currentEmail = (currentUser?.email || getStoredAuthEmail() || "").toLowerCase();
+
   const value = {
     currentUser,
     userProfile,
@@ -241,6 +263,8 @@ export function AuthProvider({ children }) {
     profileLoading,
     authChecked,
     isAuthenticated: getQuickAuthStatus(),
+    isAdmin: currentEmail === ADMIN_EMAIL,
+    adminEmail: ADMIN_EMAIL,
     signup,
     login,
     loginWithGoogle,

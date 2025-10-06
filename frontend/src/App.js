@@ -38,6 +38,15 @@ import {
   useSubscription,
 } from "./contexts/SubscriptionContext";
 
+// Admin
+import AdminLogin from "./admin/AdminLogin";
+import AdminRoute from "./admin/AdminRoute";
+import { AdminDataProvider } from "./admin/AdminDataProvider";
+import DashboardOverview from "./admin/pages/DashboardOverview";
+import AdminSubscriptionsPage from "./admin/pages/Subscriptions";
+import AdminConnectionsPage from "./admin/pages/Connections";
+import AdminQueriesPage from "./admin/pages/Queries";
+
 // Component to handle global notifications
 function AppNotifications() {
   const { autoSyncSuccess, clearAutoSyncSuccess } = useSubscription();
@@ -304,6 +313,33 @@ function App() {
                 </AuthLayout>
               } 
             />
+            <Route
+              path="/admin/login"
+              element={
+                <AuthLayout>
+                  <AdminLogin />
+                </AuthLayout>
+              }
+            />
+
+            <Route
+              path="/admin/*"
+              element={
+                <AdminDataProvider>
+                  <AdminRoute />
+                </AdminDataProvider>
+              }
+            >
+              <Route index element={<Navigate to="/admin/dashboard" replace />} />
+              <Route path="dashboard" element={<DashboardOverview />} />
+              <Route
+                path="subscriptions"
+                element={<AdminSubscriptionsPage />}
+              />
+              <Route path="connections" element={<AdminConnectionsPage />} />
+              <Route path="queries" element={<AdminQueriesPage />} />
+              <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
+            </Route>
 
             {/* All other routes - With navbar and footer */}
             <Route

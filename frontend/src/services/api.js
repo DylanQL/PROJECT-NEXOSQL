@@ -18,6 +18,23 @@ api.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
       // Add Firebase UID as a custom header for development mode
       config.headers["x-firebase-uid"] = user.uid;
+      if (user.email) {
+        config.headers["x-user-email"] = user.email;
+      }
+    }
+
+    if (!config.headers["x-user-email"]) {
+      try {
+        const storedUser = localStorage.getItem("authUser");
+        if (storedUser) {
+          const parsed = JSON.parse(storedUser);
+          if (parsed?.email) {
+            config.headers["x-user-email"] = parsed.email;
+          }
+        }
+      } catch (storageError) {
+        console.warn("Failed to read stored auth user", storageError);
+      }
     }
     return config;
   },
@@ -351,6 +368,20 @@ export const chatApi = {
       return {
         data: null,
         error: error.response?.data?.error || "Error migrating chats",
+      };
+    }
+  },
+};
+
+export const adminApi = {
+  getDashboardMetrics: async () => {
+    try {
+      const response = await api.get("/admin/dashboard");
+      return { data: response.data, error: null };
+    } catch (error) {
+      return {
+        data: null,
+        error: error.response?.data?.error || "Error fetching admin metrics",
       };
     }
   },
