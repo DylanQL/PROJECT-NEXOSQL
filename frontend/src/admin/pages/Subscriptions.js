@@ -141,33 +141,6 @@ const Subscriptions = () => {
         </Table>
       </div>
 
-      <div className="admin-grid cols-2">
-        <div className="admin-card">
-          <h4>Observaciones</h4>
-          <ul className="mb-0 text-muted ps-3">
-            <li>
-              Reforzar campañas justo antes de los meses con histórico negativo para
-              amortiguar cancelaciones.
-            </li>
-            <li>
-              Analizar motivos de baja a partir de encuestas o tickets en los meses
-              con mayor churn.
-            </li>
-            <li>
-              Evaluar ofertas de upgrade en los meses de mejor desempeño para
-              maximizar ingresos.
-            </li>
-          </ul>
-        </div>
-        <div className="admin-card">
-          <h4>Próximas acciones sugeridas</h4>
-          <ul className="mb-0 text-muted ps-3">
-            <li>Implementar recordatorios proactivos antes del ciclo de facturación.</li>
-            <li>Segmentar mensajes según antigüedad de la suscripción.</li>
-            <li>Monitorear tickets de soporte asociados a cancelaciones.</li>
-          </ul>
-        </div>
-      </div>
     </AdminLayout>
   );
 };
