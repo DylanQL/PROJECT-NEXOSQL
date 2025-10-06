@@ -180,6 +180,7 @@ const getDashboardMetrics = async (req, res) => {
 
     const queryCancelledWhere = {
       cancelado: true,
+      type: "user",
       createdAt: {
         [Op.gte]: startOfYear,
         [Op.lt]: startOfNextYear,
