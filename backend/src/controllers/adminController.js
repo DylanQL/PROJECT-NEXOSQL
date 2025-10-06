@@ -30,7 +30,7 @@ const buildMonthlyTemplate = () =>
     value: 0,
   }));
 
-const PLAN_KEYS = ["bronce", "plata", "oro", "sin_plan"];
+const PLAN_KEYS = ["oro", "plata", "bronce", "sin_plan"];
 
 const createPlanBucket = () => {
   const bucket = {};
@@ -160,6 +160,80 @@ const getCyclesCompleted = (subscription) => {
   return cyclesCompleted;
 };
 
+const parseDate = (value) => {
+  if (!value) {
+    return null;
+  }
+
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const normalizePlanType = (planType) => {
+  const normalized = String(planType || "").toLowerCase();
+  return PLAN_KEYS.includes(normalized) ? normalized : "sin_plan";
+};
+
+const extractSubscriptionPeriod = (subscription) => {
+  const planType = normalizePlanType(subscription.planType);
+  const startDate =
+    parseDate(subscription.startDate) ||
+    parseDate(subscription.createdAt) ||
+    parseDate(subscription.updatedAt);
+
+  let endDate = null;
+  if (isCancelledSubscription(subscription)) {
+    const paypalData = getPaypalData(subscription);
+    endDate =
+      parseDate(subscription.endDate) ||
+      parseDate(paypalData?.cancelled_at) ||
+      parseDate(paypalData?.cancelTime) ||
+      parseDate(subscription.updatedAt);
+  }
+
+  return {
+    planType,
+    startDate,
+    endDate,
+  };
+};
+
+const getPlanForMoment = (timeline, userId, moment) => {
+  if (!userId) {
+    return "sin_plan";
+  }
+
+  const periods = timeline.get(userId);
+  if (!periods || periods.length === 0) {
+    return "sin_plan";
+  }
+
+  const reference = parseDate(moment);
+  if (!reference) {
+    return periods[periods.length - 1].planType;
+  }
+
+  const target = reference.getTime();
+
+  for (let index = periods.length - 1; index >= 0; index -= 1) {
+    const period = periods[index];
+    if (!period.startDate) {
+      continue;
+    }
+
+    const startTime = period.startDate.getTime();
+    if (startTime > target) {
+      continue;
+    }
+
+    if (!period.endDate || target < period.endDate.getTime()) {
+      return period.planType;
+    }
+  }
+
+  return periods[0].planType || "sin_plan";
+};
+
 const getDashboardMetrics = async (req, res) => {
   try {
     const now = new Date();
@@ -242,48 +316,39 @@ const getDashboardMetrics = async (req, res) => {
       isActiveSubscription(sub) || isCancelledSubscription(sub),
     );
 
-    const planByUser = new Map();
+    const subscriptionTimeline = new Map();
 
-    relevantSubscriptions.forEach((sub) => {
-      const existing = planByUser.get(sub.userId);
-      const createdAt = new Date(sub.createdAt || sub.startDate || 0);
-      if (!existing || createdAt > existing.createdAt) {
-        planByUser.set(sub.userId, {
-          planType: String(sub.planType || "").toLowerCase(),
-          createdAt,
-        });
+    const registerSubscriptionPeriod = (subscription) => {
+      const period = extractSubscriptionPeriod(subscription);
+      if (!period.startDate) {
+        return;
       }
-    });
 
-    allActiveSubs.forEach((sub) => {
-      if (!planByUser.has(sub.userId)) {
-        planByUser.set(sub.userId, {
-          planType: String(sub.planType || "").toLowerCase(),
-          createdAt: new Date(sub.createdAt || sub.startDate || 0),
-        });
-      }
-    });
-
-    cancellationCandidates.forEach((sub) => {
-      if (!planByUser.has(sub.userId)) {
-        planByUser.set(sub.userId, {
-          planType: String(sub.planType || "").toLowerCase(),
-          createdAt: new Date(sub.createdAt || sub.startDate || 0),
-        });
-      }
-    });
-
-    const resolvePlanKey = (userId) => {
-      if (!userId) {
-        return "sin_plan";
-      }
-      const entry = planByUser.get(userId);
-      const planType = entry?.planType;
-      if (!planType) {
-        return "sin_plan";
-      }
-      return PLAN_KEYS.includes(planType) ? planType : "sin_plan";
+      const timeline = subscriptionTimeline.get(subscription.userId) || [];
+      timeline.push(period);
+      subscriptionTimeline.set(subscription.userId, timeline);
     };
+
+    relevantSubscriptions.forEach(registerSubscriptionPeriod);
+    allActiveSubs.forEach(registerSubscriptionPeriod);
+    cancellationCandidates.forEach(registerSubscriptionPeriod);
+
+    subscriptionTimeline.forEach((periods, userId) => {
+      periods.sort((a, b) => a.startDate - b.startDate);
+      for (let index = 0; index < periods.length - 1; index += 1) {
+        const current = periods[index];
+        const next = periods[index + 1];
+
+        if (!current.startDate || !next.startDate) {
+          continue;
+        }
+
+        if (!current.endDate || current.endDate > next.startDate) {
+          current.endDate = new Date(next.startDate.getTime());
+        }
+      }
+      subscriptionTimeline.set(userId, periods);
+    });
 
     const revenue = relevantSubscriptions.reduce((acc, sub) => {
       const price = parseFloat(sub.price || 0);
@@ -343,7 +408,11 @@ const getDashboardMetrics = async (req, res) => {
       addToMonthly(queryMonthly, message.createdAt);
 
       const userId = message.chat?.userId;
-      const planKey = resolvePlanKey(userId);
+      const planKey = getPlanForMoment(
+        subscriptionTimeline,
+        userId,
+        message.createdAt,
+      );
       const planBucket = queryMonthly[monthIndex].plans;
       if (planBucket && planKey) {
         planBucket[planKey] = (planBucket[planKey] || 0) + 1;

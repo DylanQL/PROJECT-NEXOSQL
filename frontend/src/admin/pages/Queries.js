@@ -140,9 +140,7 @@ const Queries = () => {
                           backgroundColor: planColors[key],
                         }}
                         title={`${planLabels[key]} · ${count} consultas`}
-                      >
-                        {width >= 18 ? count : null}
-                      </div>
+                      ></div>
                     );
                   })
                 ) : (
