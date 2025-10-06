@@ -89,6 +89,31 @@
   backdrop-filter: blur(14px);
 }
 
+.admin-header-title {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.admin-sidebar-toggle {
+  display: none;
+}
+
+.admin-sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease;
+  z-index: 1030;
+}
+
+.admin-sidebar-overlay.is-active {
+  opacity: 1;
+  visibility: visible;
+}
+
 .admin-heading {
   font-size: 1.9rem;
   font-weight: 600;
@@ -248,27 +273,59 @@
   color: #f94144;
 }
 
-@media (max-width: 992px) {
+@media (max-width: 991.98px) {
   .admin-dashboard {
+    position: relative;
     flex-direction: column;
   }
+
   .admin-sidebar {
-    flex-direction: row;
-    width: 100%;
-    overflow-x: auto;
-    padding: 1rem;
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    transform: translateX(-100%);
+    width: 240px;
+    z-index: 1040;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    transition: transform 0.25s ease;
   }
+
+  .admin-sidebar.is-visible {
+    transform: translateX(0);
+  }
+
   .admin-nav {
-    flex-direction: row;
-    gap: 0.5rem;
+    flex-direction: column;
+    gap: 0.75rem;
   }
+
+  .admin-sidebar-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
   .admin-header {
+    position: sticky;
+    top: 0;
+    z-index: 1020;
     flex-direction: column;
     align-items: flex-start;
-    gap: 1.5rem;
+    gap: 1.25rem;
   }
+
+  .admin-header-title {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
   .admin-header-actions {
     width: 100%;
     justify-content: space-between;
+  }
+
+  .admin-dashboard--sidebar-open {
+    overflow: hidden;
   }
 }
