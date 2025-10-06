@@ -156,9 +156,19 @@ const getDashboardMetrics = async (req, res) => {
       .filter((sub) => sub.status === "active")
       .reduce((acc, sub) => acc + parseFloat(sub.price || 0), 0);
 
-    const activeSubscriptions = subscriptions.filter(
-      (sub) => sub.status === "active",
-    ).length;
+    const activeSubscriptions = subscriptions.filter((sub) => {
+      if (isCancelledSubscription(sub)) {
+        return false;
+      }
+
+      const status = String(sub.status || "").toLowerCase();
+      if (status === "active") {
+        return true;
+      }
+
+      const paypalStatus = getPaypalStatus(sub);
+      return paypalStatus === "active";
+    }).length;
 
     const totalConnections = connections.length;
     const totalQueries = queryMessages.length;
@@ -213,11 +223,11 @@ const getDashboardMetrics = async (req, res) => {
       ? parseFloat(((activeSubscriptions / totalUsers) * 100).toFixed(2))
       : 0;
 
-    const subscriptionEvents = subscriptions.length + cancellations.length;
+    const churnBase = cancellations.length + activeSubscriptions;
 
-    const churnRate = subscriptionEvents
+    const churnRate = churnBase
       ? parseFloat(
-          ((cancellations.length / subscriptionEvents) * 100).toFixed(2),
+          ((cancellations.length / churnBase) * 100).toFixed(2),
         )
       : 0;
 
