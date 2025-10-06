@@ -107,32 +107,6 @@ const Connections = () => {
         </div>
       </div>
 
-      <div className="admin-grid cols-2">
-        <div className="admin-card">
-          <h4>Tendencias clave</h4>
-          <ul className="text-muted ps-3 mb-0">
-            <li>
-              Identificar motores con crecimiento acelerado para preparar guías y
-              webinars específicos.
-            </li>
-            <li>
-              Verificar la tasa de éxito en la creación de conexiones y revisar logs
-              de errores recurrentes.
-            </li>
-            <li>
-              Promover plantillas de conexión para motores con menor adopción.
-            </li>
-          </ul>
-        </div>
-        <div className="admin-card">
-          <h4>Acciones recomendadas</h4>
-          <ul className="text-muted ps-3 mb-0">
-            <li>Implementar monitoreo de uptime de motores integrados.</li>
-            <li>Crear checklist de verificación para nuevas conexiones.</li>
-            <li>Ofrecer talleres para optimizar la seguridad de credenciales.</li>
-          </ul>
-        </div>
-      </div>
     </AdminLayout>
   );
 };
