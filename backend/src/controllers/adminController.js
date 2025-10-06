@@ -80,6 +80,20 @@ const isCancelledSubscription = (subscription) => {
   return false;
 };
 
+const isActiveSubscription = (subscription) => {
+  if (isCancelledSubscription(subscription)) {
+    return false;
+  }
+
+  const directStatus = String(subscription.status || "").toLowerCase();
+  if (directStatus === "active") {
+    return true;
+  }
+
+  const paypalStatus = getPaypalStatus(subscription);
+  return paypalStatus === "active";
+};
+
 const getDashboardMetrics = async (req, res) => {
   try {
     const now = new Date();
@@ -153,22 +167,16 @@ const getDashboardMetrics = async (req, res) => {
     );
 
     const revenue = subscriptions
-      .filter((sub) => sub.status === "active")
+      .filter((sub) => isActiveSubscription(sub))
       .reduce((acc, sub) => acc + parseFloat(sub.price || 0), 0);
 
-    const activeSubscriptions = subscriptions.filter((sub) => {
-      if (isCancelledSubscription(sub)) {
-        return false;
-      }
+    const activeSubscriptions = subscriptions.filter((sub) =>
+      isActiveSubscription(sub)
+    ).length;
 
-      const status = String(sub.status || "").toLowerCase();
-      if (status === "active") {
-        return true;
-      }
-
-      const paypalStatus = getPaypalStatus(sub);
-      return paypalStatus === "active";
-    }).length;
+    const relevantSubscriptions = subscriptions.filter((sub) =>
+      isActiveSubscription(sub) || isCancelledSubscription(sub)
+    );
 
     const totalConnections = connections.length;
     const totalQueries = queryMessages.length;
@@ -183,7 +191,7 @@ const getDashboardMetrics = async (req, res) => {
     const queryMonthly = buildMonthlyTemplate();
     const queryCancelledMonthly = buildMonthlyTemplate();
 
-    subscriptions.forEach((sub) => {
+    relevantSubscriptions.forEach((sub) => {
       addToMonthly(subscriptionMonthly, sub.createdAt);
     });
 
