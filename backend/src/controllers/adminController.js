@@ -94,6 +94,61 @@ const isActiveSubscription = (subscription) => {
   return paypalStatus === "active";
 };
 
+const getPaypalData = (subscription) => {
+  const rawData = subscription.paypalData;
+  if (!rawData) {
+    return null;
+  }
+
+  if (typeof rawData === "string") {
+    try {
+      return JSON.parse(rawData);
+    } catch (error) {
+      return null;
+    }
+  }
+
+  return rawData;
+};
+
+const getCyclesCompleted = (subscription) => {
+  const paypalData = getPaypalData(subscription);
+  if (!paypalData) {
+    return isActiveSubscription(subscription) ? 1 : 0;
+  }
+
+  const executions = paypalData?.billing_info?.cycle_executions;
+  let cyclesCompleted = 0;
+
+  if (Array.isArray(executions)) {
+    cyclesCompleted = executions.reduce((total, execution) => {
+      const cycles = parseInt(execution?.cycles_completed, 10);
+      return total + (Number.isNaN(cycles) ? 0 : cycles);
+    }, 0);
+  }
+
+  const price = parseFloat(subscription.price || 0);
+  if (cyclesCompleted === 0 && price > 0) {
+    const lastPaymentAmount = parseFloat(
+      paypalData?.billing_info?.last_payment?.amount?.value || 0,
+    );
+    if (lastPaymentAmount > 0) {
+      const inferredCycles = Math.round(lastPaymentAmount / price);
+      if (inferredCycles >= 1) {
+        cyclesCompleted = inferredCycles;
+      } else {
+        cyclesCompleted = 1;
+      }
+    }
+  }
+
+  if (cyclesCompleted === 0 && isActiveSubscription(subscription)) {
+    cyclesCompleted = 1;
+  }
+
+  return cyclesCompleted;
+};
+
 const getDashboardMetrics = async (req, res) => {
   try {
     const now = new Date();
@@ -166,17 +221,23 @@ const getDashboardMetrics = async (req, res) => {
       isCancelledSubscription(subscription),
     );
 
-    const revenue = subscriptions
-      .filter((sub) => isActiveSubscription(sub))
-      .reduce((acc, sub) => acc + parseFloat(sub.price || 0), 0);
-
-    const activeSubscriptions = subscriptions.filter((sub) =>
-      isActiveSubscription(sub)
-    ).length;
-
     const relevantSubscriptions = subscriptions.filter((sub) =>
-      isActiveSubscription(sub) || isCancelledSubscription(sub)
+      isActiveSubscription(sub) || isCancelledSubscription(sub),
     );
+
+    const revenue = relevantSubscriptions.reduce((acc, sub) => {
+      const price = parseFloat(sub.price || 0);
+      if (!price || Number.isNaN(price)) {
+        return acc;
+      }
+
+      const cyclesCompleted = getCyclesCompleted(sub);
+      return acc + price * cyclesCompleted;
+    }, 0);
+
+    const activeSubscriptions = relevantSubscriptions.filter((sub) =>
+      isActiveSubscription(sub),
+    ).length;
 
     const totalConnections = connections.length;
     const totalQueries = queryMessages.length;
