@@ -98,15 +98,20 @@ const Queries = () => {
 
       <div className="admin-card">
         <div className="d-flex flex-wrap gap-3 mb-3 text-muted small">
-          {planKeys.map((key) => (
-            <div key={`legend-${key}`} className="d-flex align-items-center gap-2">
-              <span
-                className="admin-plan-dot"
-                style={{ backgroundColor: planColors[key] }}
-              ></span>
-              <span>{planLabels[key]}</span>
-            </div>
-          ))}
+          {planKeys
+            .filter((key) => key !== "sin_plan")
+            .map((key) => (
+              <div
+                key={`legend-${key}`}
+                className="d-flex align-items-center gap-2"
+              >
+                <span
+                  className="admin-plan-dot"
+                  style={{ backgroundColor: planColors[key] }}
+                ></span>
+                <span>{planLabels[key]}</span>
+              </div>
+            ))}
         </div>
         <h4>Evolución mensual</h4>
         {queries.map((item) => {
@@ -149,11 +154,13 @@ const Queries = () => {
               </div>
               {hasPlanData && (
                 <div className="d-flex flex-wrap gap-3 mt-2 text-muted small">
-                  {planKeys.map((key) => (
-                    <span key={`${item.month}-legend-${key}`}>
-                      {planLabels[key]}: <strong>{plans[key] || 0}</strong>
-                    </span>
-                  ))}
+                  {planKeys
+                    .filter((key) => key !== "sin_plan")
+                    .map((key) => (
+                      <span key={`${item.month}-legend-${key}`}>
+                        {planLabels[key]}: <strong>{plans[key] || 0}</strong>
+                      </span>
+                    ))}
                 </div>
               )}
             </div>
