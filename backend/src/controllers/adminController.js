@@ -257,6 +257,9 @@ const getDashboardMetrics = async (req, res) => {
 
     const queryWhere = {
       type: "user",
+      cancelado: {
+        [Op.not]: true,
+      },
       createdAt: {
         [Op.gte]: startOfYear,
         [Op.lt]: startOfNextYear,
