@@ -5,6 +5,7 @@ const ConexionDB = require("./ConexionDB");
 const Subscription = require("./Subscription");
 const Chat = require("./Chat");
 const ChatMessage = require("./ChatMessage");
+const AdminUser = require("./AdminUser");
 
 // Initialize associations
 const models = {
@@ -14,6 +15,7 @@ const models = {
   Subscription,
   Chat,
   ChatMessage,
+  AdminUser,
 };
 
 // Set up associations
@@ -38,6 +40,7 @@ const initializeModels = async () => {
 
     // Initialize default database engines if they don't exist
     await initializeDefaultEngines();
+    await initializeDefaultAdmins();
   } catch (error) {
     console.error("Error synchronizing models:", error);
     throw error;
@@ -68,6 +71,26 @@ const initializeDefaultEngines = async () => {
   }
 };
 
+const initializeDefaultAdmins = async () => {
+  try {
+    const defaultAdminEmail = process.env.ADMIN_EMAIL || process.env.DEFAULT_ADMIN_EMAIL;
+
+    if (!defaultAdminEmail) {
+      return;
+    }
+
+    await AdminUser.findOrCreate({
+      where: { email: defaultAdminEmail.toLowerCase() },
+      defaults: {
+        name: "Administrador principal",
+        isActive: true,
+      },
+    });
+  } catch (error) {
+    console.error("Error initializing default admin users:", error);
+  }
+};
+
 module.exports = {
   User,
   MotorDB,
@@ -75,5 +98,6 @@ module.exports = {
   Subscription,
   Chat,
   ChatMessage,
+  AdminUser,
   initializeModels,
 };

@@ -27,8 +27,14 @@ const AdminLogin = () => {
   const location = useLocation();
   const redirectTo = location.state?.from || "/admin/dashboard";
 
-  const { loginWithGoogle, logout, isAdmin, isAuthenticated, adminEmail } =
-    useAuth();
+  const {
+    loginWithGoogle,
+    logout,
+    isAdmin,
+    isAuthenticated,
+    adminUsers,
+    refreshAdminUsers,
+  } = useAuth();
 
   useEffect(() => {
     if (isAuthenticated && isAdmin) {
@@ -46,12 +52,20 @@ const AdminLogin = () => {
         throw new Error(result.error);
       }
 
+      const admins = await refreshAdminUsers();
       const signedEmail = result?.user?.email?.toLowerCase();
 
-      if (signedEmail !== adminEmail) {
+      const allowedAdmins =
+        admins && admins.length > 0 ? admins : adminUsers;
+
+      const isAllowed = allowedAdmins.some(
+        (admin) => admin.email === signedEmail,
+      );
+
+      if (!isAllowed) {
         await logout();
         setError(
-          "Solo el administrador autorizado puede acceder a este panel. Intenta con la cuenta oficial.",
+          "Tu cuenta no tiene permisos de administrador. Contacta al equipo de plataforma para habilitar el acceso.",
         );
         return;
       }
@@ -99,12 +113,17 @@ const AdminLogin = () => {
           <Card className="bg-dark border-0 shadow-sm mt-4">
             <Card.Body className="p-4">
               <h5 className="text-white mb-3 text-center">
-                Acceso exclusivo para {adminEmail}
+                Acceso exclusivo para administradores del sistema
               </h5>
               <p className="text-muted text-center mb-4">
-                Para mayor seguridad, el acceso al panel administrativo solo está
-                disponible con autenticación federada mediante Google.
+                Solo el personal autorizado puede gestionar la plataforma. Inicia
+                sesión con la cuenta corporativa asignada para continuar.
               </p>
+              {adminUsers.length > 0 && (
+                <p className="text-muted text-center small mb-4">
+                  Cuentas autorizadas: {adminUsers.map((admin) => admin.email).join(", ")}
+                </p>
+              )}
               <div className="d-grid">
                 <Button
                   variant="outline-light"

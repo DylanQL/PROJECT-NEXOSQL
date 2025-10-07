@@ -385,6 +385,17 @@ export const adminApi = {
       };
     }
   },
+  getAdminUsers: async () => {
+    try {
+      const response = await api.get("/admin/allowed-users");
+      return { data: response.data, error: null };
+    } catch (error) {
+      return {
+        data: null,
+        error: error.response?.data?.error || "Error fetching admin users",
+      };
+    }
+  },
 };
 
 export default api;

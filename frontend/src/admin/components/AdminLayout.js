@@ -15,8 +15,13 @@ import logoNexoSQL from "../../assets/logo_nexosql.svg";
 import "../../styles/AdminDashboard.css";
 
 const AdminLayout = ({ children, title }) => {
-  const { currentUser, adminEmail, logout } = useAuth();
+  const { currentUser, adminUsers, logout } = useAuth();
   const navigate = useNavigate();
+  const adminEmailDisplay = adminUsers.map((admin) => admin.email).join(", ");
+  const fallbackAdminLabel =
+    adminEmailDisplay || "Administradores del sistema";
+  const currentEmailDisplay =
+    currentUser?.email || adminUsers[0]?.email || "admin@nexosql";
   const [sidebarVisible, setSidebarVisible] = useState(false);
 
   const handleLogout = async () => {
@@ -100,8 +105,8 @@ const AdminLayout = ({ children, title }) => {
           </NavLink>
         </nav>
         <div className="admin-sidebar-footer">
-          <small className="text-muted">Administrador</small>
-          <div className="admin-user-email">{adminEmail}</div>
+          <small className="text-muted">Administradores</small>
+          <div className="admin-user-email">{fallbackAdminLabel}</div>
         </div>
       </aside>
 
@@ -125,7 +130,7 @@ const AdminLayout = ({ children, title }) => {
           <div className="admin-header-actions">
             <div className="admin-user-pill">
               <PersonCircle />
-              <span>{currentUser?.email || adminEmail}</span>
+              <span>{currentEmailDisplay}</span>
             </div>
             <Button variant="outline-light" size="sm" onClick={handleLogout}>
               <BoxArrowRight className="me-2" /> Cerrar sesión

@@ -12,10 +12,7 @@ import {
   signInWithGoogle,
   logOut,
 } from "../services/firebase";
-import { userApi } from "../services/api";
-
-const ADMIN_EMAIL =
-  (process.env.REACT_APP_ADMIN_EMAIL || "angelo.quispe.l@tecsup.edu.pe").toLowerCase();
+import { userApi, adminApi } from "../services/api";
 
 const getStoredAuthEmail = () => {
   if (typeof window === "undefined") {
@@ -47,6 +44,8 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
+  const [adminUsers, setAdminUsers] = useState([]);
+  const [adminUsersLoading, setAdminUsersLoading] = useState(false);
   const authStateChecked = useRef(false);
   const authUnsubscribe = useRef(null);
 
@@ -218,6 +217,7 @@ export function AuthProvider({ children }) {
       // Limpiar todos los estados de autenticación inmediatamente
       setCurrentUser(null);
       setUserProfile(null);
+      setAdminUsers([]);
       // Limpiar cualquier dato de usuario almacenado en localStorage
       localStorage.removeItem("authUser");
       // Asegurar que isAuthenticated sea false inmediatamente
@@ -256,6 +256,51 @@ export function AuthProvider({ children }) {
 
   const currentEmail = (currentUser?.email || getStoredAuthEmail() || "").toLowerCase();
 
+  const refreshAdminUsers = async () => {
+    setAdminUsersLoading(true);
+    try {
+      const authInstance = getAuthInstance();
+      if (!authInstance.currentUser) {
+        setAdminUsers([]);
+        return [];
+      }
+
+      const response = await adminApi.getAdminUsers();
+
+      if (response.error) {
+        console.error("Error fetching admin users:", response.error);
+        setAdminUsers([]);
+        return [];
+      }
+
+      const admins = (response.data?.admins || []).map((admin) => ({
+        ...admin,
+        email: (admin.email || "").toLowerCase(),
+      }));
+
+      setAdminUsers(admins);
+      return admins;
+    } catch (error) {
+      console.error("Exception fetching admin users:", error);
+      setAdminUsers([]);
+      return [];
+    } finally {
+      setAdminUsersLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!currentUser) {
+      setAdminUsers([]);
+      return;
+    }
+
+    refreshAdminUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser?.uid]);
+
+  const isAdminUser = adminUsers.some((admin) => admin.email === currentEmail);
+
   const value = {
     currentUser,
     userProfile,
@@ -263,8 +308,10 @@ export function AuthProvider({ children }) {
     profileLoading,
     authChecked,
     isAuthenticated: getQuickAuthStatus(),
-    isAdmin: currentEmail === ADMIN_EMAIL,
-    adminEmail: ADMIN_EMAIL,
+    isAdmin: isAdminUser,
+    adminUsers,
+    adminUsersLoading,
+    refreshAdminUsers,
     signup,
     login,
     loginWithGoogle,

@@ -6,6 +6,7 @@ const {
   MotorDB,
   User,
   Chat,
+  AdminUser,
 } = require("../models");
 
 const MONTH_LABELS = [
@@ -484,6 +485,30 @@ const getDashboardMetrics = async (req, res) => {
   }
 };
 
+const listAdminUsers = async (req, res) => {
+  try {
+    const admins = await AdminUser.findAll({
+      where: { isActive: true },
+      attributes: ["id", "email", "name", "createdAt", "updatedAt"],
+      order: [["createdAt", "ASC"]],
+    });
+
+    return res.json({
+      admins: admins.map((admin) => ({
+        id: admin.id,
+        email: admin.email,
+        name: admin.name,
+        createdAt: admin.createdAt,
+        updatedAt: admin.updatedAt,
+      })),
+    });
+  } catch (error) {
+    console.error("Error listing admin users", error);
+    return res.status(500).json({ error: "Failed to fetch admin users" });
+  }
+};
+
 module.exports = {
   getDashboardMetrics,
+  listAdminUsers,
 };
