@@ -562,7 +562,7 @@ const SupportTickets = () => {
             </Table>
           </div>
           <div className="d-flex flex-column flex-lg-row justify-content-lg-between align-items-lg-center gap-3 mt-3">
-            <small className="text-muted">
+            <small className="text-light">
               Mostrando {totalTickets === 0 ? 0 : startIndex + 1} - {endIndex} de {totalTickets} tickets
             </small>
             {totalPages > 1 && (
