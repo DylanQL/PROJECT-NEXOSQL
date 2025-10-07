@@ -239,7 +239,7 @@ const SupportTickets = () => {
         <Modal.Header closeButton closeLabel="Cerrar">
           <Modal.Title>Detalle del ticket</Modal.Title>
         </Modal.Header>
-        <Modal.Body>
+        <Modal.Body className="admin-modal-body">
           <div className="mb-3">
             <h5 className="mb-1 d-flex align-items-center gap-2">
               <span>
@@ -431,13 +431,14 @@ const SupportTickets = () => {
         }}
         centered
         backdrop="static"
+        contentClassName="admin-modal"
       >
         {statusChangeRequest && pendingCopy && (
           <>
             <Modal.Header closeButton={!isPendingTicketUpdating} closeLabel="Cerrar confirmación">
               <Modal.Title>{pendingCopy.title}</Modal.Title>
             </Modal.Header>
-            <Modal.Body>
+            <Modal.Body className="admin-modal-body">
               <p>{pendingCopy.body}</p>
               <div className="d-flex flex-column gap-1 text-muted small">
                 <span>
@@ -457,17 +458,18 @@ const SupportTickets = () => {
             </Modal.Body>
             <Modal.Footer>
               <Button
-                variant="outline-secondary"
+                variant="outline-light"
                 onClick={handleCancelStatusChange}
                 disabled={isPendingTicketUpdating}
+                className="px-4"
               >
                 Cancelar
               </Button>
               <Button
-                variant="primary"
+                variant="success"
                 onClick={handleConfirmStatusChange}
                 disabled={isPendingTicketUpdating}
-                className="d-inline-flex align-items-center gap-2"
+                className="d-inline-flex align-items-center gap-2 px-4"
               >
                 {isPendingTicketUpdating && (
                   <Spinner animation="border" size="sm" role="status">
@@ -486,6 +488,7 @@ const SupportTickets = () => {
         onHide={() => setSelectedTicket(null)}
         centered
         backdrop="static"
+        contentClassName="admin-modal"
       >
         {renderModalContent()}
       </Modal>
