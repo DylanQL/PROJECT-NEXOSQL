@@ -241,8 +241,14 @@ const SupportTickets = () => {
         </Modal.Header>
         <Modal.Body>
           <div className="mb-3">
-            <h5 className="mb-1">{INCIDENT_LABELS[selectedTicket.incidentType] || selectedTicket.incidentType}</h5>
-            {renderStatusBadge(selectedTicket.status)}
+            <h5 className="mb-1 d-flex align-items-center gap-2">
+              <span>
+                {INCIDENT_LABELS[selectedTicket.incidentType] || selectedTicket.incidentType}
+              </span>
+              <span className="text-muted" style={{ fontSize: "0.9rem" }}>
+                ({STATUS_MAP[selectedTicket.status]?.label || selectedTicket.status})
+              </span>
+            </h5>
           </div>
           <div className="mb-3">
             <h6 className="text-muted mb-1">Descripción</h6>
