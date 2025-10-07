@@ -307,8 +307,6 @@
   border-radius: 0.75rem;
   padding: 1.5rem;
   color: rgba(248, 249, 250, 0.85);
-  max-height: 60vh;
-  overflow-y: auto;
 }
 
 .admin-modal-body h5 span:first-child,
