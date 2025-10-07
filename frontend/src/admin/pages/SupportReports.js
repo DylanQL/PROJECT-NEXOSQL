@@ -135,9 +135,16 @@ const LineChartCard = ({ data }) => {
           ))}
         </svg>
       </div>
-      <div className="d-flex justify-content-between text-uppercase text-muted small mt-3">
+      <div className="d-flex justify-content-between text-uppercase text-muted small mt-3 flex-wrap gap-2">
         {data.map((item) => (
-          <span key={`label-${item.month}`}>{item.label}</span>
+          <div
+            key={`label-${item.month}`}
+            className="d-flex flex-column align-items-center"
+            style={{ minWidth: "40px" }}
+          >
+            <span>{item.label}</span>
+            <span className="fw-semibold text-light">{item.value}</span>
+          </div>
         ))}
       </div>
     </div>
