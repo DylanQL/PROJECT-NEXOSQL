@@ -5,10 +5,30 @@ import AdminLayout from "../components/AdminLayout";
 import { adminApi } from "../../services/api";
 
 const STATUS_MAP = {
-  open: { label: "Sin atender", badgeClass: "admin-badge warn", buttonVariant: "outline-warning" },
-  in_progress: { label: "Atendiendo", badgeClass: "admin-badge", buttonVariant: "outline-primary" },
-  resolved: { label: "Terminado", badgeClass: "admin-badge", buttonVariant: "outline-success" },
-  closed: { label: "Cerrado", badgeClass: "admin-badge error", buttonVariant: "outline-secondary" },
+  open: {
+    label: "Sin atender",
+    badgeClass: "admin-badge warn",
+    buttonVariant: "warning",
+    buttonClassName: "text-dark fw-semibold",
+  },
+  in_progress: {
+    label: "Atendiendo",
+    badgeClass: "admin-badge",
+    buttonVariant: "info",
+    buttonClassName: "text-dark fw-semibold",
+  },
+  resolved: {
+    label: "Terminado",
+    badgeClass: "admin-badge",
+    buttonVariant: "success",
+    buttonClassName: "fw-semibold",
+  },
+  closed: {
+    label: "Cerrado",
+    badgeClass: "admin-badge error",
+    buttonVariant: "secondary",
+    buttonClassName: "fw-semibold",
+  },
 };
 
 const EDITABLE_STATUSES = ["open", "in_progress", "resolved"];
@@ -382,7 +402,8 @@ const SupportTickets = () => {
                 const statusInfo = STATUS_MAP[ticket.status] || {
                   label: ticket.status,
                   badgeClass: "admin-badge",
-                  buttonVariant: "outline-light",
+                  buttonVariant: "secondary",
+                  buttonClassName: "fw-semibold",
                 };
                 const isEditable = EDITABLE_STATUSES.includes(ticket.status);
                 const nextStatus = getNextEditableStatus(ticket.status);
@@ -402,7 +423,7 @@ const SupportTickets = () => {
                       <Button
                         size="sm"
                         variant={statusInfo.buttonVariant || "outline-light"}
-                        className="d-inline-flex align-items-center gap-2 px-3"
+                        className={`d-inline-flex align-items-center gap-2 px-3 ${statusInfo.buttonClassName || ""}`}
                         disabled={!isEditable || !nextStatus || isUpdating}
                         onClick={() =>
                           nextStatus &&
