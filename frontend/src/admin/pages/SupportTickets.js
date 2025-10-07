@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { Alert, Button, Modal, Spinner, Table } from "react-bootstrap";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Alert, Button, Form, Modal, Pagination, Spinner, Table } from "react-bootstrap";
 import { ArrowClockwise, Eye } from "react-bootstrap-icons";
 import AdminLayout from "../components/AdminLayout";
 import { adminApi } from "../../services/api";
@@ -45,6 +45,8 @@ const PLAN_LABELS = {
   plata: "Plan Plata",
   bronce: "Plan Bronce",
 };
+
+const PLAN_ORDER = ["oro", "plata", "bronce", "none"];
 
 const formatSubscriptionPlan = (planType) => {
   if (!planType) {
@@ -126,6 +128,10 @@ const SupportTickets = () => {
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [processing, setProcessing] = useState({});
   const [statusChangeRequest, setStatusChangeRequest] = useState(null);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [planFilter, setPlanFilter] = useState("all");
+  const [rowsPerPage, setRowsPerPage] = useState(20);
+  const [currentPage, setCurrentPage] = useState(1);
 
   const loadTickets = useCallback(async () => {
     setLoading(true);
@@ -143,6 +149,100 @@ const SupportTickets = () => {
   useEffect(() => {
     loadTickets();
   }, [loadTickets]);
+
+  const statusOptions = useMemo(() => Object.keys(STATUS_MAP), []);
+
+  const planOptions = useMemo(() => {
+    const values = new Set();
+    values.add("none");
+    tickets.forEach((ticket) => {
+      const planType = ticket.user?.subscriptionPlan || ticket.subscriptionPlan || null;
+      values.add(planType || "none");
+    });
+    return Array.from(values).sort((a, b) => {
+      const indexA = PLAN_ORDER.indexOf(a);
+      const indexB = PLAN_ORDER.indexOf(b);
+      const safeA = indexA === -1 ? PLAN_ORDER.length : indexA;
+      const safeB = indexB === -1 ? PLAN_ORDER.length : indexB;
+      return safeA - safeB;
+    });
+  }, [tickets]);
+
+  const filteredTickets = useMemo(() => {
+    return tickets.filter((ticket) => {
+      const ticketStatus = ticket.status || "";
+      if (statusFilter !== "all" && ticketStatus !== statusFilter) {
+        return false;
+      }
+
+      const planTypeRaw = ticket.user?.subscriptionPlan || ticket.subscriptionPlan || null;
+      const planKey = planTypeRaw || "none";
+      if (planFilter !== "all" && planKey !== planFilter) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [tickets, statusFilter, planFilter]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [statusFilter, planFilter]);
+
+  useEffect(() => {
+    const totalPagesCalc = Math.max(1, Math.ceil(filteredTickets.length / rowsPerPage));
+    if (currentPage > totalPagesCalc) {
+      setCurrentPage(totalPagesCalc);
+    }
+  }, [filteredTickets.length, rowsPerPage, currentPage]);
+
+  const totalTickets = filteredTickets.length;
+  const totalPages = Math.max(1, Math.ceil(totalTickets / rowsPerPage));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const startIndex = totalTickets === 0 ? 0 : (safeCurrentPage - 1) * rowsPerPage;
+  const paginatedTickets = filteredTickets.slice(startIndex, startIndex + rowsPerPage);
+  const endIndex = totalTickets === 0 ? 0 : Math.min(startIndex + rowsPerPage, totalTickets);
+
+  const visiblePages = useMemo(() => {
+    const pages = [];
+    const maxVisible = 5;
+    let startPage = Math.max(1, safeCurrentPage - Math.floor(maxVisible / 2));
+    let endPage = startPage + maxVisible - 1;
+
+    if (endPage > totalPages) {
+      endPage = totalPages;
+      startPage = Math.max(1, endPage - maxVisible + 1);
+    }
+
+    for (let page = startPage; page <= endPage; page += 1) {
+      pages.push(page);
+    }
+    return pages;
+  }, [safeCurrentPage, totalPages]);
+
+  const handleStatusFilterChange = (event) => {
+    setStatusFilter(event.target.value);
+  };
+
+  const handlePlanFilterChange = (event) => {
+    setPlanFilter(event.target.value);
+  };
+
+  const handleRowsPerPageChange = (event) => {
+    const value = parseInt(event.target.value, 10);
+    if (Number.isNaN(value) || value <= 0) {
+      return;
+    }
+    setRowsPerPage(value);
+    setCurrentPage(1);
+  };
+
+  const handlePageChange = (page) => {
+    if (page < 1 || page > totalPages) {
+      return;
+    }
+    setCurrentPage(page);
+  };
 
   const handleCancelStatusChange = () => {
     setStatusChangeRequest(null);
@@ -329,36 +429,77 @@ const SupportTickets = () => {
         </Alert>
       )}
 
-      <div className="admin-card mb-4 d-flex justify-content-between align-items-center">
-        <div>
-          <h4 className="mb-0">Listado de tickets</h4>
-          <small className="text-muted">
-            Revisa el detalle y actualiza el estado de cada solicitud.
-          </small>
+      <div className="admin-card mb-4">
+        <div className="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3">
+          <div>
+            <h4 className="mb-0">Listado de tickets</h4>
+            <small className="text-muted">
+              Revisa el detalle y aplica filtros para encontrar incidencias específicas.
+            </small>
+          </div>
+          <Button variant="outline-light" size="sm" onClick={loadTickets}>
+            <ArrowClockwise className="me-2" />
+            Actualizar
+          </Button>
         </div>
-        <Button variant="outline-light" size="sm" onClick={loadTickets}>
-          <ArrowClockwise className="me-2" />
-          Actualizar
-        </Button>
+        <div className="d-flex flex-column flex-lg-row align-items-lg-end gap-3 mt-3">
+          <Form.Group controlId="statusFilter" className="flex-grow-1 flex-lg-grow-0" style={{ minWidth: "200px" }}>
+            <Form.Label className="text-muted small mb-1">Estado</Form.Label>
+            <Form.Select value={statusFilter} onChange={handleStatusFilterChange}>
+              <option value="all">Todos los estados</option>
+              {statusOptions.map((status) => (
+                <option key={status} value={status}>
+                  {STATUS_MAP[status]?.label || status}
+                </option>
+              ))}
+            </Form.Select>
+          </Form.Group>
+          <Form.Group controlId="planFilter" className="flex-grow-1 flex-lg-grow-0" style={{ minWidth: "220px" }}>
+            <Form.Label className="text-muted small mb-1">Tipo de suscripción</Form.Label>
+            <Form.Select value={planFilter} onChange={handlePlanFilterChange}>
+              <option value="all">Todas las suscripciones</option>
+              {planOptions.map((plan) => (
+                <option key={plan} value={plan}>
+                  {plan === "none" ? "Sin suscripción" : formatSubscriptionPlan(plan)}
+                </option>
+              ))}
+            </Form.Select>
+          </Form.Group>
+          <Form.Group controlId="rowsPerPage" style={{ maxWidth: "160px" }}>
+            <Form.Label className="text-muted small mb-1">Resultados por página</Form.Label>
+            <Form.Control
+              type="number"
+              min={1}
+              value={rowsPerPage}
+              onChange={handleRowsPerPageChange}
+            />
+          </Form.Group>
+        </div>
       </div>
 
       {!tickets.length ? (
         renderEmptyState()
+      ) : !filteredTickets.length ? (
+        <Alert variant="info" className="admin-card">
+          <Alert.Heading>Sin resultados</Alert.Heading>
+          <p>No se encontraron tickets con los filtros seleccionados. Ajusta los filtros para ver otros registros.</p>
+        </Alert>
       ) : (
-        <div className="admin-table-wrapper">
-          <Table variant="dark" responsive className="mb-0 align-middle">
-            <thead>
-              <tr>
-                <th>Creado</th>
-                <th>Usuario</th>
-                <th>Suscripción</th>
-                <th>Tipo</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tickets.map((ticket) => {
+        <>
+          <div className="admin-table-wrapper">
+            <Table variant="dark" responsive className="mb-0 align-middle">
+              <thead>
+                <tr>
+                  <th>Creado</th>
+                  <th>Usuario</th>
+                  <th>Suscripción</th>
+                  <th>Tipo</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+              {paginatedTickets.map((ticket) => {
                 const statusInfo = STATUS_MAP[ticket.status] || {
                   label: ticket.status,
                   badgeClass: "admin-badge",
@@ -417,9 +558,41 @@ const SupportTickets = () => {
                   </tr>
                 );
               })}
-            </tbody>
-          </Table>
-        </div>
+              </tbody>
+            </Table>
+          </div>
+          <div className="d-flex flex-column flex-lg-row justify-content-lg-between align-items-lg-center gap-3 mt-3">
+            <small className="text-muted">
+              Mostrando {totalTickets === 0 ? 0 : startIndex + 1} - {endIndex} de {totalTickets} tickets
+            </small>
+            {totalPages > 1 && (
+              <Pagination className="mb-0">
+                <Pagination.First disabled={safeCurrentPage === 1} onClick={() => handlePageChange(1)} />
+                <Pagination.Prev
+                  disabled={safeCurrentPage === 1}
+                  onClick={() => handlePageChange(safeCurrentPage - 1)}
+                />
+                {visiblePages.map((page) => (
+                  <Pagination.Item
+                    key={`page-${page}`}
+                    active={page === safeCurrentPage}
+                    onClick={() => handlePageChange(page)}
+                  >
+                    {page}
+                  </Pagination.Item>
+                ))}
+                <Pagination.Next
+                  disabled={safeCurrentPage === totalPages}
+                  onClick={() => handlePageChange(safeCurrentPage + 1)}
+                />
+                <Pagination.Last
+                  disabled={safeCurrentPage === totalPages}
+                  onClick={() => handlePageChange(totalPages)}
+                />
+              </Pagination>
+            )}
+          </div>
+        </>
       )}
 
       <Modal
