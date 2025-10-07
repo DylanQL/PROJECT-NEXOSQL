@@ -8,9 +8,10 @@ const Subscription = require("../models/Subscription");
 const createUser = async (req, res) => {
   try {
     const { nombres, apellidos, email, telefono, pais } = req.body;
+    const normalizedEmail = email?.toLowerCase();
 
     // Check if all required fields are provided
-    if (!nombres || !apellidos || !email) {
+    if (!nombres || !apellidos || !normalizedEmail) {
       return res
         .status(400)
         .json({ error: "Nombres, apellidos y email son campos requeridos" });
@@ -22,14 +23,43 @@ const createUser = async (req, res) => {
     // Check if user already exists in our database
     const existingUser = await User.findOne({ where: { firebaseUid } });
     if (existingUser) {
-      return res.status(409).json({
-        error: "El usuario ya existe en nuestra base de datos",
-        message: `Usuario con UID ${firebaseUid} ya está registrado`,
+      // If the user already exists (e.g. dev placeholder), update their profile instead of failing
+      if (existingUser.email !== normalizedEmail) {
+        const emailConflict = await User.findOne({
+          where: { email: normalizedEmail },
+        });
+
+        if (emailConflict && emailConflict.id !== existingUser.id) {
+          return res.status(409).json({
+            error: "Este correo electrónico ya está registrado en el sistema",
+          });
+        }
+      }
+
+      existingUser.nombres = nombres;
+      existingUser.apellidos = apellidos;
+      existingUser.email = normalizedEmail;
+      existingUser.telefono = telefono;
+      existingUser.pais = pais;
+
+      await existingUser.save();
+
+      return res.status(200).json({
+        message: "Perfil actualizado exitosamente",
+        user: {
+          id: existingUser.id,
+          nombres: existingUser.nombres,
+          apellidos: existingUser.apellidos,
+          email: existingUser.email,
+          telefono: existingUser.telefono,
+          pais: existingUser.pais,
+          firebaseUid: existingUser.firebaseUid,
+        },
       });
     }
 
     // Check if email is already registered
-    const emailExists = await User.findOne({ where: { email } });
+    const emailExists = await User.findOne({ where: { email: normalizedEmail } });
     if (emailExists) {
       return res
         .status(409)
@@ -42,7 +72,7 @@ const createUser = async (req, res) => {
     const newUser = await User.create({
       nombres,
       apellidos,
-      email,
+      email: normalizedEmail,
       telefono,
       pais,
       firebaseUid,
