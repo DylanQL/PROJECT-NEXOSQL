@@ -352,9 +352,9 @@ const SupportTickets = () => {
           </div>
           <div className="mb-3">
             <h6 className="text-muted mb-1">Descripción</h6>
-            <p className="mb-0" style={{ whiteSpace: "pre-wrap" }}>
+            <div className="admin-modal-description">
               {selectedTicket.description}
-            </p>
+            </div>
           </div>
           <div className="mb-3">
             <h6 className="text-muted mb-1">Información del usuario</h6>
