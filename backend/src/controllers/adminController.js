@@ -51,26 +51,36 @@ const ticketStatusOrder = {
 
 const ADMIN_TICKET_STATUSES = ["open", "in_progress", "resolved"];
 
-const serializeSupportTicket = (ticket) => ({
-  id: ticket.id,
-  incidentType: ticket.incidentType,
-  status: ticket.status,
-  description: ticket.description,
-  metadata: ticket.metadata,
-  createdAt: ticket.createdAt,
-  updatedAt: ticket.updatedAt,
-  user: ticket.user
-    ? {
-        id: ticket.user.id,
-        nombres: ticket.user.nombres,
-        apellidos: ticket.user.apellidos,
-        email: ticket.user.email,
-        telefono: ticket.user.telefono,
-        pais: ticket.user.pais,
-        createdAt: ticket.user.createdAt,
-      }
-    : null,
-});
+const serializeSupportTicket = (ticket) => {
+  const subscriptions = Array.isArray(ticket.user?.subscriptions)
+    ? ticket.user.subscriptions
+    : [];
+  const activeSubscription =
+    subscriptions.find((sub) => sub.status === "active") || subscriptions[0] || null;
+
+  return {
+    id: ticket.id,
+    incidentType: ticket.incidentType,
+    status: ticket.status,
+    description: ticket.description,
+    metadata: ticket.metadata,
+    createdAt: ticket.createdAt,
+    updatedAt: ticket.updatedAt,
+    subscriptionPlan: activeSubscription?.planType || null,
+    user: ticket.user
+      ? {
+          id: ticket.user.id,
+          nombres: ticket.user.nombres,
+          apellidos: ticket.user.apellidos,
+          email: ticket.user.email,
+          telefono: ticket.user.telefono,
+          pais: ticket.user.pais,
+          createdAt: ticket.user.createdAt,
+          subscriptionPlan: activeSubscription?.planType || null,
+        }
+      : null,
+  };
+};
 
 const toMonthIndex = (date) => new Date(date).getMonth();
 
@@ -555,6 +565,18 @@ const listSupportTickets = async (req, res) => {
             "pais",
             "createdAt",
           ],
+          include: [
+            {
+              model: Subscription,
+              as: "subscriptions",
+              attributes: ["id", "planType", "status", "createdAt", "updatedAt"],
+              where: { status: "active" },
+              required: false,
+              separate: true,
+              limit: 1,
+              order: [["createdAt", "DESC"]],
+            },
+          ],
         },
       ],
     });
@@ -600,6 +622,18 @@ const updateSupportTicketStatus = async (req, res) => {
             "telefono",
             "pais",
             "createdAt",
+          ],
+          include: [
+            {
+              model: Subscription,
+              as: "subscriptions",
+              attributes: ["id", "planType", "status", "createdAt", "updatedAt"],
+              where: { status: "active" },
+              required: false,
+              separate: true,
+              limit: 1,
+              order: [["createdAt", "DESC"]],
+            },
           ],
         },
       ],

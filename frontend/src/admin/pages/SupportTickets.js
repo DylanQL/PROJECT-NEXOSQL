@@ -40,6 +40,19 @@ const INCIDENT_LABELS = {
   other: "Otro",
 };
 
+const PLAN_LABELS = {
+  oro: "Plan Oro",
+  plata: "Plan Plata",
+  bronce: "Plan Bronce",
+};
+
+const formatSubscriptionPlan = (planType) => {
+  if (!planType) {
+    return "Sin suscripción";
+  }
+  return PLAN_LABELS[planType] || planType;
+};
+
 const formatDateTime = (value) => {
   if (!value) {
     return "Sin registro";
@@ -248,6 +261,9 @@ const SupportTickets = () => {
                 <li>
                   <strong>Email:</strong> {selectedTicket.user.email}
                 </li>
+                <li>
+                  <strong>Suscripción:</strong> {formatSubscriptionPlan(selectedTicket.user.subscriptionPlan || selectedTicket.subscriptionPlan)}
+                </li>
                 {selectedTicket.user.telefono && (
                   <li>
                     <strong>Teléfono:</strong> {selectedTicket.user.telefono}
@@ -334,7 +350,7 @@ const SupportTickets = () => {
               <tr>
                 <th>Creado</th>
                 <th>Usuario</th>
-                <th>Email</th>
+                <th>Suscripción</th>
                 <th>Tipo</th>
                 <th>Estado</th>
                 <th>Acciones</th>
@@ -351,6 +367,8 @@ const SupportTickets = () => {
                 const isEditable = EDITABLE_STATUSES.includes(ticket.status);
                 const nextStatus = getNextEditableStatus(ticket.status);
                 const isUpdating = processing[ticket.id];
+                const subscriptionPlanType =
+                  ticket.user?.subscriptionPlan || ticket.subscriptionPlan || null;
 
                 return (
                   <tr key={ticket.id}>
@@ -360,7 +378,7 @@ const SupportTickets = () => {
                         ? `${ticket.user.nombres} ${ticket.user.apellidos}`
                         : "Usuario no disponible"}
                     </td>
-                    <td>{ticket.user?.email || "Sin email"}</td>
+                    <td>{formatSubscriptionPlan(subscriptionPlanType)}</td>
                     <td>{INCIDENT_LABELS[ticket.incidentType] || ticket.incidentType}</td>
                     <td className="text-center">
                       <Button
