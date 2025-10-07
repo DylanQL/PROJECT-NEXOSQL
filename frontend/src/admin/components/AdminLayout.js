@@ -9,6 +9,7 @@ import {
   PersonCircle,
   BoxArrowRight,
   List,
+  Headset,
 } from "react-bootstrap-icons";
 import { useAuth } from "../../contexts/AuthContext";
 import logoNexoSQL from "../../assets/logo_nexosql.svg";
@@ -102,6 +103,14 @@ const AdminLayout = ({ children, title }) => {
           >
             <Terminal />
             <span>Consultas</span>
+          </NavLink>
+          <NavLink
+            to="/admin/support-tickets"
+            className="admin-nav-link"
+            onClick={closeSidebar}
+          >
+            <Headset />
+            <span>Tickets soporte</span>
           </NavLink>
         </nav>
         <div className="admin-sidebar-footer">

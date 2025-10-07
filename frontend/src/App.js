@@ -46,6 +46,7 @@ import DashboardOverview from "./admin/pages/DashboardOverview";
 import AdminSubscriptionsPage from "./admin/pages/Subscriptions";
 import AdminConnectionsPage from "./admin/pages/Connections";
 import AdminQueriesPage from "./admin/pages/Queries";
+import AdminSupportTicketsPage from "./admin/pages/SupportTickets";
 
 // Component to handle global notifications
 function AppNotifications() {
@@ -338,6 +339,10 @@ function App() {
               />
               <Route path="connections" element={<AdminConnectionsPage />} />
               <Route path="queries" element={<AdminQueriesPage />} />
+              <Route
+                path="support-tickets"
+                element={<AdminSupportTicketsPage />}
+              />
               <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
             </Route>
 

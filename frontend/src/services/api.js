@@ -396,6 +396,31 @@ export const adminApi = {
       };
     }
   },
+  getSupportTickets: async () => {
+    try {
+      const response = await api.get("/admin/support-tickets");
+      return { data: response.data, error: null };
+    } catch (error) {
+      return {
+        data: null,
+        error: error.response?.data?.error || "Error fetching support tickets",
+      };
+    }
+  },
+  updateSupportTicketStatus: async (ticketId, status) => {
+    try {
+      const response = await api.patch(
+        `/admin/support-tickets/${ticketId}/status`,
+        { status },
+      );
+      return { data: response.data, error: null };
+    } catch (error) {
+      return {
+        data: null,
+        error: error.response?.data?.error || "Error updating ticket status",
+      };
+    }
+  },
 };
 
 export const supportApi = {

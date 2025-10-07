@@ -7,6 +7,7 @@ const {
   User,
   Chat,
   AdminUser,
+  SupportTicket,
 } = require("../models");
 
 const MONTH_LABELS = [
@@ -40,6 +41,36 @@ const createPlanBucket = () => {
   });
   return bucket;
 };
+
+const ticketStatusOrder = {
+  open: 1,
+  in_progress: 2,
+  resolved: 3,
+  closed: 4,
+};
+
+const ADMIN_TICKET_STATUSES = ["open", "in_progress", "resolved"];
+
+const serializeSupportTicket = (ticket) => ({
+  id: ticket.id,
+  incidentType: ticket.incidentType,
+  status: ticket.status,
+  description: ticket.description,
+  metadata: ticket.metadata,
+  createdAt: ticket.createdAt,
+  updatedAt: ticket.updatedAt,
+  user: ticket.user
+    ? {
+        id: ticket.user.id,
+        nombres: ticket.user.nombres,
+        apellidos: ticket.user.apellidos,
+        email: ticket.user.email,
+        telefono: ticket.user.telefono,
+        pais: ticket.user.pais,
+        createdAt: ticket.user.createdAt,
+      }
+    : null,
+});
 
 const toMonthIndex = (date) => new Date(date).getMonth();
 
@@ -508,7 +539,111 @@ const listAdminUsers = async (req, res) => {
   }
 };
 
+const listSupportTickets = async (req, res) => {
+  try {
+    const tickets = await SupportTicket.findAll({
+      include: [
+        {
+          model: User,
+          as: "user",
+          attributes: [
+            "id",
+            "nombres",
+            "apellidos",
+            "email",
+            "telefono",
+            "pais",
+            "createdAt",
+          ],
+        },
+      ],
+    });
+
+    const serialized = tickets
+      .map(serializeSupportTicket)
+      .sort((a, b) => {
+        const statusDiff =
+          (ticketStatusOrder[a.status] || 99) -
+          (ticketStatusOrder[b.status] || 99);
+        if (statusDiff !== 0) {
+          return statusDiff;
+        }
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      });
+
+    return res.json({ tickets: serialized });
+  } catch (error) {
+    console.error("Error listing support tickets", error);
+    return res.status(500).json({ error: "Failed to fetch support tickets" });
+  }
+};
+
+const updateSupportTicketStatus = async (req, res) => {
+  try {
+    const { ticketId } = req.params;
+    const { status } = req.body || {};
+
+    if (!status || !ADMIN_TICKET_STATUSES.includes(status)) {
+      return res.status(400).json({ error: "Invalid ticket status" });
+    }
+
+    const ticket = await SupportTicket.findByPk(ticketId, {
+      include: [
+        {
+          model: User,
+          as: "user",
+          attributes: [
+            "id",
+            "nombres",
+            "apellidos",
+            "email",
+            "telefono",
+            "pais",
+            "createdAt",
+          ],
+        },
+      ],
+    });
+
+    if (!ticket) {
+      return res.status(404).json({ error: "Support ticket not found" });
+    }
+
+    if (ticket.status !== status) {
+      ticket.status = status;
+      await ticket.save();
+      await ticket.reload({
+        include: [
+          {
+            model: User,
+            as: "user",
+            attributes: [
+              "id",
+              "nombres",
+              "apellidos",
+              "email",
+              "telefono",
+              "pais",
+              "createdAt",
+            ],
+          },
+        ],
+      });
+    }
+
+    return res.json({
+      success: true,
+      ticket: serializeSupportTicket(ticket),
+    });
+  } catch (error) {
+    console.error("Error updating support ticket status", error);
+    return res.status(500).json({ error: "Failed to update ticket status" });
+  }
+};
+
 module.exports = {
   getDashboardMetrics,
   listAdminUsers,
+  listSupportTickets,
+  updateSupportTicketStatus,
 };
