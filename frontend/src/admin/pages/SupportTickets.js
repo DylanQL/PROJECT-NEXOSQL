@@ -1,14 +1,14 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Alert, Button, Form, Modal, Spinner, Table } from "react-bootstrap";
+import { Alert, Button, Modal, Spinner, Table } from "react-bootstrap";
 import { ArrowClockwise, Eye } from "react-bootstrap-icons";
 import AdminLayout from "../components/AdminLayout";
 import { adminApi } from "../../services/api";
 
 const STATUS_MAP = {
-  open: { label: "Sin atender", badgeClass: "admin-badge warn" },
-  in_progress: { label: "Atendiendo", badgeClass: "admin-badge" },
-  resolved: { label: "Terminado", badgeClass: "admin-badge" },
-  closed: { label: "Cerrado", badgeClass: "admin-badge error" },
+  open: { label: "Sin atender", badgeClass: "admin-badge warn", buttonVariant: "outline-warning" },
+  in_progress: { label: "Atendiendo", badgeClass: "admin-badge", buttonVariant: "outline-primary" },
+  resolved: { label: "Terminado", badgeClass: "admin-badge", buttonVariant: "outline-success" },
+  closed: { label: "Cerrado", badgeClass: "admin-badge error", buttonVariant: "outline-secondary" },
 };
 
 const EDITABLE_STATUSES = ["open", "in_progress", "resolved"];
@@ -132,15 +132,26 @@ const SupportTickets = () => {
     </Alert>
   );
 
-  const renderStatusBadge = (status) => {
-    const statusInfo = STATUS_MAP[status] || {
-      label: status,
-      badgeClass: "admin-badge",
-    };
-    return (
-      <span className={statusInfo.badgeClass}>{statusInfo.label}</span>
-    );
+const getNextEditableStatus = (status) => {
+  const currentIndex = EDITABLE_STATUSES.indexOf(status);
+  if (currentIndex === -1) {
+    return null;
+  }
+  if (currentIndex === EDITABLE_STATUSES.length - 1) {
+    return null;
+  }
+  return EDITABLE_STATUSES[currentIndex + 1];
+};
+
+const renderStatusBadge = (status) => {
+  const statusInfo = STATUS_MAP[status] || {
+    label: status,
+    badgeClass: "admin-badge",
   };
+  return (
+    <span className={statusInfo.badgeClass}>{statusInfo.label}</span>
+  );
+};
 
   const renderModalContent = () => {
     if (!selectedTicket) {
@@ -311,11 +322,11 @@ const SupportTickets = () => {
                 const statusInfo = STATUS_MAP[ticket.status] || {
                   label: ticket.status,
                   badgeClass: "admin-badge",
+                  buttonVariant: "outline-light",
                 };
                 const isEditable = EDITABLE_STATUSES.includes(ticket.status);
-                const selectValue = isEditable
-                  ? ticket.status
-                  : ticket.status || EDITABLE_STATUSES[0];
+                const nextStatus = getNextEditableStatus(ticket.status);
+                const isUpdating = processing[ticket.id];
 
                 return (
                   <tr key={ticket.id}>
@@ -328,30 +339,20 @@ const SupportTickets = () => {
                     <td>{ticket.user?.email || "Sin email"}</td>
                     <td>{INCIDENT_LABELS[ticket.incidentType] || ticket.incidentType}</td>
                     <td className="text-center">
-                      <div className="d-flex flex-column gap-2 align-items-center">
-                        {renderStatusBadge(ticket.status)}
-                        <Form.Select
-                          size="sm"
-                          value={selectValue}
-                          onChange={(event) =>
-                            handleStatusChange(ticket.id, event.target.value)
-                          }
-                          disabled={processing[ticket.id] || !isEditable}
-                          aria-label="Cambiar estado del ticket"
-                        >
-                          {EDITABLE_STATUSES.map((statusOption) => (
-                            <option key={statusOption} value={statusOption}>
-                              {STATUS_MAP[statusOption].label}
-                            </option>
-                          ))}
-                          {!isEditable && (
-                            <option value={selectValue}>{statusInfo.label}</option>
-                          )}
-                        </Form.Select>
-                        {processing[ticket.id] && (
-                          <Spinner animation="border" size="sm" />
+                      <Button
+                        size="sm"
+                        variant={statusInfo.buttonVariant || "outline-light"}
+                        className="d-inline-flex align-items-center gap-2 px-3"
+                        disabled={!isEditable || !nextStatus || isUpdating}
+                        onClick={() => nextStatus && handleStatusChange(ticket.id, nextStatus)}
+                      >
+                        {isUpdating && (
+                          <Spinner animation="border" size="sm" role="status">
+                            <span className="visually-hidden">Actualizando...</span>
+                          </Spinner>
                         )}
-                      </div>
+                        {statusInfo.label}
+                      </Button>
                     </td>
                     <td className="text-center">
                       <Button
