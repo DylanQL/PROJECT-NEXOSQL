@@ -10,6 +10,7 @@ import {
   BoxArrowRight,
   List,
   Headset,
+  GraphUp,
 } from "react-bootstrap-icons";
 import { useAuth } from "../../contexts/AuthContext";
 import logoNexoSQL from "../../assets/logo_nexosql.svg";
@@ -111,6 +112,14 @@ const AdminLayout = ({ children, title }) => {
           >
             <Headset />
             <span>Tickets soporte</span>
+          </NavLink>
+          <NavLink
+            to="/admin/support-reports"
+            className="admin-nav-link"
+            onClick={closeSidebar}
+          >
+            <GraphUp />
+            <span>Reportes de tickets</span>
           </NavLink>
         </nav>
         <div className="admin-sidebar-footer">

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Alert, Button, Modal, Spinner, Table } from "react-bootstrap";
 import { ArrowClockwise, Eye } from "react-bootstrap-icons";
 import AdminLayout from "../components/AdminLayout";
@@ -191,23 +191,6 @@ const SupportTickets = () => {
       )
     : null;
 
-  const ticketSummary = useMemo(() => {
-    if (!tickets.length) {
-      return null;
-    }
-
-    const summary = {
-      total: tickets.length,
-      byStatus: {},
-    };
-
-    tickets.forEach((ticket) => {
-      summary.byStatus[ticket.status] = (summary.byStatus[ticket.status] || 0) + 1;
-    });
-
-    return summary;
-  }, [tickets]);
-
   const renderLoading = () => (
     <div className="text-center py-5">
       <div className="spinner-border text-light" role="status">
@@ -319,46 +302,6 @@ const SupportTickets = () => {
 
   return (
     <AdminLayout title="Tickets de soporte">
-      {ticketSummary && (
-        <div className="admin-grid cols-3 mb-4">
-          <div className="admin-card">
-            <p className="text-muted mb-1">Tickets registrados</p>
-            <div className="admin-stat-value">{ticketSummary.total}</div>
-            <div className="admin-stat-caption">
-              Seguimiento desde el panel administrativo.
-            </div>
-          </div>
-          <div className="admin-card">
-            <p className="text-muted mb-1">En espera</p>
-            <div className="admin-stat-value">
-              {ticketSummary.byStatus.open || 0}
-            </div>
-            <div className="admin-stat-caption">
-              Prioriza los casos urgentes antes de cerrar.
-            </div>
-          </div>
-          <div className="admin-card">
-            <p className="text-muted mb-1">En progreso</p>
-            <div className="admin-stat-value">
-              {ticketSummary.byStatus.in_progress || 0}
-            </div>
-            <div className="admin-stat-caption">
-              Coordina con el equipo de soporte para acelerar la resolución.
-            </div>
-          </div>
-          <div className="admin-card">
-            <p className="text-muted mb-1">Terminados</p>
-            <div className="admin-stat-value">
-              {(ticketSummary.byStatus.resolved || 0) +
-                (ticketSummary.byStatus.closed || 0)}
-            </div>
-            <div className="admin-stat-caption">
-              Casos que ya fueron atendidos y pueden archivarse.
-            </div>
-          </div>
-        </div>
-      )}
-
       {actionFeedback && (
         <Alert
           variant={actionFeedback.type}
