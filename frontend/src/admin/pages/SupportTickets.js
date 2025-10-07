@@ -150,10 +150,6 @@ const SupportTickets = () => {
           ticket.id === ticketId ? result.data.ticket : ticket,
         ),
       );
-      setActionFeedback({
-        type: "success",
-        message: "Estado actualizado correctamente.",
-      });
     }
     setProcessing((prev) => {
       const next = { ...prev };
