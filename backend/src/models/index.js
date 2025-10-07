@@ -6,6 +6,7 @@ const Subscription = require("./Subscription");
 const Chat = require("./Chat");
 const ChatMessage = require("./ChatMessage");
 const AdminUser = require("./AdminUser");
+const SupportTicket = require("./SupportTicket");
 
 // Initialize associations
 const models = {
@@ -16,6 +17,7 @@ const models = {
   Chat,
   ChatMessage,
   AdminUser,
+  SupportTicket,
 };
 
 // Set up associations
@@ -99,5 +101,6 @@ module.exports = {
   Chat,
   ChatMessage,
   AdminUser,
+  SupportTicket,
   initializeModels,
 };

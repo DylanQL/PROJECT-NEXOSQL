@@ -3,6 +3,7 @@ import { Navbar, Nav, Container } from "react-bootstrap";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useSubscription } from "../contexts/SubscriptionContext";
+import SupportRequestModal from "./SupportRequestModal";
 import logo from "../assets/logo_nexosql.svg";
 
 const Navigation = () => {
@@ -12,6 +13,7 @@ const Navigation = () => {
 
   const location = useLocation();
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [showSupportModal, setShowSupportModal] = useState(false);
   const dropdownRef = useRef(null);
 
   const handleLogout = async () => {
@@ -31,6 +33,11 @@ const Navigation = () => {
 
   const handleProfileMenuClick = () => {
     setShowProfileDropdown(false);
+  };
+
+  const handleSupportClick = () => {
+    setShowProfileDropdown(false);
+    setShowSupportModal(true);
   };
 
   // Get user initials for avatar
@@ -81,7 +88,8 @@ const Navigation = () => {
   }, []);
 
   return (
-    <Navbar bg="light" variant="light" expand="lg" className="px-0 navbar-modern">
+    <>
+      <Navbar bg="light" variant="light" expand="lg" className="px-0 navbar-modern">
       <Container fluid className="px-3">
         <Navbar.Brand as={Link} to="/" className="d-flex align-items-center brand-modern">
           <img src={logo} alt="NexoSQL Logo" height="32" className="me-2 brand-logo" />
@@ -153,6 +161,17 @@ const Navigation = () => {
                     Conexiones
                   </Link>
 
+                  {hasActiveSubscription && (
+                    <button
+                      type="button"
+                      className="profile-dropdown-item profile-dropdown-item-modern"
+                      onClick={handleSupportClick}
+                    >
+                      <i className="bi bi-life-preserver"></i>
+                      Soporte técnico
+                    </button>
+                  )}
+
                   <div className="profile-dropdown-logout">
                     <button
                       className="profile-dropdown-item profile-dropdown-item-modern"
@@ -215,6 +234,11 @@ const Navigation = () => {
         )}
       </Container>
     </Navbar>
+      <SupportRequestModal
+        show={showSupportModal}
+        onClose={() => setShowSupportModal(false)}
+      />
+    </>
   );
 };
 

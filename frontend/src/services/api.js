@@ -398,4 +398,20 @@ export const adminApi = {
   },
 };
 
+export const supportApi = {
+  createTicket: async (payload) => {
+    try {
+      const response = await api.post("/support", payload);
+      return { data: response.data, error: null };
+    } catch (error) {
+      return {
+        data: null,
+        error:
+          error.response?.data?.error ||
+          "Error al registrar la solicitud de soporte",
+      };
+    }
+  },
+};
+
 export default api;
