@@ -29,18 +29,25 @@ const authMiddleware = async (req, res, next) => {
       let user = await User.findOne({
         where: { firebaseUid: devFirebaseUid },
       });
-      
+
       // If user doesn't exist, create a temporary one for development
       if (!user) {
-        console.log("Development mode: Creating temporary user for", devFirebaseUid);
+        const headerEmail = (req.headers["x-user-email"] || "").toLowerCase();
+
+        console.log(
+          "Development mode: Creating temporary user for",
+          devFirebaseUid,
+        );
         user = await User.create({
-          nombres: "Dev",
-          apellidos: "User",
-          email: `dev-${devFirebaseUid}@example.com`,
+          nombres: "",
+          apellidos: "",
+          email: headerEmail || `dev-${devFirebaseUid}@example.com`,
+          telefono: null,
+          pais: null,
           firebaseUid: devFirebaseUid,
         });
       }
-      
+
       req.user = user;
     } catch (err) {
       console.error("Development mode: User lookup/creation failed:", err);

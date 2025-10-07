@@ -2,6 +2,25 @@ const { admin } = require("../config/firebase");
 const User = require("../models/User");
 const Subscription = require("../models/Subscription");
 
+const isIncompleteProfile = (user) => {
+  if (!user) return true;
+
+  const nombres = user.nombres?.trim();
+  const apellidos = user.apellidos?.trim();
+  const email = user.email?.trim();
+
+  if (!nombres || !apellidos || !email) {
+    return true;
+  }
+
+  const isDevName =
+    nombres.toLowerCase() === "dev" && apellidos.toLowerCase() === "user";
+  const isPlaceholderEmail =
+    email.startsWith("dev-") && email.endsWith("@example.com");
+
+  return isDevName || isPlaceholderEmail;
+};
+
 /**
  * Creates a new user in the database
  */
@@ -108,6 +127,15 @@ const getUserProfile = async (req, res) => {
       return res.status(404).json({
         error: "Perfil no encontrado",
         message: `No se encontró un perfil para el usuario con UID ${req.firebaseUid}`,
+      });
+    }
+
+    if (isIncompleteProfile(user)) {
+      return res.status(404).json({
+        error: "Perfil incompleto",
+        message:
+          "Debe completar su perfil antes de acceder a las funcionalidades protegidas",
+        incomplete: true,
       });
     }
 
