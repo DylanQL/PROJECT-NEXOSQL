@@ -36,6 +36,55 @@ const formatDateTime = (value) => {
   });
 };
 
+const getNextEditableStatus = (status) => {
+  const currentIndex = EDITABLE_STATUSES.indexOf(status);
+  if (currentIndex === -1) {
+    return null;
+  }
+  if (currentIndex === EDITABLE_STATUSES.length - 1) {
+    return null;
+  }
+  return EDITABLE_STATUSES[currentIndex + 1];
+};
+
+const renderStatusBadge = (status) => {
+  const statusInfo = STATUS_MAP[status] || {
+    label: status,
+    badgeClass: "admin-badge",
+  };
+  return (
+    <span className={statusInfo.badgeClass}>{statusInfo.label}</span>
+  );
+};
+
+const getStatusTransitionCopy = (currentStatus, nextStatus, ticket) => {
+  const userName = ticket?.user
+    ? `${ticket.user.nombres} ${ticket.user.apellidos}`.trim()
+    : "el usuario";
+
+  if (currentStatus === "open" && nextStatus === "in_progress") {
+    return {
+      title: "Confirmar atención",
+      body: `Estás por comenzar a atender el ticket de ${userName}. ¿Deseas marcarlo como “Atendiendo”?`,
+      confirmLabel: "Sí, comenzar atención",
+    };
+  }
+
+  if (currentStatus === "in_progress" && nextStatus === "resolved") {
+    return {
+      title: "Ticket resuelto",
+      body: `¿Confirmas que el ticket de ${userName} ya fue atendido y puedes marcarlo como “Terminado”?`,
+      confirmLabel: "Sí, marcar como terminado",
+    };
+  }
+
+  return {
+    title: "Actualizar estado",
+    body: "¿Confirmas que deseas actualizar el estado del ticket?",
+    confirmLabel: "Actualizar",
+  };
+};
+
 const SupportTickets = () => {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -43,6 +92,7 @@ const SupportTickets = () => {
   const [actionFeedback, setActionFeedback] = useState(null);
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [processing, setProcessing] = useState({});
+  const [statusChangeRequest, setStatusChangeRequest] = useState(null);
 
   const loadTickets = useCallback(async () => {
     setLoading(true);
@@ -61,10 +111,26 @@ const SupportTickets = () => {
     loadTickets();
   }, [loadTickets]);
 
+  const handleCancelStatusChange = () => {
+    setStatusChangeRequest(null);
+  };
+
+  const handleConfirmStatusChange = async () => {
+    if (!statusChangeRequest) {
+      return;
+    }
+
+    const { ticket, nextStatus } = statusChangeRequest;
+    const success = await handleStatusChange(ticket.id, nextStatus);
+    if (success) {
+      setStatusChangeRequest(null);
+    }
+  };
+
   const handleStatusChange = async (ticketId, status) => {
     const currentTicket = tickets.find((ticket) => ticket.id === ticketId);
     if (!currentTicket || currentTicket.status === status) {
-      return;
+      return false;
     }
 
     setProcessing((prev) => ({ ...prev, [ticketId]: true }));
@@ -72,6 +138,12 @@ const SupportTickets = () => {
     const result = await adminApi.updateSupportTicketStatus(ticketId, status);
     if (result.error) {
       setActionFeedback({ type: "danger", message: result.error });
+      setProcessing((prev) => {
+        const next = { ...prev };
+        delete next[ticketId];
+        return next;
+      });
+      return false;
     } else {
       setTickets((prev) =>
         prev.map((ticket) =>
@@ -88,7 +160,20 @@ const SupportTickets = () => {
       delete next[ticketId];
       return next;
     });
+    return true;
   };
+
+  const pendingTicket = statusChangeRequest?.ticket || null;
+  const isPendingTicketUpdating = pendingTicket
+    ? !!processing[pendingTicket.id]
+    : false;
+  const pendingCopy = statusChangeRequest
+    ? getStatusTransitionCopy(
+        statusChangeRequest.currentStatus,
+        statusChangeRequest.nextStatus,
+        pendingTicket,
+      )
+    : null;
 
   const ticketSummary = useMemo(() => {
     if (!tickets.length) {
@@ -131,27 +216,6 @@ const SupportTickets = () => {
       <p>Aún no se han generado solicitudes de soporte por parte de los usuarios.</p>
     </Alert>
   );
-
-const getNextEditableStatus = (status) => {
-  const currentIndex = EDITABLE_STATUSES.indexOf(status);
-  if (currentIndex === -1) {
-    return null;
-  }
-  if (currentIndex === EDITABLE_STATUSES.length - 1) {
-    return null;
-  }
-  return EDITABLE_STATUSES[currentIndex + 1];
-};
-
-const renderStatusBadge = (status) => {
-  const statusInfo = STATUS_MAP[status] || {
-    label: status,
-    badgeClass: "admin-badge",
-  };
-  return (
-    <span className={statusInfo.badgeClass}>{statusInfo.label}</span>
-  );
-};
 
   const renderModalContent = () => {
     if (!selectedTicket) {
@@ -344,7 +408,14 @@ const renderStatusBadge = (status) => {
                         variant={statusInfo.buttonVariant || "outline-light"}
                         className="d-inline-flex align-items-center gap-2 px-3"
                         disabled={!isEditable || !nextStatus || isUpdating}
-                        onClick={() => nextStatus && handleStatusChange(ticket.id, nextStatus)}
+                        onClick={() =>
+                          nextStatus &&
+                          setStatusChangeRequest({
+                            ticket,
+                            currentStatus: ticket.status,
+                            nextStatus,
+                          })
+                        }
                       >
                         {isUpdating && (
                           <Spinner animation="border" size="sm" role="status">
@@ -371,6 +442,65 @@ const renderStatusBadge = (status) => {
           </Table>
         </div>
       )}
+
+      <Modal
+        show={!!statusChangeRequest}
+        onHide={() => {
+          if (!isPendingTicketUpdating) {
+            handleCancelStatusChange();
+          }
+        }}
+        centered
+        backdrop="static"
+      >
+        {statusChangeRequest && pendingCopy && (
+          <>
+            <Modal.Header closeButton={!isPendingTicketUpdating} closeLabel="Cerrar confirmación">
+              <Modal.Title>{pendingCopy.title}</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <p>{pendingCopy.body}</p>
+              <div className="d-flex flex-column gap-1 text-muted small">
+                <span>
+                  Estado actual:{" "}
+                  {STATUS_MAP[statusChangeRequest.currentStatus]?.label ||
+                    statusChangeRequest.currentStatus}
+                </span>
+                <span>
+                  Próximo estado:{" "}
+                  {STATUS_MAP[statusChangeRequest.nextStatus]?.label ||
+                    statusChangeRequest.nextStatus}
+                </span>
+                <span>
+                  Creado el {formatDateTime(statusChangeRequest.ticket.createdAt)}
+                </span>
+              </div>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button
+                variant="outline-secondary"
+                onClick={handleCancelStatusChange}
+                disabled={isPendingTicketUpdating}
+              >
+                Cancelar
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleConfirmStatusChange}
+                disabled={isPendingTicketUpdating}
+                className="d-inline-flex align-items-center gap-2"
+              >
+                {isPendingTicketUpdating && (
+                  <Spinner animation="border" size="sm" role="status">
+                    <span className="visually-hidden">Guardando...</span>
+                  </Spinner>
+                )}
+                {pendingCopy.confirmLabel}
+              </Button>
+            </Modal.Footer>
+          </>
+        )}
+      </Modal>
 
       <Modal
         show={!!selectedTicket}
