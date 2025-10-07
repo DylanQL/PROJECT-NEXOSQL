@@ -299,11 +299,6 @@ const SupportTickets = () => {
             </div>
           )}
         </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setSelectedTicket(null)}>
-            Cerrar
-          </Button>
-        </Modal.Footer>
       </>
     );
   };
