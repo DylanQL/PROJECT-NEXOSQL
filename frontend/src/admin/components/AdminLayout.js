@@ -106,20 +106,20 @@ const AdminLayout = ({ children, title }) => {
             <span>Consultas</span>
           </NavLink>
           <NavLink
-            to="/admin/support-tickets"
-            className="admin-nav-link"
-            onClick={closeSidebar}
-          >
-            <Headset />
-            <span>Tickets soporte</span>
-          </NavLink>
-          <NavLink
             to="/admin/support-reports"
             className="admin-nav-link"
             onClick={closeSidebar}
           >
             <GraphUp />
             <span>Reportes de tickets</span>
+          </NavLink>
+          <NavLink
+            to="/admin/support-tickets"
+            className="admin-nav-link"
+            onClick={closeSidebar}
+          >
+            <Headset />
+            <span>Tickets soporte</span>
           </NavLink>
         </nav>
         <div className="admin-sidebar-footer">
