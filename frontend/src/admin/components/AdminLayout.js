@@ -122,10 +122,6 @@ const AdminLayout = ({ children, title }) => {
             <span>Tickets soporte</span>
           </NavLink>
         </nav>
-        <div className="admin-sidebar-footer">
-          <small className="text-muted">Administradores</small>
-          <div className="admin-user-email">{fallbackAdminLabel}</div>
-        </div>
       </aside>
 
       <div className="admin-content">
