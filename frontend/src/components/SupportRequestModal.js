@@ -9,7 +9,7 @@ const INCIDENT_TYPES = [
   { value: "other", label: "Otro" },
 ];
 
-const SupportRequestModal = ({ show, onClose }) => {
+const SupportRequestModal = ({ show, onClose, onTicketCreated }) => {
   const [incidentType, setIncidentType] = useState("connection_error");
   const [description, setDescription] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -50,6 +50,13 @@ const SupportRequestModal = ({ show, onClose }) => {
     }
 
     setSuccess(true);
+
+    if (onTicketCreated) {
+      onTicketCreated({
+        incidentType,
+        description: description.trim(),
+      });
+    }
     setSubmitting(false);
 
     setTimeout(() => {
@@ -74,11 +81,7 @@ const SupportRequestModal = ({ show, onClose }) => {
             </Alert>
           )}
 
-          {success && (
-            <Alert variant="success" className="mb-4">
-              Hemos recibido tu solicitud. Nos comunicaremos contigo pronto.
-            </Alert>
-          )}
+          {success && <div className="mb-4" />} {/* placeholder spacing */}
 
           <Form.Group className="mb-3" controlId="incidentType">
             <Form.Label>Tipo de incidencia</Form.Label>

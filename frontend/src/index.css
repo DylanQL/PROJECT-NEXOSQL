@@ -3406,3 +3406,40 @@ footer .social-icons a:hover {
         font-size: 1.6rem;
     }
 }
+/* Support toast */
+.support-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: rgba(33, 37, 41, 0.95);
+  color: #f8f9fa;
+  padding: 16px 20px;
+  border-radius: 12px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.35);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 1080;
+  backdrop-filter: blur(8px);
+}
+
+.support-toast__content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+}
+
+.support-toast__close {
+  background: transparent;
+  border: none;
+  color: #ced4da;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0 0 2px;
+  line-height: 1;
+}
+
+.support-toast__close:hover {
+  color: #f8f9fa;
+}

@@ -14,6 +14,7 @@ const Navigation = () => {
   const location = useLocation();
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showSupportModal, setShowSupportModal] = useState(false);
+  const [supportConfirmation, setSupportConfirmation] = useState(null);
   const dropdownRef = useRef(null);
 
   const handleLogout = async () => {
@@ -38,6 +39,14 @@ const Navigation = () => {
   const handleSupportClick = () => {
     setShowProfileDropdown(false);
     setShowSupportModal(true);
+  };
+
+  const handleSupportTicketCreated = (ticket) => {
+    setSupportConfirmation({
+      message: "Hemos recibido tu solicitud. Nos comunicaremos contigo pronto.",
+      timestamp: Date.now(),
+      ticket,
+    });
   };
 
   // Get user initials for avatar
@@ -237,7 +246,24 @@ const Navigation = () => {
       <SupportRequestModal
         show={showSupportModal}
         onClose={() => setShowSupportModal(false)}
+        onTicketCreated={handleSupportTicketCreated}
       />
+      {supportConfirmation && (
+        <div className="support-toast">
+          <div className="support-toast__content">
+            <i className="bi bi-check-circle-fill me-2"></i>
+            {supportConfirmation.message}
+          </div>
+          <button
+            type="button"
+            className="support-toast__close"
+            onClick={() => setSupportConfirmation(null)}
+            aria-label="Cerrar notificación"
+          >
+            ×
+          </button>
+        </div>
+      )}
     </>
   );
 };
