@@ -279,9 +279,27 @@ const SupportTickets = () => {
       return false;
     } else {
       setTickets((prev) =>
-        prev.map((ticket) =>
-          ticket.id === ticketId ? result.data.ticket : ticket,
-        ),
+        prev.map((ticket) => {
+          if (ticket.id !== ticketId) {
+            return ticket;
+          }
+          return {
+            ...result.data.ticket,
+            user: {
+              ...ticket.user,
+              ...result.data.ticket.user,
+              subscriptionPlan:
+                result.data.ticket.subscriptionPlan ||
+                result.data.ticket.user?.subscriptionPlan ||
+                ticket.user?.subscriptionPlan ||
+                null,
+            },
+            subscriptionPlan:
+              result.data.ticket.subscriptionPlan ||
+              ticket.subscriptionPlan ||
+              null,
+          };
+        }),
       );
     }
     setProcessing((prev) => {
