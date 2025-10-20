@@ -88,7 +88,7 @@ class AIController {
         hiloConversacion
       });
 
-      const result = await aiService.processQuery(connection, question, hiloConversacion);
+      const result = await aiService.processQuery(connection, question, hiloConversacion, chat.id);
 
       console.log('AI processing completed:', {
         success: !!result.answer,

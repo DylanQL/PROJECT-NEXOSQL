@@ -52,9 +52,10 @@ class AIService {
    * @param {Object} connection - Database connection details
    * @param {string} question - Natural language question
    * @param {string} hiloConversacion - Thread conversation ID
+   * @param {number} chatId - Chat ID for conversation history
    * @returns {Object} - Answer and metadata
    */
-  async processQuery(connection, question, hiloConversacion) {
+  async processQuery(connection, question, hiloConversacion, chatId = null) {
     // Create a database client based on the motor type
     const dbClient = await this.createDatabaseClient(connection);
 
@@ -65,13 +66,53 @@ class AIService {
       // Create the system prompt with database schema information
       const systemPrompt = this.createSystemPrompt(schemaInfo, connection.motor.nombre);
 
+      // Get conversation history if chatId is provided
+      let conversationHistory = [];
+      if (chatId) {
+        conversationHistory = await this.getConversationHistory(chatId);
+      }
+
       // Process the question using the AI service
-      const result = await this.processWithAI(dbClient, systemPrompt, question, connection, hiloConversacion);
+      const result = await this.processWithAI(
+        dbClient, 
+        systemPrompt, 
+        question, 
+        connection, 
+        hiloConversacion, 
+        conversationHistory
+      );
 
       return result;
     } finally {
       // Close database connection
       await this.closeDatabaseClient(dbClient, connection.motor.nombre);
+    }
+  }
+
+  /**
+   * Get conversation history for a chat
+   * @param {number} chatId - Chat ID
+   * @returns {Array} - Array of previous messages
+   */
+  async getConversationHistory(chatId) {
+    try {
+      const messages = await ChatMessage.findAll({
+        where: { 
+          chatId,
+          cancelado: false // Exclude cancelled messages
+        },
+        order: [['createdAt', 'ASC']],
+        limit: 20 // Limit to last 20 messages to avoid token overflow
+      });
+
+      // Format messages for OpenAI API
+      return messages.map(msg => ({
+        role: msg.type === 'user' ? 'user' : 'assistant',
+        content: msg.content
+      }));
+    } catch (error) {
+      console.error('Error getting conversation history:', error);
+      return [];
     }
   }
 
@@ -912,9 +953,11 @@ Important rules:
    * @param {string} systemPrompt - System prompt with schema information
    * @param {string} question - User's question
    * @param {Object} connection - Connection details
+   * @param {string} hiloConversacion - Thread conversation ID
+   * @param {Array} conversationHistory - Previous messages in the conversation
    * @returns {Object} - Final answer and metadata
    */
-  async processWithAI(dbClient, systemPrompt, question, connection, hiloConversacion) {
+  async processWithAI(dbClient, systemPrompt, question, connection, hiloConversacion, conversationHistory = []) {
     let iterations = 0;
     let currentPrompt = `${question}`;
     const queryResults = [];
@@ -963,13 +1006,29 @@ Important rules:
           }
         }
 
+        // Build messages array with conversation history
+        const messages = [
+          { role: "system", content: systemPrompt }
+        ];
+
+        // Add conversation history (excluding the current question)
+        if (conversationHistory && conversationHistory.length > 0) {
+          // Filter out the current question if it exists in history
+          const filteredHistory = conversationHistory.filter(msg => 
+            !(msg.role === 'user' && msg.content === question)
+          );
+          messages.push(...filteredHistory);
+        }
+
+        // Add current user question
+        messages.push({ role: "user", content: currentPrompt });
+
+        console.log(`📝 Sending ${messages.length} messages to AI (including ${conversationHistory.length} history messages)`);
+
         // Call the AI service
         const completion = await this.openai.chat.completions.create({
           model: this.model,
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: currentPrompt }
-          ],
+          messages: messages,
           temperature: 0.1, // Lower temperature for more precise SQL
           max_tokens: 2000
         });
